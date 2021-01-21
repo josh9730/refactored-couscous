@@ -1,0 +1,114 @@
+---
+interfaces:   
+  - name: e1/1
+    description: Perfsonar:RT401505
+    vlan: 286
+  - name: e1/2
+    description: CLR6469
+    vlan: 287
+  - name: e1/3
+    description: CLR2916
+    vlan: 288
+  - name: e1/4
+    description: CLR7273
+    vlan: 289
+  - name: e1/5 
+    description: CLR7129
+    vlan: 291
+  - name: e1/6
+    description: CLR7137
+    vlan: 293
+  - name: e1/7
+    description: CLR8028
+    vlan: 294
+  - name: e1/8
+    description: CLR7148
+    vlan: 297
+  - name: e1/9
+    description: CLR7204
+    vlan: 298
+  - name: e1/10
+    description: CLR8028
+    vlan: 294
+  - name: e1/11
+    description: CLR6702
+    trunk: ASI
+    vlan: 111, 120, 216
+  - name: e1/12
+    description: Perfsonar:wb:RT401505
+    vlan: 299
+  - name: e1/13
+    description: FETP
+    vlan: 300
+  - name: e1/14
+    description: CLR7976
+    vlan: 308
+  - name: e1/15
+    description: CLR7978
+    vlan: 319
+  - name: e1/16
+    description: CLR7998
+    vlan: 320
+  - name: e1/17
+    description: CLR16089
+    vlan: 321
+  - name: e1/18
+    description: CLR6892
+    vlan: 327
+  - name: e1/19
+    description: CLR6312
+    vlan: 328
+  - name: e1/20
+    description: CLR7992
+    vlan: 329
+  - name: e1/21
+    description: CLR6783
+    vlan: 332
+  - name: e1/22
+    description: CLR6870
+    vlan: 335
+  - name: e1/23
+    description: CLR6612
+    vlan: 338
+  - name: e1/24
+    description: CLR6600
+    vlan: 348
+  - name: e1/25
+    description: CLR7961
+    vlan: 357
+  - name: e1/26
+    description: CLR7888
+    vlan: 362
+  - name: e1/27
+    description: CLR7581
+    vlan: 306
+  - name: e1/28
+    description: CLR7935
+    vlan: 307
+  - name: e1/29
+    description: CLR6265
+    vlan: 201
+  - name: e1/30
+    description: CLR6174
+    vlan: 230
+  - name: e1/49/1
+    description: "10G ASI #1 to lax-agg8-sw-1 e1/45"
+    vlan: 217,219-221,226,268,304-305,309,318
+    trunk: L2
+  - name: e1/49/2
+    description: "10G ASI #1 to lax-agg8-sw-1 e1/46"
+    vlan: 203,205-207,236,255,258,271,276,281-282,284
+    trunk: L2
+  - name: e1/49/2
+    description: "10G ASI #1 to lax-agg8-sw-1 e1/47"
+    vlan: 222,256,260,326,339-340,344,346,354,370,501
+    trunk: L2
+  - name: e1/49/3
+    description: "10G ASI #1 to lax-agg8-sw-1 e1/48"
+    vlan: 50,324,333-334,341,403,2401
+    trunk: L2
+  - name: e1/54
+    description: "ASI to lax-agg10 et-6/1/0"
+    vlan: "50,203,205-207,217,219-222,226,236,255-256,258,260,268,271,276,281-282,284,304-305,309,318,324,326,333-334,3
+39-341,344,346,354,370,403,501,2401"
+    trunk: ASI

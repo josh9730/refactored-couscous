@@ -1,0 +1,19 @@
+{noformat}
+{% for i in range(1,13) %}
+Jumper #{{ i }}
+    A Location: 
+        Rack 008
+        COR-AGG8-PP#1
+        Port {{ 36 + i }} Front 
+        Terminate: Yes
+        Label: PP-004-LC#1-{{ 12 + i }}
+    
+    Z Location: 
+        Rack 004
+        PP-004-LC#1
+        Port {{ 12 + i }} Front 
+        Terminate: Yes
+        Label: COR-AGG8-PP#1-{{ 36 + i }}
+
+{% endfor %}
+{noformat}

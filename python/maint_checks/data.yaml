@@ -1,0 +1,150 @@
+---
+username: jdickmanmfa
+global_agg: lax-agg10 # must be junos for circuits
+global_type: junos
+do_diff: false # set to true if a diff is desired
+pre_file_path: 'output_pre.json'
+post_file_path: 'output_post.json'
+device_checks: # formerly N/A
+  # - svl-agg10: junos
+  - pdc-agg1: junos
+#   - riv-agg8: iosxr
+# circuit_checks: # formerly 'devices'
+#   tri-agg2:
+#     device_type: iosxr
+#     circuits:
+#       CLR1118:
+#         service: ebgp
+#         port: TenGigE0/7/0/22
+  # sac-agg4:
+  #   device_type: iosxr
+  #   circuits:
+  #     CLR2118:
+  #       service: ebgp
+  #       port: TenGigE0/7/0/18.132
+  # frg-agg4:
+  #   device_type: iosxr
+  #   circuits:
+  #     ama-coe-2:
+  #       service: ibgp
+  #     cal-coe-2:
+  #       service: ibgp
+  #     col-coe-2:
+  #       service: ibgp
+  # lax-agg6:
+  #   device_type: iosxr
+  #   circuits:
+  #     DC-HPR_peering:
+  #       service: ebgp
+  #       v4_neighbor: 137.164.26.209
+  #       v6_neighbor: 2607:f380::108:9a41:ad11
+  # svl-agg8:
+  #   device_type: iosxr
+  #   circuits:
+  #     merritt-cc-3:
+  #       service: ibgp
+  # lax-agg10:
+  #   device_type: junos
+  #   circuits: # agg_circuit_checks
+  #     bumt-lib-1:
+  #       service: ibgp
+  #     lb-csu-2:
+  #       service: ibgp
+  #       v4_neighbor: 137.164.0.4
+  #       v6_neighbor: 2607:f380::118:9a40:41
+  #     oxnr-pub-lib-1:
+  #       service: ibgp
+  #     cyp-cc-3:
+  #       service: ibgp
+  #     CLR-7073:
+  #       service: ebgp
+  #       port: 'et-7/1/0.285'
+  # lax-agg8:
+  #   device_type: iosxr
+  #   circuits:
+  #     CLR7245:
+  #       service: ebgp
+  #       port: 'TenGigE0/0/0/19/1.245'
+  #     rh-cc-2:
+  #       service: ibgp
+  # cor-agg8:
+  #   device_type: junos
+  #   circuits:
+  #     CLR16527:
+  #       service: static
+  #       asn: '64544'
+  #       port: 'xe-0/0/0:0.101'
+
+
+# device_type: either 'iosxr' or 'junos'
+# 'global' is where the BGP table is checked. Must be junos (issue with napalm 'get_route_to' getter on ios-xr)
+
+# Uses info from Quail only (and the ASN from Confluence for static routes)
+
+# Works as follows:
+# If iBGP:
+# Pass hostname to bash to get IPs
+# Get Rx/Adv route info via netmiko from directly connected agg router
+# Get 'global' bgp data
+# Neighbor IPs can be manually defined if needed (ex: if the v6 neighbor is not in DNS)
+
+# If eBGP:
+# Pass port to napalm to get port IPs
+# Add 1/16 to find the neighbor IPs (assumes the standard)
+# Can manually define neighbor IPs if needed (ex. neighbor IPs not per standard)
+# Get global bgp data
+
+# If static:
+# Pass ASN to agg, find all routes that are tagged with ASN (standard)
+# Fetch global bgp data
+# Issues: If routes not tagged with ASN. Public ASNs not in confluence (not many statics with public ASNs though)
+
+# Rx/Adv routes:
+# Uses TextFSM to parse output from netmiko
+# Returns a list of all routes received
+# Returns Advertised Count (v4 & v6)
+# Returns Yes/No if Default Route advertised or not
+
+# 'Global' BGP data:
+# Uses the list of routes to find:
+# Next-Hop
+# Metric
+# Local Preference
+# AS Path
+# Communities
+
+# If do_diff == true
+## Program will output to 'post' file, and do a diff with 'pre'
+## Any diffs will be printed
+
+# If do_diff == false
+## Program will output to 'pre' file only
+
+
+# keyring setup:
+# keyring set mfa [ mfa user ]  [ first factor ]
+# keyring set otp [ mfa user ] [ the secret from the URI ]
+
+
+######
+
+# TO DO
+# error detection / correction, checks if yaml wrong
+# eBGP: possibly use ND
+# static: possibly use arp to find NH & check interface
+# variance
+# pip install -r requirements
+# integrate with quail/infinity - input only CLR name
+# show advertised routes
+# CLR1118/2118 results in 2118 not pulling routes? 
+# multiple agg routers causes route not to be searchable
+
+# oop issues:
+# determine if HPR
+#   if Adv.Count > 800k and DC, = 'Full Table', etc
+# v6 routes only - does list work?
+# check XR static
+# static returns 'recorded' for AS Path - send ASN to method?
+# port checks
+
+# diffs/output as another method of CircuitChecks? Formulate data from outputs too?

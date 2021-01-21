@@ -1,0 +1,110 @@
+{jiraissues:NOC-630029}
+h1. === NOC Section ===
+
+h3. SUMMARY
+* Migrate circuits to fre-agg-sw-2
+* migrate fre-ts-mgmt
+
+h3. CHANGE LEVEL
+Level 2
+
+h3. REMOTE HANDS REQUIRED
+FRES1
+
+h3. EXECUTION:
+NOC
+
+h3. REMOTE HANDS APPROVAL
+NOC-628538
+
+h3. CLRs IMPACTED
+7766
+7778
+7768
+7764
+7765
+6267
+7780
+6824
+
+h3. ESCALATION
+Deploying Engineer
+
+h3. PARTIAL ROLLBACK
+True
+
+h3. ROLLBACK STEPS:
+Rollback is reverse of MOP
+
+h1. === PRE-MAINTENANCE ===
+{noformat}
+fre-agg4:
+    show interface Te0/3/0/0.1187
+    show bgp neighbor 137.164.2.42 routes
+    show bgp neighbor 137.164.2.42 advertised-routes
+{noformat}
+
+h1. === MOP START ===
+
+h4. SHIPPING
+NOC-630009
+    Fedex #771472687949
+NOC-631096
+    Fedex #771582072369
+
+h4. Please call 714-220-3494 before starting and reference NOC-630029
+
+h2. Section 1 - Migrate Optics
+# *&#91;NOC]* Shutdown all CLRs:
+{noformat}
+
+ENTER COMMANDS HERE
+
+{noformat}
+# *&#91;NOC]* Migrate optics as follows:
+{noformat}
+
+ENTER COMMANDS HERE
+
+{noformat}
+h2. Section 2 - Migrate 8889
+# *&#91;RH]* Locate fre-dis-sw-1 in C09.05 & fre-agg-sw-2 in C09.06. Jumpers have been pre-run for all circuits and labeled according to CLR.
+# *&#91;RH]* Run the following
+{noformat}
+Jumper #1:
+    A Location:
+        Cage: 180
+        Rack: 132
+        Device: A1234
+        Port: 17 front
+        Jumper: LC SMF
+        Label: CLR1234
+
+    Z Location:
+        Cage: 180
+        Rack: 132
+        Device: A1234
+        Port: 17 front
+        Jumper: LC SMF
+        Label: CLR1234
+
+Jumper #2:
+    A Location:
+        Cage: 180
+        Device: A1234
+        Port: 17 front
+        Jumper: LC SMF
+        Label: CLR1345245
+
+    Z Location:
+        Cage: 180
+        Rack: 132
+        Device: A1234
+        Port: 17 front
+        Jumper: LC SMF
+        Label: CLR1345245
+{noformat}
+
+h2. Cleanup
+
+# *&#91;RH]* Dispose of any remaining packaging materials in the racks. 

@@ -1,0 +1,68 @@
+h1. === NOC Section === 
+
+{% for i,j in NOC_Section.items() %}
+h3. {{ i }}
+{{ j }}
+
+{% endfor -%}
+
+h1. === MOP START ===
+
+h4. SHIPPING:
+{% for i in shipping %}
+{%- if i.shipment -%} 
+{{ i.shipment }} / Fedex {{ i.tracking }}
+{% else %}
+N/A
+{% endif %}
+{% endfor %}
+
+h4. Please call 714-220-3494 before starting and reference {{ ticket }}
+{% for i in data %}
+
+h2. Section {{ loop.index }} - {{ i.jumper }}
+
+# *&#91;RH]* Locate {{ i.A_TID }} in {{ i.A_Loc }}{% if not i.dangling %} and {{ i.Z_TID }} in {{ i.Z_Loc }}{% endif %}.
+{% if i.A_Optic %}
+# *&#91;RH]* Insert the shipped {{ i.A_Optic }} optic into {{ i.A_Port }}.
+{% endif %}
+{% if i.Z_Optic %} 
+# *&#91;RH]* Insert the shipped {{ i.Z_Optic }} optic into {{ i.Z_Port }}.
+{% endif %}
+# *&#91;RH]* Run the following jumper: 
+{noformat:nopanel=True}
+{{ i.jumper }} - {{ i.jumper_type }}
+
+A Location: 
+{{ i.A_Loc }}
+{{ i.A_TID }}
+{{ i.A_Port }}
+{% if i.A_xconnect %}
+Cross Connect: {{ i.A_xconnect }} {% endif %}
+{% if i.A_CID %}
+CID: {{ i.A_CID }} {% endif %}
+{% if i.label %}
+Label: {{ i.A_label }}
+{% endif %}
+Terminate: {{ i.A_Term }}
+
+Z Location: 
+{% if not i.dangling %}
+{{ i.Z_Loc }}
+{{ i.Z_TID }}
+{{ i.Z_Port }}
+{% if i.Z_xconnect %}
+Cross Connect: {{ i.Z_xconnect }} {% endif %}
+{% if i.Z_CID %}
+CID: {{ i.Z_CID }} {% endif %}
+{% if i.label %}
+Label: {{ i.Z_label }}
+{% endif %}
+Terminate: {{ i.Z_Term }}
+{% else %}
+Leave dangling in {{ i.Z_Loc }}
+{% endif %}
+{noformat}
+{% endfor %}
+
+h1. === MOP END ===

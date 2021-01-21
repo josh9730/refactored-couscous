@@ -1,0 +1,320 @@
+
+h1. Circuit Migration Table
+||#||CLR||CPE||Current Device||Current Port||New L2 Device||New L2 Port||ASI #||L3 Device||L3 Port||v6 Peering||BGP Routes||eBGP||CPE Device||
+|1|bar-cc-1|bar-cc-1|lax-agg6|Gi0/1/1/11|lax-agg8-sw-1|e1/33|100G ASI #1|lax-agg10|et-6/1/0.334|Yes|F|N|1001|
+|2|lax-agg1 - lax-agg6|None|None|None|lax-agg10-sw-1|e1/15|100G ASI #4|lax-agg10|et-6/1/1.207|No|None|None|lax-agg1|
+|3|CLR7658|ucanr-soct-sw-1|None|Gi100/0/0/36|lax-agg8-sw-1|e1/23|100G ASI #1|lax-agg10|et-6/1/0.346|No|None|static|C3650|
+|4|CLR2690|csu-fro-2|lax-agg6|Gi0/1/1/5.223|lax-agg8-sw-1|e1/37|100G ASI #1|lax-agg10|et-6/1/0.324|No|None|static|C3850|
+|5|CLR6687|lam-gw-2|lax-agg6|Gi100/0/0/0|lax-agg-sw-4|e1/14|100G ASI #1|lax-agg10|et-6/1/3.256|Yes|None|Y|switch|
+|6|CLR6469|Montebello USD|lax-agg6|Te0/6/0/2|lax-agg10-sw-1|e1/2|100G ASI #1|lax-agg10|et-6/1/0.287|No|D|Y|None|
+|7|CLR8028|FETP 20G|lax-agg6|Te0/6/0/14 , Te0/6/0/22|lax-agg10-sw-1|e1/7, e1/8|100G ASI #3|lax-agg10|et-6/1/0.294|No|D|Y|None|
+|8|CLR7986/16104|usc-mar-ctr-1|lax-agg-sw-3|Te1/24|None|None|100G ASI #5|lax-agg10|et-6/1/3.363|Yes|D|N|mx204|
+
+h1. === NOC Section === 
+
+h3. SUMMARY
+10G DC Migrations to lax-agg10
+
+h3. CHANGE LEVEL
+Level 3
+
+h3. REMOTE HANDS REQUIRED
+LA2
+
+h3. REMOTE HANDS APPROVAL
+NOC-616402
+
+h3. CLRs IMPACTED
+7658, 2690, 6687, 6469, 8028, 6715, 6672, pv-cc-1, bar-cc-1, 7986
+
+h3. ESCALATION
+Deploying Engineer
+
+h3. PARTIAL ROLLBACK
+Yes
+
+h1. === PRE-MAINTENANCE ===
+
+h3. 1 - bar-cc-1  
+{noformat}L1/L2 OPtics/PMs
+CPE Port: bar-cc-1 g0/0/2 
+Hub Port: lax-agg6 Gi0/1/1/11 
+lax-agg6:
+    show bgp neighbor 137.164.2.43 routes
+    show bgp neighbor 137.164.2.43 advertised-count 
+    show bgp ipv6 unicast neighbor 2607:f380::118:9a40:22b1 routes
+    show bgp ipv6 unicast neighbor 2607:f380::118:9a40:22b1 advertised-count
+{noformat}
+
+h3. 2 - lax-agg1 - lax-agg6  
+{noformat}L1/L2 OPtics/PMs
+Hub Port: None None 
+lax-agg6:
+    show arp None
+{noformat}
+
+h3. 3 - CLR7658  
+{noformat}L1/L2 OPtics/PMs
+CPE Port: ucanr-soct-sw-1 Gi1/1/1 
+Hub Port: None Gi100/0/0/36 
+lax-agg6:
+    show arp Gi100/0/0/36.346
+{noformat}
+
+h3. 4 - CLR2690  
+{noformat}L1/L2 OPtics/PMs
+CPE Port: csu-fro-2 Te1/0/1 
+Hub Port: lax-agg6 Gi0/1/1/5.223 
+lax-agg6:
+    show arp Gi0/1/1/5.223
+{noformat}
+
+h3. 5 - CLR6687  
+{noformat}L1/L2 OPtics/PMs
+CPE Port: lam-gw-2 Te0/5/0/1 
+Hub Port: lax-agg6 Gi100/0/0/0 
+lax-agg6:
+    show bgp neighbor 137.164.41.7 routes
+    show bgp neighbor 137.164.41.7 advertised-count 
+    show bgp ipv6 unicast neighbor 2607:f380:1::118:9a42:9071 routes
+    show bgp ipv6 unicast neighbor 2607:f380:1::118:9a42:9071 advertised-count
+{noformat}
+
+h3. 6 - CLR6469  
+{noformat}L1/L2 OPtics/PMs
+Hub Port: lax-agg6 Te0/6/0/2 
+lax-agg6:
+    show bgp neighbor 137.164.24.69 routes
+    show bgp neighbor 137.164.24.69 advertised-count{noformat}
+
+h3. 7 - CLR8028  
+{noformat}L1/L2 OPtics/PMs
+Hub Port: lax-agg6 Te0/6/0/14 , Te0/6/0/22 
+lax-agg6:
+    show bgp neighbor 137.164.24.71 routes
+    show bgp neighbor 137.164.24.71 advertised-count{noformat}
+
+h3. 8 - CLR7986/16104  
+{noformat}L1/L2 OPtics/PMs
+CPE Port: usc-mar-ctr-1 xe-0/1/4 
+Hub Port: lax-agg-sw-3 Te1/24 
+lax-agg6:
+    show bgp neighbor 137.164.0.81 routes
+    show bgp neighbor 137.164.0.81 advertised-count 
+    show bgp ipv6 unicast neighbor 2607:f380::118:9a40:511 routes
+    show bgp ipv6 unicast neighbor 2607:f380::118:9a40:511 advertised-count
+{noformat}
+
+h1. === MOP START ===
+
+h4. SHIPPING: 
+NOC- / Fedex None
+ 
+h4. Please call 714-220-3494 before starting and reference NOC-
+
+
+h2. Section 1 - bar-cc-1 Migration 
+
+# *&#91;NOC]* Shutdown old port and enable new port:
+{noformat}lax-agg6:
+    interface Gi0/1/1/11 shutdown
+
+lax-agg10:
+    delete interface et-6/1/0.334 disable {noformat}
+# *&#91;RH]* Migrate the following jumper and optic:
+{noformat}Current Termination:
+    Cage 180 Rack 0202 - lax-agg6 - Gi0/1/1/11
+
+New Termination:
+Cage 180 Rack 0202 - lax-agg8-sw-1 - e1/33{noformat}
+# *&#91;NOC]* Verify the new port comes up. May need to toggle negotiation.
+# *&#91;NOC]* Compare pre/post maintenance L1/L2 stats and the new L3: 
+{noformat}lax-agg10:
+    show route receive protocol bgp 137.164.2.43
+    show route advertising-protocol bgp 137.164.2.43
+    show route receive protocol bgp 2607:f380::118:9a40:22b1
+    show route advertising-protocol bgp 2607:f380::118:9a40:22b1
+{noformat}
+
+----
+
+h2. Section 2 - lax-agg1 - lax-agg6 Migration 
+
+# *&#91;NOC]* Shutdown old port and enable new port:
+{noformat}None:
+    interface None shutdown
+
+lax-agg10:
+    delete interface et-6/1/1.207 disable {noformat}
+# *&#91;RH]* Migrate the following jumper and optic:
+{noformat}Current Termination:
+    None - None - None
+
+New Termination:
+    Cage 180 Rack 0202 - lax-agg10-sw-1 - e1/15{noformat}
+# *&#91;NOC]* Verify the new port comes up. May need to toggle negotiation.
+# *&#91;NOC]* Compare pre/post maintenance L1/L2 stats and the new L3: 
+{noformat}lax-agg10
+    show arp interface e1/15
+{noformat}
+
+----
+
+h2. Section 3 - CLR7658 Migration 
+
+# *&#91;NOC]* Shutdown old port and enable new port:
+{noformat}None:
+    interface Gi100/0/0/36 shutdown
+
+lax-agg10:
+    delete interface et-6/1/0.346 disable {noformat}
+# *&#91;RH]* Migrate the following jumper and optic:
+{noformat}Current Termination:
+    Cage 180 Rack 0202 - None - Gi100/0/0/36
+
+New Termination:
+    Cage 180 Rack 0202 - lax-agg8-sw-1 - e1/23{noformat}
+# *&#91;NOC]* Verify the new port comes up. May need to toggle negotiation.
+# *&#91;NOC]* Compare pre/post maintenance L1/L2 stats and the new L3: 
+{noformat}lax-agg10
+    show arp interface e1/23
+{noformat}
+
+----
+
+h2. Section 4 - CLR2690 Migration 
+
+# *&#91;NOC]* Shutdown old port and enable new port:
+{noformat}lax-agg6:
+    interface Gi0/1/1/5.223 shutdown
+
+lax-agg10:
+    delete interface et-6/1/0.324 disable {noformat}
+# *&#91;RH]* Migrate the following jumper and optic:
+{noformat}Current Termination:
+    Cage 180 Rack 0202 - lax-agg6 - Gi0/1/1/5.223
+
+New Termination:
+    Cage 180 Rack 0202 - lax-agg8-sw-1 - e1/37{noformat}
+# *&#91;NOC]* Verify the new port comes up. May need to toggle negotiation.
+# *&#91;NOC]* Compare pre/post maintenance L1/L2 stats and the new L3: 
+{noformat}lax-agg10
+    show arp interface e1/37
+{noformat}
+
+----
+
+h2. Section 5 - CLR6687 Migration 
+
+# *&#91;NOC]* Shutdown old port and enable new port:
+{noformat}lax-agg6:
+    interface Gi100/0/0/0 shutdown
+
+lax-agg10:
+    delete interface et-6/1/3.256 disable {noformat}
+# *&#91;RH]* Migrate the following jumper and optic:
+{noformat}Current Termination:
+    Cage 180 Rack 0202 - lax-agg6 - Gi100/0/0/0
+
+New Termination:
+    Cage 180 Rack 0107 - lax-agg-sw-4 - e1/14{noformat}
+# *&#91;NOC]* Enable the eBGP peering:
+{noformat}lax-agg10:
+    delete protocols bgp group svc-lamirada-v4 shutdown
+    delete protocols bgp group svc-lamirada-v6 shutdown{noformat}
+# *&#91;NOC]* Verify the new port comes up. May need to toggle negotiation.
+# *&#91;NOC]* Compare pre/post maintenance L1/L2 stats and the new L3: 
+{noformat}lax-agg10:
+    show route receive protocol bgp 137.164.41.7
+    show route advertising-protocol bgp 137.164.41.7
+    show route receive protocol bgp 2607:f380:1::118:9a42:9071
+    show route advertising-protocol bgp 2607:f380:1::118:9a42:9071
+{noformat}
+
+----
+
+h2. Section 6 - CLR6469 Migration 
+
+# *&#91;NOC]* Shutdown old port and enable new port:
+{noformat}lax-agg6:
+    interface Te0/6/0/2 shutdown
+
+lax-agg10:
+    delete interface et-6/1/0.287 disable {noformat}
+# *&#91;RH]* Migrate the following jumper and optic:
+{noformat}Current Termination:
+    Cage 180 Rack 0202 - lax-agg6 - Te0/6/0/2
+
+New Termination:
+Cage 180 Rack 0202 - lax-agg10-sw-1 - e1/2{noformat}
+# *&#91;NOC]* Enable the eBGP peering:
+{noformat}lax-agg10:
+    delete protocols bgp group svc-mon_usd-v4 shutdown{noformat}
+# *&#91;NOC]* Verify the new port comes up. May need to toggle negotiation.
+# *&#91;NOC]* Compare pre/post maintenance L1/L2 stats and the new L3: 
+{noformat}lax-agg10:
+    show route receive protocol bgp 137.164.24.69
+    show route advertising-protocol bgp 137.164.24.69
+{noformat}
+
+----
+
+h2. Section 7 - CLR8028 Migration 
+
+# *&#91;NOC]* Shutdown old port and enable new port:
+{noformat}lax-agg6:
+    interface Te0/6/0/14 , Te0/6/0/22 shutdown
+
+lax-agg10:
+    delete interface et-6/1/0.294 disable {noformat}
+# *&#91;RH]* Migrate the following jumper and optic:
+{noformat}Current Termination:
+    Cage 180 Rack 0202 - lax-agg6 - Te0/6/0/14 , Te0/6/0/22
+
+New Termination:
+Cage 180 Rack 0202 - lax-agg10-sw-1 - e1/7, e1/8{noformat}
+# *&#91;NOC]* Enable the eBGP peering:
+{noformat}lax-agg10:
+    delete protocols bgp group svc-fetp-v4 shutdown{noformat}
+# *&#91;NOC]* Verify the new port comes up. May need to toggle negotiation.
+# *&#91;NOC]* Compare pre/post maintenance L1/L2 stats and the new L3: 
+{noformat}lax-agg10:
+    show route receive protocol bgp 137.164.24.71
+    show route advertising-protocol bgp 137.164.24.71
+{noformat}
+
+----
+
+h2. Section 8 - CLR7986/16104 Migration 
+
+# *&#91;NOC]* Shutdown old port and enable new port:
+{noformat}lax-agg-sw-3:
+    interface Te1/24 shutdown
+
+lax-agg10:
+    delete interface et-6/1/3.363 disable {noformat}
+# *&#91;NOC]* Re-provision VLAN path: 
+{noformat}lax-agg-sw-3:
+    interface e1/54
+    switchport trunk allowed vlan add 363{noformat}
+# *&#91;NOC]* Verify the new port comes up. May need to toggle negotiation.
+# *&#91;NOC]* Compare pre/post maintenance L1/L2 stats and the new L3: 
+{noformat}lax-agg10:
+    show route receive protocol bgp 137.164.0.81
+    show route advertising-protocol bgp 137.164.0.81
+    show route receive protocol bgp 2607:f380::118:9a40:511
+    show route advertising-protocol bgp 2607:f380::118:9a40:511
+{noformat}
+
+----
+
+h3. --- CLEAN UP ---
+
+*1.* &#91;NOC] Verify all alarms have cleared and all circuits have restored.
+*2.* &#91;RH] Obtain billable time.
+*3.* &#91;NOC] Update all migrated CLRs.
+*4.* &#91;NOC] Clean up interface configs from lax-agg6 and lax-agg-sw-3.
+*5.* &#91;NOC] Clean up all ISIS configs from migrated circuits on lax-agg6.
+
+h1. === END MOP === 
+

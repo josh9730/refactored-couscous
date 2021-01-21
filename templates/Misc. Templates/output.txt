@@ -1,0 +1,2362 @@
+telnet@lax-hpr3#show route 
+route-map to_uh deny 100
+ match community  CENIC_No_Export
+route-map to_uh permit 120
+ match community  HPR_All
+ set metric-type internal
+route-map to_FLR deny 15
+ match ip address prefix-list small-prefixes-25
+route-map to_FLR deny 50
+ match community  CENIC_No_Export
+route-map to_FLR deny 60
+ match ip address prefix-list bogons
+route-map to_FLR deny 70
+ match as-path  181
+route-map to_FLR permit 100
+ match community  CENIC_HPR_Internal
+route-map to_FLR permit 105
+ match community  CENIC_DC_Internal
+route-map to_FLR permit 150
+ match community  To_PWave_Peers
+route-map to_nps deny 10
+ match community  CENIC_No_Export
+route-map to_nps permit 110
+ match ip address prefix-list CENIC_HPR_Internal
+ set community  2153:2153                                         
+route-map to_nps permit 120
+ match community  HPR_All
+ set metric-type internal
+route-map to_uci deny 100
+ match community  CENIC_No_Export
+route-map to_uci permit 120
+ match community  HPR_All
+ set metric-type internal
+ set metric -10
+route-map to_ucr deny 100
+ match community  CENIC_No_Export
+route-map to_ucr permit 110
+ match ip address prefix-list CENIC_HPR_Internal
+ set community  2153:2153
+route-map to_ucr permit 120
+ match community  HPR_All
+ set metric-type internal
+route-map from_uh permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ip next-hop 137.164.17.255                                   
+route-map from_uh deny 50
+ match as-path  181
+route-map from_uh permit 80
+ match ip address prefix-list uh-dos
+ match community  blackhole-hpr
+ set ip next-hop 137.164.17.255 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:6360 2153:65506
+route-map from_uh permit 100
+ match ip address prefix-list uh
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65418 2152:65436 2152:65438 2153:6360 2153:65418 2153:65436 2153:65437 2153:65438 2153:65506 additive 
+route-map from_uh permit 110
+ match ip address prefix-list uh
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65418 2152:65436 2152:65438 2153:6360 2153:65418 2153:65436 2153:65437 2153:65438 2153:65506 additive 
+route-map from_uh permit 120
+ match ip address prefix-list uh
+ set local-preference 100                                         
+ set comm-list CENIC_tags delete 
+ set community  2152:65418 2152:65436 2152:65438 2153:6360 2153:65418 2153:65436 2153:65437 2153:65438 2153:65506 additive 
+route-map to_sdsc deny 50
+ match community  CENIC_No_Export
+route-map to_sdsc permit 100
+ match ip address prefix-list CENIC_HPR_Internal
+ set metric-type internal
+ set community  2153:2153
+route-map to_sdsc permit 110
+ match community  33
+ set metric-type internal
+route-map to_ucla deny 10
+ match community  CENIC_No_Export
+route-map to_ucla permit 110
+ match community  33
+ set metric-type internal
+route-map to_ucsb deny 100
+ match community  CENIC_No_Export
+route-map to_ucsb permit 110
+ match ip address prefix-list CENIC_HPR_Internal
+ set community  2153:2153
+route-map to_ucsb permit 120
+ match community  HPR_All                                         
+ set metric-type internal
+route-map to_ucsd deny 50
+ match community  CENIC_No_Export
+route-map to_ucsd permit 100
+ match ip address prefix-list CENIC_HPR_Internal
+ set metric-type internal
+ set community  2153:2153
+ set metric -10
+route-map to_ucsd permit 110
+ match community  33
+ set metric-type internal
+ set metric -10
+route-map from_FLR deny 50
+ match as-path  181
+route-map from_FLR permit 100
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_FLR permit 110
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-68                                
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_FLR permit 120
+ match ip address prefix-list sanity-32
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_nps permit 10
+ match community  blackhole-hpr
+ set ip next-hop 137.164.17.255 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set local-preference 100 
+route-map from_nps permit 100
+ match ip address prefix-list nps
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:257 2153:65418 2153:65436 2153:65437 2153:65438 2153:65439 2153:65506 additive 
+route-map from_uci permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete                                  
+ set community  2153:666 2153:65535 additive 
+ set ip next-hop 137.164.17.255 
+route-map from_uci permit 100
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:299 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map from_ucr permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ip next-hop 137.164.17.255 
+route-map from_ucr permit 100
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:6106 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map to_dc_v6 deny 10
+ match as-path  6
+route-map to_dc_v6 permit 100
+ match ipv6 address prefix-list CENIC_HPR_Internal_v6
+ set metric-type internal
+ set community  2153:2153 additive 
+route-map to_dc_v6 permit 110                                     
+ match community  hpr-internal
+ set metric-type internal
+route-map to_dc_v6 permit 120
+ match community  cf-hpr-charter
+ set metric-type internal
+route-map to_dc_v6 permit 130
+ match community  cf-hpr-assoc
+ set metric-type internal
+route-map to_dc_v6 permit 140
+ match community  cf-hpr-commodity-peer
+ set metric-type internal
+route-map to_dc_v6 permit 150
+ match community  cf-hpr-internet2-peer
+ set metric-type internal
+route-map to_esnet deny 10
+ match community  CENIC_No_Export
+route-map to_esnet permit 100
+ match ip address prefix-list CENIC_HPR_Internal
+ set metric 100
+ set community  2153:2153
+route-map to_esnet permit 110
+ match community  To_I2_Peers
+ set metric 100                                                   
+route-map from_sdsc permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ip next-hop 137.164.17.255 
+route-map from_sdsc permit 100
+ match as-path  90
+ set local-preference 88 
+ set community  2152:65436 2152:65438 2153:195 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map from_sdsc permit 110
+ set local-preference 100 
+ set community  2152:65436 2152:65438 2153:195 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map from_ucla permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ip next-hop 137.164.17.255 
+route-map from_ucla permit 100
+ set local-preference 100 
+ set community  2152:65436 2152:65438 2153:52 2153:65418 2153:65436 2153:65438 2153:65439 2153:65507 additive 
+route-map from_ucsb permit 10                                     
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ip next-hop 137.164.17.255 
+route-map from_ucsb permit 85
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  123:456 2152:65436 2152:65438 2153:131 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map from_ucsb permit 90
+ match community  testing-v4multi
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:131 2153:65422 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map from_ucsb permit 100
+ match ip address prefix-list UCSB
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:131 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map from_ucsd permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete                                  
+ set community  2153:666 2153:65535 additive 
+ set ip next-hop 137.164.17.255 
+route-map from_ucsd permit 100
+ match ip address prefix-list UCSDplusSDSC
+ match as-path  80
+ set local-preference 88 
+ set community  2152:65436 2152:65438 2153:7377 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map from_ucsd permit 110
+ match ip address prefix-list UCSDplusSDSC
+ set local-preference 100 
+ set community  2152:65436 2152:65438 2153:7377 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map from_ucsd permit 130
+ match ip address prefix-list UCSDplusSDSC-r&e-specifics
+ set local-preference 100 
+ set community  2152:65418 2152:65438 2153:65418 2153:65438 2153:65439 2153:65506 2152:65436 2153:65436 additive 
+route-map to-uci-v6 deny 100
+ match community  CENIC_No_Export
+route-map to-uci-v6 permit 120
+ match community  HPR_All
+ set metric-type internal
+route-map to_FLR_v6 deny 50
+ match community  CENIC_No_Export
+route-map to_FLR_v6 deny 70                                       
+ match as-path  181
+route-map to_FLR_v6 permit 100
+ match community  CENIC_HPR_Internal
+route-map to_FLR_v6 permit 105
+ match community  CENIC_DC_Internal
+route-map to_FLR_v6 permit 150
+ match community  To_PWave_Peers
+route-map to_lhcone deny 10
+ match community  CENIC_No_Export
+route-map to_lhcone deny 15
+ match ip address prefix-list to-repeer-32sanity
+route-map to_lhcone permit 50
+ match ip address prefix-list lhcone-no-tier1
+ match community  to-lhcone
+ set community  65011:0 additive 
+route-map to_lhcone permit 60
+ match ip address prefix-list lhcone-pre0
+ match community  to-lhcone
+route-map to_lhcone permit 70
+ match ip address prefix-list lhcone-pre1
+ match community  to-lhcone
+ set as-path prepend  2153
+ set community  65003:297 additive                                
+route-map to_lhcone permit 80
+ match as-path  403
+ match community  to-lhcone
+ set as-path prepend  2153
+ set community  65003:297 additive 
+route-map to_lhcone permit 90
+ match ip address prefix-list lhcone-pre2
+ match community  to-lhcone
+ set as-path prepend  2153 2153
+ set community  65003:297 additive 
+route-map to_lhcone permit 100
+ match as-path  404
+ match community  to-lhcone
+ set as-path prepend  2153 2153
+ set community  65003:297 additive 
+route-map to_lhcone permit 300
+ match community  to-lhcone
+ set community  65003:297 additive 
+route-map to_scinet deny 10
+ match community  CENIC_No_Export
+route-map to_scinet deny 15
+ match ip address prefix-list small-prefixes-25
+route-map to_scinet deny 16                                       
+ match ipv6 address prefix-list small-v6-prefixes-ge-49
+route-map to_scinet deny 20
+ match as-path  scinet-as14031-deny-paths
+route-map to_scinet permit 100
+ match community  To_PRP_Affiliates
+ set metric-type internal
+route-map to_scinet permit 120
+ match community  To_ScienceDMZ
+ set metric-type internal
+route-map from-uh-v6 permit 5
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535
+ set ipv6 next-hop 2607:f380::ff 
+route-map from-uh-v6 permit 7
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:6360 2153:65418 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from_dc_v6 permit 100
+ match community  dc-internal
+ set local-preference 90 
+route-map from_dc_v6 permit 105
+ match ipv6 address prefix-list lbl-v6-as16                       
+ set local-preference 70 
+route-map from_dc_v6 permit 110
+ match community  cf-dc-charter
+ set local-preference 90 
+route-map from_dc_v6 permit 120
+ match community  cf-dc-assoc
+ set local-preference 80 
+route-map from_dc_v6 permit 130
+ match community  cf-dc-commodity-peer
+ set local-preference 35 
+route-map from_dc_v6 permit 200
+ set local-preference 71 
+route-map from_esnet deny 50
+ match as-path  181
+route-map from_esnet permit 100
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:72 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_esnet permit 110
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-68                                
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:68 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_esnet permit 120
+ match ip address prefix-list sanity-32
+ set local-preference 60 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map to-wrn-unm deny 100
+ match community  CENIC_No_Export
+route-map to-wrn-unm permit 120
+ match community  HPR_All
+ set metric-type internal
+route-map to_wrn-gpn deny 10
+ match community  CENIC_No_Export
+route-map to_wrn-gpn deny 20
+ match as-path  189
+route-map to_wrn-gpn permit 100
+ match ip address prefix-list CENIC_HPR_Internal
+ set metric 100
+ set community  2153:2153
+route-map to_wrn-gpn permit 110
+ match community  40                                              
+ set metric-type internal
+route-map to_wrn-gpn permit 120
+ match community  cf-hpr-international-peer
+ set metric-type internal
+route-map from-NPS-v6 permit 5
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535
+ set ipv6 next-hop 2607:f380::ff 
+route-map from-NPS-v6 permit 50
+ match community  blackhole-all
+ set ipv6 next-hop 2607:f380::118:9a41:ff0 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65498 2153:65506 additive 
+route-map from-NPS-v6 permit 110
+ match ipv6 address prefix-list NPS-announce-v6
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65418 2153:65298 2153:65436 2153:65437 2153:65438 2153:65439 2153:65506 additive 
+route-map from-NPS-v6 permit 120
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:65439 2153:65506 2153:65535 additive         
+route-map from-uci-v6 permit 50
+ match community  blackhole-all
+ set ipv6 next-hop 2607:f380::ff 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65498 2153:65535 additive 
+route-map from-uci-v6 permit 110
+ match ipv6 address prefix-list uci-announce-v6
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:299 2152:65436 2152:65438 2153:65418 2153:65298 2153:65436 2153:65437 2153:65438 2153:65439 2153:65506 additive 
+route-map from-uci-v6 permit 120
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:65439 2153:65535 2153:65506 additive 
+route-map from-ucr-v6 permit 5
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ipv6 next-hop 2607:f380::ff 
+route-map from-ucr-v6 permit 100
+ match ipv6 address prefix-list ucr-v6-announce
+ set local-preference 100 
+ set comm-list CENIC_tags delete                                  
+ set community  2153:6106 2153:65418 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from-ucr-v6 permit 110
+ match ipv6 address prefix-list ucr-v6-no-export
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:6106 2153:65439 2153:65506 2153:65535 additive 
+route-map from_FLR_v6 deny 50
+ match as-path  181
+route-map from_FLR_v6 permit 100
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_FLR_v6 permit 110
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_FLR_v6 permit 120
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_lhcone deny 15                                     
+ match ip address prefix-list to-repeer-32sanity
+route-map from_lhcone deny 20
+ match as-path  187
+route-map from_lhcone permit 50
+ match ip address prefix-list lhcone-pref
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2153:65245 2153:65506 additive 
+route-map from_lhcone permit 60
+ match ip address  105
+ set local-preference 16 
+ set comm-list CENIC_tags delete 
+ set community  2153:65425 2153:65506 additive 
+route-map from_lhcone permit 70
+ match as-path  186
+ set local-preference 16 
+ set comm-list CENIC_tags delete 
+ set community  2153:65425 2153:65506 additive 
+route-map from_lhcone permit 300
+ set local-preference 22 
+ set comm-list CENIC_tags delete 
+ set community  2153:65425 2153:65506 additive 
+route-map from_scinet permit 10                                   
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ip next-hop 137.164.17.255 
+route-map from_scinet permit 100
+ match ip address prefix-list scinet-v4
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:14031 14031:65426 2153:65438 2153:65439 2153:65506 additive 
+route-map to-wrn-frgp deny 100
+ match community  CENIC_No_Export
+route-map to-wrn-frgp permit 120
+ match community  HPR_All
+ set metric-type internal
+route-map to_dc_v4uni deny 5
+ match ip address prefix-list UH-More-Specifics
+route-map to_dc_v4uni deny 10
+ match as-path  6
+route-map to_dc_v4uni deny 11
+ match ip address prefix-list UCR-SDMZ-RT508584
+route-map to_dc_v4uni permit 15
+ match ip address prefix-list CENIC_HPR_Internal                  
+ set community  2153:2153 additive 
+route-map to_dc_v4uni permit 100
+ match community  to-dc-v4uni
+route-map to_esnet_v6 deny 10
+ match community  CENIC_No_Export
+ set metric 100
+route-map to_esnet_v6 permit 120
+ match community  To_I2_Peers
+ set metric 100
+route-map to_sdsc_prp deny 10
+ match community  CENIC_No_Export
+route-map to_sdsc_prp deny 20
+ match as-path  105
+route-map to_sdsc_prp permit 100
+ match community  To_PRP_Affiliates
+route-map to_sdsc_prp permit 120
+ match community  To_ScienceDMZ
+route-map to_sdsu-lab permit 100
+ match ip address prefix-list CENIC_HPR_Internal
+ set community  2153:2153
+route-map to_sdsu-lab permit 120
+ match community  HPR_All
+ set metric-type internal                                         
+route-map from-sdsc-v6 permit 5
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ipv6 next-hop 2607:f380::ff 
+route-map from-sdsc-v6 permit 100
+ match ipv6 address prefix-list ucsd-sdsc-v6-announce
+ match as-path  90
+ set local-preference 88 
+ set comm-list CENIC_tags delete 
+ set community  2153:195 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from-sdsc-v6 permit 110
+ match ipv6 address prefix-list ucsd-sdsc-v6-announce
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:195 2153:65418 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from-sdsc-v6 permit 120
+ match ipv6 address prefix-list ucsd-sdsc-v6-no-export
+ match as-path  90
+ set local-preference 88 
+ set comm-list CENIC_tags delete 
+ set community  2153:195 2153:65439 2153:65506 2153:65535 additive 
+route-map from-sdsc-v6 permit 130                                 
+ match ipv6 address prefix-list ucsd-sdsc-v6-no-export
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:195 2153:65439 2153:65506 2153:65535 additive 
+route-map from-ucla-v6 permit 5
+ match community  blackhole-hpr
+ set ipv6 next-hop 2607:f380::ff 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+route-map from-ucla-v6 permit 7
+ match community  HPR_AT_All_I2_Peers
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:52 2153:65418 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from-ucla-v6 permit 110
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:52 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2153:65506 2153:65535 additive 
+route-map from-ucsb-v6 permit 5
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ipv6 next-hop 2607:f380::ff                                  
+route-map from-ucsb-v6 permit 7
+ match community  HPR_AT_All_I2_Peers
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:131 2153:65418 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from-ucsb-v6 permit 110
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:131 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2153:65506 2153:65535 additive 
+route-map from-ucsd-v6 permit 5
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ipv6 next-hop 2607:f380::ff 
+route-map from-ucsd-v6 permit 100
+ match ipv6 address prefix-list ucsd-sdsc-v6-announce
+ match as-path  80
+ set local-preference 88 
+ set comm-list CENIC_tags delete 
+ set community  2153:7377 2153:65436 2153:65438 2152:64436 2152:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from-ucsd-v6 permit 110
+ match ipv6 address prefix-list ucsd-sdsc-v6-announce
+ set local-preference 100                                         
+ set comm-list CENIC_tags delete 
+ set community  2153:7377 2153:65418 2153:65436 2152:64436 2152:65438 2153:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from-ucsd-v6 permit 120
+ match ipv6 address prefix-list ucsd-sdsc-v6-no-export
+ match as-path  80
+ set local-preference 88 
+ set comm-list CENIC_tags delete 
+ set community  2153:7377 2153:65439 2153:65506 2153:65535 additive 
+route-map from-ucsd-v6 permit 130
+ match ipv6 address prefix-list ucsd-sdsc-v6-no-export
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:7377 2153:65439 2153:65506 2153:65535 additive 
+route-map from-wrn-unm permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ip next-hop 137.164.17.255 
+route-map from-wrn-unm deny 50
+ match as-path  181
+route-map from-wrn-unm permit 60
+ match ip address prefix-list wrn-unm-no-transit                  
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:40498 2153:65439 2153:65435 2153:65436 2153:65438 2153:65506 additive 
+route-map from-wrn-unm permit 100
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:40498 2153:65439 2153:65418 2153:65435 2153:65436 2153:65438 2153:65506 additive 
+route-map from_wrn-gpn deny 50
+ match as-path  181
+route-map from_wrn-gpn permit 100
+ match ip address prefix-list wrn-gpn
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 2153:65386 2153:65384 2153:65390 2153:65392 2153:65382 2153:65408 2153:65380 2153:65384 additive 
+route-map to_newnet_v6 deny 5
+ match community  CENIC_No_Export
+route-map to_newnet_v6 permit 100
+ match community  20
+ set community  11537:260 65000:3549 65000:16509 additive 
+route-map to_newnet_v6 permit 110
+ match community  50
+ set community  65000:3549 65000:16509 additive 
+route-map to_optiputer deny 10                                    
+ match community  CENIC_No_Export
+route-map to_optiputer deny 20
+ match ip address prefix-list optiputer-from-sdsc
+route-map to_optiputer permit 100
+ match community  To_PRP_Affiliates
+route-map to_optiputer permit 120
+ match community  To_ScienceDMZ
+route-map to_pwave-dtn deny 100
+ match community  CENIC_No_Export
+route-map to_pwave-dtn permit 110
+ match ip address prefix-list CENIC_HPR_Internal
+ set community  2153:2153
+route-map to_pwave-dtn permit 120
+ match community  HPR_All
+ set metric-type internal
+route-map to_sdsu-sdmz permit 100
+ match ip address prefix-list CENIC_HPR_Internal
+ set community  2153:2153
+route-map to_sdsu-sdmz permit 120
+ match community  HPR_All
+ set metric-type internal
+route-map to_wrn-learn deny 10
+ match community  CENIC_No_Export                                 
+route-map to_wrn-learn deny 20
+ match as-path  189
+route-map to_wrn-learn permit 100
+ match ip address prefix-list CENIC_HPR_Internal
+ set metric 100
+ set community  2153:2153
+route-map to_wrn-learn permit 110
+ match community  40
+ set metric-type internal
+route-map to_wrn-learn permit 120
+ match community  cf-hpr-international-peer
+ set metric-type internal
+route-map from-wrn-frgp permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ip next-hop 137.164.17.255 
+route-map from-wrn-frgp deny 50
+ match as-path  181
+route-map from-wrn-frgp permit 100
+ set local-preference 100 
+ set comm-list CENIC_tags delete                                  
+ set community  2152:65436 2152:65438 2153:65439 2153:65418 2153:65435 2153:65436 2153:65438 2153:65506 additive 
+route-map from_dc_v4uni permit 10
+ match community  blackhole-all
+ set ip next-hop 137.164.17.255 
+ set community  2153:666 additive 
+route-map from_dc_v4uni permit 80
+ match ip address prefix-list lbl
+ set local-preference 70 
+route-map from_dc_v4uni permit 100
+ match community  dc-charter
+ set local-preference 90 
+route-map from_dc_v4uni permit 110
+ match community  dc-associates
+ set local-preference 80 
+route-map from_dc_v4uni permit 200
+ set local-preference 71 
+route-map from_esnet_v6 deny 50
+ match as-path  181
+route-map from_esnet_v6 permit 100
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:72 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_esnet_v6 permit 110
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:68 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_esnet_v6 permit 120
+ set local-preference 60 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_sdsc_prp permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ip next-hop 137.164.17.255 
+route-map from_sdsc_prp permit 110
+ set local-preference 110 
+ set community  2152:65436 2152:65438 2153:195 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map from_sdsu-lab permit 10
+ match community  blackhole-hpr
+ set ip next-hop 137.164.17.255 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive                      
+ set local-preference 100 
+route-map from_sdsu-lab permit 100
+ match ip address prefix-list sdsu-lab
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:64760 2153:65418 2153:65436 2153:65437 2153:65438 2153:65439 2153:65506 additive 
+route-map static-to-bgp permit 100
+ match ip address prefix-list bbone-subnets
+ set origin igp 
+ set as-path tag 
+ set community  2153:2153 2153:65506 2153:65535
+ set ip next-hop 137.164.17.10 
+ set metric 0
+route-map to-caltech-ul deny 100
+ match community  CENIC_No_Export
+route-map to-caltech-ul permit 120
+ match community  HPR_All
+ set metric-type internal
+route-map to_dc_v4multi deny 10
+ match as-path  6
+route-map to_dc_v4multi permit 15
+ match ip address prefix-list CENIC_HPR_Internal
+ set community  2153:2153 additive                                
+route-map to_dc_v4multi permit 100
+ match community  to-dc-v4multi
+route-map to_los-nettos deny 50
+ match community  CENIC_No_Export
+route-map to_los-nettos permit 110
+ match community  HPR_All
+ set metric-type internal
+route-map to_pwave_cudi deny 15
+ match ip address prefix-list small-prefixes-25
+route-map to_pwave_cudi deny 50
+ match community  CENIC_No_Export
+route-map to_pwave_cudi deny 60
+ match ip address prefix-list bogons
+route-map to_pwave_cudi deny 70
+ match as-path  181
+route-map to_pwave_cudi permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_cudi permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_cudi permit 150
+ match community  To_PWave_Peers
+route-map to_pwave_dren deny 15
+ match ip address prefix-list small-prefixes-25                   
+route-map to_pwave_dren deny 50
+ match community  CENIC_No_Export
+route-map to_pwave_dren deny 60
+ match ip address prefix-list bogons
+route-map to_pwave_dren deny 70
+ match as-path  181
+route-map to_pwave_dren permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_dren permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_dren permit 150
+ match community  To_PWave_Peers
+route-map to_pwave_mren deny 10
+ match community  CENIC_No_Export
+route-map to_pwave_mren permit 100
+ match community  To_PRP_Affiliates
+ set metric-type internal
+ set metric +54
+route-map to_wrn-gpn_v6 deny 10
+ match community  CENIC_No_Export
+route-map to_wrn-gpn_v6 deny 20
+ match as-path  189
+route-map to_wrn-gpn_v6 permit 100                                
+ match ipv6 address prefix-list CENIC_HPR_Internal_v6
+ set metric 100
+ set community  2153:2153
+route-map to_wrn-gpn_v6 permit 110
+ match community  40
+ set metric-type internal
+route-map to_wrn-gpn_v6 permit 120
+ match community  cf-hpr-international-peer
+ set metric-type internal
+route-map to_wrn-onenet deny 10
+ match community  CENIC_No_Export
+route-map to_wrn-onenet deny 20
+ match as-path  189
+route-map to_wrn-onenet permit 100
+ match ip address prefix-list CENIC_HPR_Internal
+ set metric 100
+ set community  2153:2153
+route-map to_wrn-onenet permit 110
+ match community  40
+ set metric-type internal
+route-map to_wrn-onenet permit 120
+ match community  cf-hpr-international-peer
+ set metric-type internal                                         
+route-map MSDP-SA-FILTER deny 10
+ match ip address  111
+route-map MSDP-SA-FILTER permit 20
+ match ip address  113
+route-map SC14-dampening permit 5
+ match as-path  10
+route-map from_newnet_v6 deny 20
+ match as-path  177
+route-map from_newnet_v6 permit 100
+ match as-path  180
+ set metric 0
+ set local-preference 55 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2152:65436 2152:65438 2153:65506 additive 
+route-map from_newnet_v6 permit 101
+ match community  Abilene_Commercial
+ set metric 0
+ set local-preference 30 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2152:65436 2152:65438 2153:65506 additive 
+route-map from_newnet_v6 permit 102
+ match as-path  173
+ set metric 0
+ set local-preference 30 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2152:65436 2152:65438 2153:65506 additive 
+route-map from_newnet_v6 permit 103
+ match as-path  155
+ set metric 0
+ set local-preference 20 
+ set comm-list CENIC_tags delete 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2152:65436 2152:65438 2153:65506 additive 
+route-map from_newnet_v6 permit 104
+ match as-path  156
+ set metric 0
+ set local-preference 30 
+ set comm-list CENIC_tags delete 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2152:65436 2152:65438 2153:65506 additive 
+route-map from_newnet_v6 permit 110
+ set metric 0
+ set local-preference 70 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2152:65436 2152:65438 2153:65506 additive 
+route-map from_optiputer permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535
+ set ip next-hop 137.164.17.255 
+route-map from_optiputer permit 100                               
+ match ip address prefix-list optiputer
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:1224 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map from_scinet_v6 permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ipv6 next-hop 2607:f380::ff 
+route-map from_scinet_v6 permit 100
+ match ipv6 address prefix-list scinet-v6
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:14031 14031:65426 2153:65438 2153:65439 2153:65506 additive 
+ set metric +320
+route-map from_sdsu-sdmz permit 10
+ match community  blackhole-hpr
+ set ip next-hop 137.164.17.255 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set local-preference 100 
+route-map from_sdsu-sdmz permit 100                               
+ match ip address prefix-list sdsu-sdmz
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65418 2153:65436 2153:65437 2153:65438 2153:65439 2153:65506 additive 
+route-map from_wrn-learn deny 50
+ match as-path  181
+route-map from_wrn-learn permit 100
+ match ip address prefix-list wrn-learn
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 2153:65386 2153:65384 2153:65390 2153:65392 2153:65382 2153:65408 2153:65380 2153:65384 additive 
+route-map to-customer-v6 deny 50
+ match community  CENIC_No_Export
+route-map to-customer-v6 permit 100
+ match community  CENIC_HPR_Internal
+ set metric-type internal
+route-map to-customer-v6 permit 110
+ match ipv6 address prefix-list CENIC_HPR_Internal_v6
+ set metric-type internal
+ set community  2153:2153 additive 
+route-map to-customer-v6 permit 120
+ match community  cf-hpr-charter
+ set metric-type internal                                         
+route-map to-customer-v6 permit 130
+ match community  cf-dc-charter
+ set metric-type internal
+route-map to-customer-v6 permit 140
+ match community  cf-hpr-assoc
+ set metric-type internal
+route-map to-customer-v6 permit 150
+ match community  cf-dc-assoc
+ set metric-type internal
+route-map to-customer-v6 permit 160
+ match community  cf-hpr-internet2-peer
+ set metric-type internal
+route-map to-customer-v6 permit 170
+ match community  cf-hpr-commodity-peer
+ set metric-type internal
+route-map to-customer-v6 permit 180
+ match community  cf-dc-commodity-peer
+ set metric-type internal
+route-map to-wrn-frgp-v6 deny 100
+ match community  CENIC_No_Export
+route-map to-wrn-frgp-v6 permit 120
+ match community  HPR_All
+ set metric-type internal                                         
+route-map to_pwave_sinet deny 15
+ match ip address prefix-list small-prefixes-25
+route-map to_pwave_sinet deny 50
+ match community  CENIC_No_Export
+route-map to_pwave_sinet deny 60
+ match ip address prefix-list bogons
+route-map to_pwave_sinet permit 64
+ match as-path  RT499060
+route-map to_pwave_sinet deny 65
+ match community  DC_CF_PWave_Participant
+route-map to_pwave_sinet deny 66
+ match community  HPR_CF_PWave_Participant
+route-map to_pwave_sinet deny 70
+ match as-path  181
+route-map to_pwave_sinet permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_sinet permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_sinet permit 110
+ match community  DC_CF_Member_Routes
+route-map to_pwave_sinet permit 120
+ match community  HPR_CF_Member_Routes
+route-map to_pwave_sinet permit 130                               
+ match community  DC_CF_Associate_Routes
+route-map to_pwave_sinet permit 140
+ match community  HPR_CF_Associate_Routes
+route-map to_pwave_sinet permit 150
+ match community  HPR_AT_All_I2_Peers
+route-map to_pwave_sinet permit 200
+ match community  AT_SINET
+route-map to_ucsc-SciDMZ deny 10
+ match community  CENIC_No_Export
+route-map to_ucsc-SciDMZ deny 20
+ match community  DC_CF_Member_Routes
+route-map to_ucsc-SciDMZ deny 30
+ match community  DC_CF_Associate_Routes
+route-map to_ucsc-SciDMZ permit 110
+ match ip address prefix-list CENIC_HPR_Internal
+ set community  2153:2153
+route-map to_ucsc-SciDMZ permit 120
+ match community  HPR_CF_Associate_Routes
+ set metric-type internal
+route-map to_ucsc-SciDMZ permit 130
+ match community  HPR_AT_Member_Routes
+ set metric-type internal
+route-map to_ucsc-SciDMZ permit 140                               
+ match community  HPR_Associate_Routes
+ set metric-type internal
+route-map from-caltech-ul permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535
+ set ip next-hop 137.164.17.255 
+route-map from-caltech-ul permit 20
+ match ip address prefix-list UL-export
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2152:65298 2153:32361 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map from-caltech-ul permit 100
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:32361 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map from-ucr-v6-1ge permit 5
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ipv6 next-hop 2607:f380::ff 
+route-map from-ucr-v6-1ge permit 100                              
+ match ipv6 address prefix-list ucr-v6-announce-1ge
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:6106 2153:65418 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from-ucr-v6-1ge permit 110
+ match ipv6 address prefix-list ucr-v6-no-export-1ge
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:6106 2153:65439 2153:65506 2153:65535 additive 
+route-map from_dc_v4multi permit 100
+ match community  dc-network-multicast
+ set local-preference 90 
+route-map from_dc_v4multi permit 110
+ set local-preference 40 
+route-map from_los-nettos permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ip next-hop 137.164.17.255 
+route-map from_los-nettos permit 50
+ match community  hpr-localpref-68
+ set local-preference 68                                          
+ set comm-list CENIC_tags delete 
+ set community  2152:65438 2153:567 2153:65418 2153:65438 2153:65439 2153:65506 2152:65436 2153:65436 additive 
+route-map from_los-nettos permit 100
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65438 2153:567 2153:65418 2153:65438 2153:65439 2153:65506 2152:65436 2153:65436 additive 
+route-map from_pwave_cudi deny 50
+ match as-path  181
+route-map from_pwave_cudi permit 100
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:28569 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_cudi permit 110
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:28569 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_cudi permit 120
+ match ip address prefix-list sanity-32
+ set local-preference 70                                          
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:28569 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_dren deny 50
+ match as-path  181
+route-map from_pwave_dren permit 100
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:668 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_dren permit 110
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:668 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_dren permit 120
+ match ip address prefix-list sanity-32
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:668 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_mren permit 10
+ match community  blackhole-hpr                                   
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535
+ set ip next-hop 137.164.17.255 
+route-map from_pwave_mren permit 100
+ match ip address prefix-list pwave-mren
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:22335 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 2153:65426 additive 
+route-map from_wrn-gpn_v6 deny 50
+ match as-path  181
+route-map from_wrn-gpn_v6 permit 100
+ match ipv6 address prefix-list wrn-gpn-v6
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 2153:65386 2153:65384 2153:65390 2153:65392 2153:65392 2153:65382 2153:65408 2153:65380 2153:65384 additive 
+route-map from_wrn-onenet deny 50
+ match as-path  181
+route-map from_wrn-onenet permit 100
+ match ip address prefix-list wrn-onenet
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 2153:65386 2153:65384 2153:65390 2153:65392 2153:65382 2153:65408 2153:65380 2153:65384 additive 
+route-map to_caltech-inst deny 10
+ match community  CENIC_No_Export
+route-map to_caltech-inst permit 110
+ match community  HPR_All
+ set metric-type internal
+route-map to_esnet_direct deny 10
+ match community  CENIC_No_Export
+route-map to_esnet_direct permit 100
+ match ip address prefix-list CENIC_HPR_Internal
+ set community  2153:2153
+ set metric-type internal
+ set metric +7
+route-map to_esnet_direct permit 110
+ match community  To_I2_Peers_LAX_local
+ set metric-type internal
+ set metric +7
+route-map to_esnet_direct permit 120
+ match community  To_I2_Peers
+ set metric-type internal
+ set metric +7
+route-map to_newnet_v4uni deny 10
+ match community  CENIC_No_Export
+route-map to_newnet_v4uni deny 15                                 
+ match ip address prefix-list to-repeer-32sanity
+route-map to_newnet_v4uni permit 25
+ match community  blackhole-hpr
+ set community  11537:260 11537:911 additive 
+route-map to_newnet_v4uni permit 70
+ match ip address prefix-list i2-pre1-v4uni
+ set as-path prepend  2153
+ set community  11537:2002 65000:16509 additive 
+route-map to_newnet_v4uni permit 75
+ match as-path  401
+ set as-path prepend  2153
+ set community  11537:2002 65000:16509 additive 
+route-map to_newnet_v4uni permit 80
+ match as-path  402
+ set as-path prepend  2153 2153
+ set community  11537:2002 65000:16509 additive 
+route-map to_newnet_v4uni permit 100
+ match community  deprecated-backbone
+ set community  11537:260 11537:2002 65000:16509 additive 
+route-map to_newnet_v4uni permit 110
+ match community  to-repeer
+ set community  11537:2002 65000:16509 additive 
+route-map to_newnet_v4uni permit 120                              
+ match community  to-repeer-i2-la
+ set community  11537:2002 65000:16509 additive 
+route-map to_pwave-wrn-rs deny 100
+ match community  CENIC_No_Export
+route-map to_pwave-wrn-rs permit 110
+ match ip address prefix-list CENIC_HPR_Internal
+ set community  2153:2153
+route-map to_pwave-wrn-rs permit 120
+ match community  HPR_All
+ set metric-type internal
+route-map to_pwave_aarnet deny 5
+ match as-path  392
+route-map to_pwave_aarnet deny 15
+ match ip address prefix-list small-prefixes-25
+route-map to_pwave_aarnet deny 50
+ match community  CENIC_No_Export
+route-map to_pwave_aarnet deny 60
+ match ip address prefix-list bogons
+route-map to_pwave_aarnet deny 70
+ match as-path  181
+route-map to_pwave_aarnet permit 74
+ match as-path  RT499060
+route-map to_pwave_aarnet permit 100                              
+ match community  CENIC_HPR_Internal
+route-map to_pwave_aarnet permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_aarnet permit 150
+ match community  To_PWave_Peers
+route-map to_pwave_reannz deny 1
+route-map to_pwave_reannz deny 15
+ match ip address prefix-list small-prefixes-25
+route-map to_pwave_reannz deny 50
+ match community  CENIC_No_Export
+route-map to_pwave_reannz deny 60
+ match ip address prefix-list bogons
+route-map to_pwave_reannz deny 70
+ match as-path  181
+route-map to_pwave_reannz permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_reannz permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_reannz permit 150
+ match community  To_PWave_Peers
+route-map to_pwave_twaren deny 15
+ match ip address prefix-list small-prefixes-25
+route-map to_pwave_twaren deny 50                                 
+ match community  CENIC_No_Export
+route-map to_pwave_twaren deny 60
+ match ip address prefix-list bogons
+route-map to_pwave_twaren permit 64
+ match as-path  RT499060
+route-map to_pwave_twaren deny 65
+ match community  DC_CF_PWave_Participant
+route-map to_pwave_twaren deny 66
+ match community  HPR_CF_PWave_Participant
+route-map to_pwave_twaren deny 70
+ match as-path  181
+route-map to_pwave_twaren permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_twaren permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_twaren permit 110
+ match community  DC_CF_Member_Routes
+route-map to_pwave_twaren permit 120
+ match community  HPR_CF_Member_Routes
+route-map to_pwave_twaren permit 130
+ match community  DC_CF_Associate_Routes
+route-map to_pwave_twaren permit 140
+ match community  HPR_CF_Associate_Routes                         
+route-map to_pwave_twaren permit 150
+ match community  HPR_AT_All_I2_Peers
+route-map to_pwave_twaren permit 200
+ match community  AT_TWAREN
+route-map to_ucsc-SciDMZ- permit 130
+ match community  HPR_AT_Member_Routes
+ set metric-type internal
+route-map to_wrn-learn_v6 deny 10
+ match community  CENIC_No_Export
+route-map to_wrn-learn_v6 deny 20
+ match as-path  189
+route-map to_wrn-learn_v6 permit 100
+ match ipv6 address prefix-list CENIC_HPR_Internal_v6
+ set metric 100
+ set community  2153:2153
+route-map to_wrn-learn_v6 permit 110
+ match community  40
+ set metric-type internal
+route-map to_wrn-learn_v6 permit 120
+ match community  cf-hpr-international-peer
+ set metric-type internal
+route-map connected-to-bgp permit 10
+ match ip address prefix-list hpr-connector-subnets               
+ set origin igp 
+ set metric -1
+ set community  2153:65506 2153:65535
+route-map connected-to-bgp deny 200
+route-map from-wrn-frgp-v6 permit 5
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ipv6 next-hop 2607:f380::ff 
+route-map from-wrn-frgp-v6 permit 100
+ match ipv6 address prefix-list wrn-frgp-v6-announce
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:14041 2153:65418 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from-wrn-frgp-v6 permit 110
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:14041 2153:65439 2153:65506 2153:65535 additive 
+route-map from_pwave_sinet deny 50
+ match as-path  181
+route-map from_pwave_sinet permit 100
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-72                                
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65385 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_sinet permit 110
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65385 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_sinet permit 120
+ match ip address prefix-list sanity-32
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65385 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_sdsu-lab-v6 permit 10
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535
+ set ipv6 next-hop 2607:f380::ff 
+route-map from_sdsu-lab-v6 permit 100
+ match ipv6 address prefix-list sdsu-sdmz-v6
+ set local-preference 100 
+ set comm-list CENIC_tags delete                                  
+ set community  2152:65436 2152:65438 2153:65418 2153:65436 2153:65437 2153:65438 2153:65439 2153:65506 additive 
+route-map from_ucsc-SciDMZ permit 10
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535
+ set local-preference 100 
+ set ip next-hop 137.164.17.255 
+route-map from_ucsc-SciDMZ permit 100
+ match ip address prefix-list ucsc-SciDMZ
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:5739 2153:65506 2153:65535 additive 
+route-map static-to-bgp-v6 permit 10
+ match ipv6 address prefix-list cust-no-export-v6
+ set ipv6 next-hop 2607:f380::108:9a41:10a1 
+ set origin igp 
+ set as-path tag 
+ set community  2153:65439 2153:65506 2153:65535
+route-map static-to-bgp-v6 permit 20
+ match ipv6 address prefix-list cust-announce-v6
+ set ipv6 next-hop 2607:f380::108:9a41:10a1 
+ set origin igp 
+ set as-path tag                                                  
+ set community  2153:65418 2153:65436 2153:65438 2153:65439 2153:65506
+route-map static-to-bgp-v6 permit 30
+ match ipv6 address prefix-list cust-backup-announce-v6
+ set ipv6 next-hop 2607:f380::108:9a41:10a1 
+ set local-preference 98 
+ set weight 0 
+ set origin igp 
+ set as-path tag 
+ set community  2153:65418 2153:65436 2153:65438 2153:65439 2153:65506
+route-map static-to-bgp-v6 deny 500
+ match ip address prefix-list all-v4
+route-map to_pwave_cudi_v6 deny 50
+ match community  CENIC_No_Export
+route-map to_pwave_cudi_v6 deny 70
+ match as-path  181
+route-map to_pwave_cudi_v6 permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_cudi_v6 permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_cudi_v6 permit 150
+ match community  To_PWave_Peers
+route-map to_pwave_dren_v6 deny 50
+ match community  CENIC_No_Export                                 
+route-map to_pwave_dren_v6 deny 70
+ match as-path  181
+route-map to_pwave_dren_v6 permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_dren_v6 permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_dren_v6 permit 150
+ match community  To_PWave_Peers
+route-map to_pwave_mren-v6 deny 10
+ match community  CENIC_No_Export
+route-map to_pwave_mren-v6 permit 100
+ match community  To_PRP_Affiliates
+ set metric-type internal
+route-map to_wrn-onenet_v6 deny 10
+ match community  CENIC_No_Export
+route-map to_wrn-onenet_v6 deny 20
+ match as-path  189
+route-map to_wrn-onenet_v6 permit 100
+ match ipv6 address prefix-list CENIC_HPR_Internal_v6
+ set metric 100
+ set community  2153:2153
+route-map to_wrn-onenet_v6 permit 110
+ match community  40                                              
+ set metric-type internal
+route-map to_wrn-onenet_v6 permit 120
+ match community  cf-hpr-international-peer
+ set metric-type internal
+route-map MSDP-SA-RP-FILTER deny 10
+ match ip route-source  124
+route-map MSDP-SA-RP-FILTER permit 20
+ match ip route-source  125
+route-map connected-to-isis permit 10
+ match ip address prefix-list hpr-connector-subnets-isis
+route-map connected-to-isis deny 200
+route-map from_caltech-inst permit 10
+ match community  blackhole-hpr
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ip next-hop 137.164.17.255 
+route-map from_caltech-inst permit 100
+ set local-preference 100 
+ set community  2152:65436 2152:65438 2153:31 2153:65418 2153:65436 2153:65438 2153:65439 2153:65507 additive 
+route-map from_esnet_direct deny 50
+ match as-path  181
+route-map from_esnet_direct permit 100                            
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:72 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_esnet_direct permit 110
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:68 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_esnet_direct permit 120
+ match ip address prefix-list sanity-32
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_newnet_v4uni deny 15
+ match ip address prefix-list to-repeer-32sanity
+route-map from_newnet_v4uni deny 20
+ match as-path  177
+route-map from_newnet_v4uni permit 50
+ match ip address prefix-list i2-pref-v4uni
+ set metric 0                                                     
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_v4uni permit 80
+ match ip address  105
+ set metric 0
+ set local-preference 61 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_v4uni permit 90
+ match as-path  180
+ set metric 0
+ set local-preference 55 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_v4uni permit 100
+ match as-path  390
+ set metric 0
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_v4uni permit 300
+ set metric 0                                                     
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_pwave_aarnet deny 5
+ match as-path  392
+route-map from_pwave_aarnet deny 50
+ match as-path  181
+route-map from_pwave_aarnet permit 100
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65393 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_aarnet permit 110
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65393 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_aarnet permit 120
+ match ip address prefix-list sanity-32
+ set local-preference 70 
+ set comm-list CENIC_tags delete                                  
+ set community  2152:65436 2152:65438 2153:65393 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_reannz deny 1
+route-map from_pwave_reannz deny 50
+ match as-path  181
+route-map from_pwave_reannz permit 100
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_reannz permit 110
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_reannz permit 120
+ match ip address prefix-list sanity-32
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_twaren deny 50
+ match as-path  181                                               
+route-map from_pwave_twaren permit 100
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65387 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_twaren permit 110
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65387 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_twaren permit 120
+ match ip address prefix-list sanity-32
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65387 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_sdsu-sdmz-v6 permit 10
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535
+ set ipv6 next-hop 2607:f380::ff 
+route-map from_sdsu-sdmz-v6 permit 100                            
+ match ipv6 address prefix-list sdsu-sdmz-v6
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65418 2153:65436 2153:65437 2153:65438 2153:65439 2153:65506 additive 
+route-map from_wrn-learn_v6 deny 50
+ match as-path  181
+route-map from_wrn-learn_v6 permit 100
+ match ipv6 address prefix-list wrn-learn-v6
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 2153:65386 2153:65384 2153:65390 2153:65392 2153:65382 2153:65408 2153:65380 2153:65384 additive 
+route-map to_in2_chic_v4uni deny 300
+ match ip address prefix-list deny-all-in2-chicago
+route-map to_newnet_v4multi deny 10
+ match community  CENIC_No_Export
+route-map to_newnet_v4multi deny 15
+ match ip address prefix-list to-repeer-32sanity
+route-map to_newnet_v4multi deny 50
+ match ip address prefix-list i2-no-v4multi
+route-map to_newnet_v4multi permit 70
+ match ip address prefix-list i2-pre2-v4multi
+route-map to_newnet_v4multi permit 75
+ match ip address prefix-list i2-pre1-v4multi                     
+ set as-path prepend  2153
+route-map to_newnet_v4multi permit 100
+ match community  deprecated-backbone
+ set community  11537:260 additive 
+route-map to_newnet_v4multi permit 110
+ match community  to-repeer
+route-map to_newnet_v4multi permit 120
+ match community  to-repeer-i2-la
+route-map to_newnet_v6multi deny 10
+ match community  CENIC_No_Export
+route-map to_newnet_v6multi deny 15
+ match ipv6 address prefix-list to-repeer-v6sanity
+route-map to_newnet_v6multi deny 50
+ match ipv6 address prefix-list i2-no-v6multi
+route-map to_newnet_v6multi permit 70
+ match ipv6 address prefix-list i2-pre2-v6multi
+ set as-path prepend  2153 2153
+route-map to_newnet_v6multi permit 75
+ match ipv6 address prefix-list i2-pre1-v6multi
+ set as-path prepend  2153
+route-map to_newnet_v6multi permit 100
+ match community  deprecated-backbone
+ set community  11537:260 additive                                
+route-map to_newnet_v6multi permit 110
+ match community  to-repeer
+route-map to_newnet_v6multi permit 120
+ match community  to-repeer-i2-la
+route-map to_pwave_transpac deny 15
+ match ip address prefix-list small-prefixes-25
+route-map to_pwave_transpac deny 50
+ match community  CENIC_No_Export
+route-map to_pwave_transpac deny 60
+ match ip address prefix-list bogons
+route-map to_pwave_transpac deny 65
+ match community  DC_CF_PWave_Participant
+route-map to_pwave_transpac deny 66
+ match community  HPR_CF_PWave_Participant
+route-map to_pwave_transpac deny 70
+ match as-path  181
+route-map to_pwave_transpac permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_transpac permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_transpac permit 110
+ match community  DC_CF_Member_Routes
+route-map to_pwave_transpac permit 120                            
+ match community  HPR_CF_Member_Routes
+route-map to_pwave_transpac permit 130
+ match community  DC_CF_Associate_Routes
+route-map to_pwave_transpac permit 140
+ match community  HPR_CF_Associate_Routes
+route-map to_pwave_transpac permit 150
+ match community  HPR_AT_All_I2_Peers
+route-map to_pwave_transpac permit 200
+ match community  AT_transpac
+route-map to_ucsc-SciDMZ-v6 deny 10
+ match community  CENIC_No_Export
+route-map to_ucsc-SciDMZ-v6 deny 20
+ match community  DC_CF_Member_Routes
+route-map to_ucsc-SciDMZ-v6 deny 30
+ match community  DC_CF_Associate_Routes
+route-map to_ucsc-SciDMZ-v6 permit 110
+ match ipv6 address prefix-list CENIC_HPR_Internal_v6
+ set community  2153:2153
+route-map to_ucsc-SciDMZ-v6 permit 120
+ match community  HPR_CF_Associate_Routes
+ set metric-type internal
+route-map to_ucsc-SciDMZ-v6 permit 130
+ match community  HPR_AT_Member_Routes                            
+ set metric-type internal
+route-map from-caltech-ul-v6 permit 5
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535
+ set ipv6 next-hop 2607:f380::ff 
+route-map from-caltech-ul-v6 permit 100
+ match ipv6 address prefix-list caltech-ultralight-v6-announce
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:32361 2153:65418 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from-caltech-ul-v6 permit 110
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:32361 2153:65439 2153:65506 2153:65535 additive 
+route-map from-los-nettos-v6 permit 5
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535 additive 
+ set ipv6 next-hop 2607:f380::ff 
+route-map from-los-nettos-v6 permit 6
+ set local-preference 100 
+ set comm-list CENIC_tags delete                                  
+ set community  2153:567 2153:65418 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from-los-nettos-v6 permit 7
+ match community  HPR_AT_All_I2_Peers
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:567 2153:65418 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from-los-nettos-v6 permit 110
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:567 2153:65436 2153:65438 2152:65436 2152:65438 2153:65439 2153:65506 2153:65535 additive 
+route-map from_pwave_cudi_v6 deny 50
+ match as-path  181
+route-map from_pwave_cudi_v6 permit 100
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:28569 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_cudi_v6 permit 110
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:28569 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_cudi_v6 permit 120                           
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:28569 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_dren_v6 deny 50
+ match as-path  181
+route-map from_pwave_dren_v6 permit 100
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:668 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_dren_v6 permit 110
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:668 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_dren_v6 permit 120
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:668 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_mren-v6 permit 10
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535                               
+ set local-preference 100 
+ set ipv6 next-hop 2607:f380::ff 
+route-map from_pwave_mren-v6 permit 100
+ match ipv6 address prefix-list pwave-mren-v6
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:22335 2153:65506 2153:65535 2153:65426 additive 
+ set metric +54
+route-map from_wrn-onenet_v6 deny 50
+ match as-path  181
+route-map from_wrn-onenet_v6 permit 100
+ match ipv6 address prefix-list wrn-onenet-v6
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 2153:65386 2153:65384 2153:65390 2153:65392 2153:65392 2153:65382 2153:65408 2153:65380 2153:65384 additive 
+route-map tag-bbone-prefixes permit 5
+ set origin igp 
+ set community  2152:65436 2152:65438 2153:2153 2153:65418 2153:65436 2153:65438 2153:65506
+ set metric -1
+route-map to_esnet_direct_v6 deny 10
+ match community  CENIC_No_Export
+ set metric 15
+route-map to_esnet_direct_v6 permit 110                           
+ match community  To_I2_Peers_LAX_local
+ set metric-type internal
+ set metric +7
+route-map to_esnet_direct_v6 permit 120
+ match community  To_I2_Peers
+ set metric-type internal
+ set metric +7
+route-map to_pwave-wrn-rs_v6 deny 100
+ match community  CENIC_No_Export
+route-map to_pwave-wrn-rs_v6 permit 110
+ match ip address prefix-list CENIC_HPR_Internal_v6
+ set community  2153:2153
+route-map to_pwave-wrn-rs_v6 permit 120
+ match community  HPR_All
+ set metric-type internal
+route-map to_pwave_aarnet_v6 deny 5
+ match as-path  392
+route-map to_pwave_aarnet_v6 deny 50
+ match community  CENIC_No_Export
+route-map to_pwave_aarnet_v6 deny 70
+ match as-path  181
+route-map to_pwave_aarnet_v6 permit 74
+ match as-path  RT499060                                          
+route-map to_pwave_aarnet_v6 permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_aarnet_v6 permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_aarnet_v6 permit 150
+ match community  To_PWave_Peers
+route-map to_pwave_reannz_v6 deny 1
+route-map to_pwave_reannz_v6 deny 50
+ match community  CENIC_No_Export
+route-map to_pwave_reannz_v6 deny 70
+ match as-path  181
+route-map to_pwave_reannz_v6 permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_reannz_v6 permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_reannz_v6 permit 150
+ match community  To_PWave_Peers
+route-map to_pwave_twaren_v6 deny 50
+ match community  CENIC_No_Export
+route-map to_pwave_twaren_v6 permit 64
+ match as-path  RT499060
+route-map to_pwave_twaren_v6 deny 65
+ match community  DC_CF_PWave_Participant                         
+route-map to_pwave_twaren_v6 deny 66
+ match community  HPR_CF_PWave_Participant
+route-map to_pwave_twaren_v6 deny 70
+ match as-path  181
+route-map to_pwave_twaren_v6 permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_twaren_v6 permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_twaren_v6 permit 110
+ match community  DC_CF_Member_Routes
+route-map to_pwave_twaren_v6 permit 120
+ match community  HPR_CF_Member_Routes
+route-map to_pwave_twaren_v6 permit 130
+ match community  DC_CF_Associate_Routes
+route-map to_pwave_twaren_v6 permit 140
+ match community  HPR_CF_Associate_Routes
+route-map to_pwave_twaren_v6 permit 150
+ match community  HPR_AT_All_I2_Peers
+route-map to_pwave_twaren_v6 permit 200
+ match community  AT_TWAREN
+route-map to_ucsc-HPR-Campus deny 10
+ match community  CENIC_No_Export
+route-map to_ucsc-HPR-Campus permit 110                           
+ match ip address prefix-list CENIC_HPR_Internal
+ set community  2153:2153
+route-map to_ucsc-HPR-Campus permit 120
+ match community  HPR_All
+ set metric-type internal
+route-map connected-to-bgp-v6 permit 10
+ match ipv6 address prefix-list hpr-v6-connector-subnets
+ set origin igp 
+ set metric -1
+ set community  2153:65506 2153:65535
+route-map connected-to-bgp-v6 deny 200
+route-map from_in2_chic_v4uni deny 300
+ match ip address prefix-list deny-all-in2-chicago
+route-map from_newnet_v4multi deny 15
+ match ip address prefix-list to-repeer-32sanity
+route-map from_newnet_v4multi permit 50
+ match ip address prefix-list i2-pref-v4multi
+ set metric 0
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2152:65506 2153:65397 2153:65417 2153:65419 2153:65436 2153:65438 additive 
+route-map from_newnet_v4multi permit 80
+ match ip address  105                                            
+ set metric 0
+ set local-preference 61 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2152:65506 2153:65397 2153:65417 2153:65419 2153:65436 2153:65438 additive 
+route-map from_newnet_v4multi permit 90
+ match as-path  180
+ set metric 0
+ set local-preference 55 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2152:65506 2153:65397 2153:65417 2153:65419 2153:65436 2153:65438 additive 
+route-map from_newnet_v4multi permit 100
+ match as-path  392
+ set metric 0
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2152:65506 2153:65397 2153:65417 2153:65419 2153:65436 2153:65438 additive 
+route-map from_newnet_v4multi permit 110
+ match ip address prefix-list newnet_v4multi_depref
+ set metric 0
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_v4multi permit 300                          
+ set metric 0
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2152:65506 2153:65397 2153:65417 2153:65419 2153:65436 2153:65438 additive 
+route-map from_newnet_v6multi deny 15
+ match ipv6 address prefix-list to-repeer-v6sanity
+route-map from_newnet_v6multi permit 100
+ match as-path  183
+ set metric 0
+ set local-preference 55 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2153:65506 additive 
+route-map from_newnet_v6multi permit 101
+ match community  Abilene_Commercial
+ set metric 0
+ set local-preference 30 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2153:65506 additive 
+route-map from_newnet_v6multi permit 102
+ match as-path  174
+ set metric 0
+ set local-preference 30 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2153:65506 additive 
+route-map from_newnet_v6multi permit 103
+ match as-path  157                                               
+ set metric 0
+ set local-preference 20 
+ set comm-list CENIC_tags delete 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2153:65506 additive 
+route-map from_newnet_v6multi permit 104
+ match as-path  158
+ set metric 0
+ set local-preference 30 
+ set comm-list CENIC_tags delete 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2153:65506 additive 
+route-map from_newnet_v6multi permit 110
+ match ip address prefix-list deny-all
+ set metric 0
+ set local-preference 70 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_transpac deny 50
+ match as-path  181
+route-map from_pwave_transpac permit 100
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65385 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_transpac permit 110
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65385 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_transpac permit 120
+ match ip address prefix-list sanity-32
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65385 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_ucsc-SciDMZ-v6 permit 10
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535
+ set local-preference 100 
+ set ipv6 next-hop 2607:f380::ff 
+route-map from_ucsc-SciDMZ-v6 permit 100
+ match ipv6 address prefix-list ucsc-SciDMZ-v6
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:5739 2153:65506 2153:65535 additive 
+route-map to_in2_chic_v4multi deny 300                            
+ match ip address prefix-list deny-all-in2-chicago
+route-map to_newnet_depref_v6 deny 5
+ match community  CENIC_No_Export
+route-map to_newnet_depref_v6 permit 100
+ match community  20
+ set community  11537:140 65000:3549 65000:16509 additive 
+route-map to_newnet_depref_v6 permit 110
+ match community  50
+ set community  11537:140 65000:3549 65000:16509 additive 
+route-map to_pwave_ultralight deny 15
+ match ip address prefix-list small-prefixes-25
+route-map to_pwave_ultralight deny 20
+ match as-path  104
+route-map to_pwave_ultralight deny 50
+ match community  CENIC_No_Export
+route-map to_pwave_ultralight deny 60
+ match ip address prefix-list bogons
+route-map to_pwave_ultralight deny 65
+ match community  DC_CF_PWave_Participant
+route-map to_pwave_ultralight deny 66
+ match community  HPR_CF_PWave_Participant
+route-map to_pwave_ultralight deny 70
+ match as-path  181                                               
+route-map to_pwave_ultralight permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_ultralight permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_ultralight permit 110
+ match community  DC_CF_Member_Routes
+route-map to_pwave_ultralight permit 120
+ match community  HPR_CF_Member_Routes
+route-map to_pwave_ultralight permit 130
+ match community  DC_CF_Associate_Routes
+route-map to_pwave_ultralight permit 140
+ match community  HPR_CF_Associate_Routes
+route-map to_pwave_ultralight permit 150
+ match community  HPR_AT_All_I2_Peers
+route-map to_ucsc-HPR-Campus- permit 130
+ match community  HPR_AT_Member_Routes
+ set metric-type internal
+route-map connected-to-isis-v6 permit 10
+ match ipv6 address prefix-list hpr-v6-connector-subnets-isis
+route-map connected-to-isis-v6 deny 200
+route-map from_esnet_direct_v6 deny 50
+ match as-path  181
+route-map from_esnet_direct_v6 permit 100                         
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:72 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_esnet_direct_v6 permit 110
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:68 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_esnet_direct_v6 permit 120
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_aarnet_v6 deny 5
+ match as-path  392
+route-map from_pwave_aarnet_v6 deny 50
+ match as-path  181
+route-map from_pwave_aarnet_v6 permit 100
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65393 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_aarnet_v6 permit 110                         
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65393 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_aarnet_v6 permit 120
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65393 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_reannz_v6 deny 1
+route-map from_pwave_reannz_v6 deny 50
+ match as-path  181
+route-map from_pwave_reannz_v6 permit 100
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_reannz_v6 permit 110
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_reannz_v6 permit 120
+ set local-preference 70                                          
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_twaren_v6 deny 50
+ match as-path  181
+route-map from_pwave_twaren_v6 permit 100
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65387 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_twaren_v6 permit 110
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65387 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_twaren_v6 permit 113
+ match as-path  155
+ set local-preference 30 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65387 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_twaren_v6 permit 114
+ match as-path  156
+ set local-preference 30 
+ set comm-list CENIC_tags delete                                  
+ set community  2152:65436 2152:65438 2153:65387 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_twaren_v6 permit 120
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65387 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_ucsc-HPR-Campus permit 10
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535
+ set local-preference 100 
+ set ip next-hop 137.164.17.255 
+route-map from_ucsc-HPR-Campus permit 100
+ match ip address prefix-list ucsc-HPR-Campus
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:5739 2153:65418 2153:65436 2153:65438 2153:65439 2153:65506 additive 
+route-map to-caltech-ul-lhcone permit 110
+ match community  cf-lhcone
+ set metric-type internal
+route-map to_al3scentral_v4uni deny 10
+ match community  CENIC_No_Export
+route-map to_al3scentral_v4uni deny 15
+ match ip address prefix-list to-repeer-32sanity                  
+route-map to_al3scentral_v4uni permit 25
+ match community  blackhole-hpr
+ set community  11537:260 11537:911 additive 
+route-map to_al3scentral_v4uni permit 70
+ match ip address prefix-list i2-pre1-v4uni
+ set as-path prepend  2153
+ set community  11537:2002 65000:16509 additive 
+route-map to_al3scentral_v4uni permit 75
+ match as-path  401
+ set as-path prepend  2153
+ set community  11537:2002 65000:16509 additive 
+route-map to_al3scentral_v4uni permit 80
+ match as-path  402
+ set as-path prepend  2153 2153
+ set community  11537:2002 65000:16509 additive 
+route-map to_al3scentral_v4uni permit 100
+ match community  deprecated-backbone
+ set community  11537:260 11537:2002 65000:16509 additive 
+route-map to_al3scentral_v4uni permit 110
+ match community  to-repeer
+ set community  11537:2002 65000:16509 additive 
+route-map to_pwave_transpac_v6 deny 50
+ match community  CENIC_No_Export                                 
+route-map to_pwave_transpac_v6 deny 65
+ match community  DC_CF_PWave_Participant
+route-map to_pwave_transpac_v6 deny 66
+ match community  HPR_CF_PWave_Participant
+route-map to_pwave_transpac_v6 deny 70
+ match as-path  181
+route-map to_pwave_transpac_v6 permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_transpac_v6 permit 105
+ match community  CENIC_DC_Internal
+route-map to_pwave_transpac_v6 permit 110
+ match community  DC_CF_Member_Routes
+route-map to_pwave_transpac_v6 permit 120
+ match community  HPR_CF_Member_Routes
+route-map to_pwave_transpac_v6 permit 130
+ match community  DC_CF_Associate_Routes
+route-map to_pwave_transpac_v6 permit 140
+ match community  HPR_CF_Associate_Routes
+route-map to_pwave_transpac_v6 permit 150
+ match community  HPR_AT_All_I2_Peers
+route-map to_pwave_transpac_v6 permit 200
+ match community  AT_transpac
+route-map EBGP-CUST-FULL-V6-OUT deny 10                           
+ match community  CENIC_No_Export
+route-map EBGP-CUST-FULL-V6-OUT permit 100
+ match community  CENIC_HPR_Internal
+ set metric-type internal
+route-map EBGP-CUST-FULL-V6-OUT permit 110
+ match community  DC_CF_COMMODITY_PEER
+ set metric-type internal
+route-map EBGP-CUST-FULL-V6-OUT permit 120
+ match community  HPR_CF_COMMODITY_PEER
+ set metric-type internal
+route-map EBGP-CUST-FULL-V6-OUT permit 130
+ match community  HPR_CF_I2_PEER
+ set metric-type internal
+route-map EBGP-CUST-FULL-V6-OUT permit 140
+ match community  HPR_AT_MEMBERS
+ set metric-type internal
+route-map EBGP-CUST-FULL-V6-OUT permit 150
+ match community  DC_CF_Associate_Routes
+ set metric-type internal
+route-map EBGP-CUST-FULL-V6-OUT permit 160
+ match community  HPR_CF_Associate_Routes
+ set metric-type internal
+route-map from_in2_chic_v4multi deny 300                          
+ match ip address prefix-list deny-all-in2-chicago
+route-map from_newnet_depref_v6 deny 20
+ match as-path  177
+route-map from_newnet_depref_v6 permit 100
+ match as-path  180
+ set metric 0
+ set local-preference 5 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2152:65436 2152:65438 2153:65506 additive 
+route-map from_newnet_depref_v6 permit 101
+ match community  Abilene_Commercial
+ set metric 0
+ set local-preference 3 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2152:65436 2152:65438 2153:65506 additive 
+route-map from_newnet_depref_v6 permit 102
+ match as-path  173
+ set metric 0
+ set local-preference 3 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2152:65436 2152:65438 2153:65506 additive 
+route-map from_newnet_depref_v6 permit 103
+ match as-path  155
+ set metric 0
+ set local-preference 2 
+ set comm-list CENIC_tags delete                                  
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2152:65436 2152:65438 2153:65506 additive 
+route-map from_newnet_depref_v6 permit 104
+ match as-path  156
+ set metric 0
+ set local-preference 3 
+ set comm-list CENIC_tags delete 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2152:65436 2152:65438 2153:65506 additive 
+route-map from_newnet_depref_v6 permit 110
+ set metric 0
+ set local-preference 20 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2152:65436 2152:65438 2153:65506 additive 
+route-map from_pwave_ultralight deny 50
+ match as-path  181
+route-map from_pwave_ultralight permit 100
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_ultralight permit 110
+ match ip address prefix-list sanity-32
+ match community  hpr-localpref-68
+ set local-preference 68                                          
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_ultralight permit 115
+ match ip address prefix-list pwave_ultralight
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_ultralight permit 120
+ match ip address prefix-list sanity-32
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map tag-bbone-v6-prefixes permit 5
+ set origin igp 
+ set community  2153:2153 2153:65418 2153:65436 2153:65438
+route-map from-caltech-ul-lhcone permit 60
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:32361 2153:65424 2153:65439 2153:65506 additive 
+route-map from_al3scentral_v4uni permit 2
+ set metric 0
+ set local-preference 72 
+ set comm-list CENIC_tags delete                                  
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_al3scentral_v4uni deny 10
+ match community  i2-no-central
+route-map from_pwave_transpac_v6 deny 50
+ match as-path  181
+route-map from_pwave_transpac_v6 permit 100
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65385 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_transpac_v6 permit 110
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65385 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_transpac_v6 permit 113
+ match as-path  155
+ set local-preference 30 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65385 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_transpac_v6 permit 114
+ match as-path  156
+ set local-preference 30                                          
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65385 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_transpac_v6 permit 120
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65385 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map to_newnet_depref_v4uni deny 10
+ match community  CENIC_No_Export
+route-map to_newnet_depref_v4uni deny 15
+ match ip address prefix-list to-repeer-32sanity
+route-map to_newnet_depref_v4uni permit 25
+ match community  blackhole-hpr
+ set community  11537:260 11537:911 additive 
+route-map to_newnet_depref_v4uni permit 70
+ match ip address prefix-list i2-pre1-v4uni
+ set as-path prepend  2153
+ set community  11537:140 11537:2002 65000:16509 additive 
+route-map to_newnet_depref_v4uni permit 75
+ match as-path  401
+ set as-path prepend  2153
+ set community  11537:140 11537:2002 65000:16509 additive 
+route-map to_newnet_depref_v4uni permit 80
+ match as-path  402                                               
+ set as-path prepend  2153 2153
+ set community  11537:140 11537:2002 65000:16509 additive 
+route-map to_newnet_depref_v4uni permit 100
+ match community  deprecated-backbone
+ set community  11537:140 11537:2002 65000:16509 additive 
+route-map to_newnet_depref_v4uni permit 110
+ match community  to-repeer
+ set community  11537:140 11537:2002 11537:2002 65000:16509 additive 
+route-map to_newnet_depref_v4uni permit 120
+ match community  to-repeer-i2-la
+ set community  11537:140 11537:2002 65000:16509 additive 
+route-map to_pwave_ultralight_v6 deny 50
+ match community  CENIC_No_Export
+route-map to_pwave_ultralight_v6 deny 65
+ match community  DC_CF_PWave_Participant
+route-map to_pwave_ultralight_v6 deny 66
+ match community  HPR_CF_PWave_Participant
+route-map to_pwave_ultralight_v6 deny 70
+ match as-path  181
+route-map to_pwave_ultralight_v6 permit 100
+ match community  CENIC_HPR_Internal
+route-map to_pwave_ultralight_v6 permit 105
+ match community  CENIC_DC_Internal                               
+route-map to_pwave_ultralight_v6 permit 110
+ match community  DC_CF_Member_Routes
+route-map to_pwave_ultralight_v6 permit 120
+ match community  HPR_CF_Member_Routes
+route-map to_pwave_ultralight_v6 permit 130
+ match community  DC_CF_Associate_Routes
+route-map to_pwave_ultralight_v6 permit 140
+ match community  HPR_CF_Associate_Routes
+route-map to_pwave_ultralight_v6 permit 150
+ match community  HPR_AT_All_I2_Peers
+route-map from_ucsc-HPR-Campus-v6 permit 3
+ match community  blackhole-hpr
+ set comm-list CENIC_tags delete 
+ set community  2153:666 2153:65535
+ set ipv6 next-hop 2607:f380::ff 
+route-map from_ucsc-HPR-Campus-v6 permit 5
+ match ipv6 address prefix-list ucsc-HPR-Campus-v6-announce
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:5739 2153:65418 2153:65436 2153:65438 2153:65298 2153:65506 2152:65436 2152:65438 2153:65439 2152:65298 additive 
+route-map from_ucsc-HPR-Campus-v6 permit 7
+ match community  HPR_AT_All_I2_Peers
+ set local-preference 100                                         
+ set comm-list CENIC_tags delete 
+ set community  2153:5739 2153:65418 2153:65436 2153:65438 2153:65439 2152:65298 2153:65298 2153:65506 additive 
+route-map from_ucsc-HPR-Campus-v6 permit 10
+ set local-preference 100 
+ set comm-list CENIC_tags delete 
+ set community  2153:5739 2153:65436 2153:65438 2153:65439 2153:65506 2153:65535 additive 
+route-map from_newnet_depref_v4uni deny 15
+ match ip address prefix-list to-repeer-32sanity
+route-map from_newnet_depref_v4uni deny 20
+ match as-path  177
+route-map from_newnet_depref_v4uni permit 50
+ match ip address prefix-list i2-pref-v4uni
+ set metric 0
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_depref_v4uni permit 80
+ match ip address  105
+ set metric 0
+ set local-preference 11 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_depref_v4uni permit 90                      
+ match as-path  180
+ set metric 0
+ set local-preference 5 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_depref_v4uni permit 100
+ match as-path  390
+ set metric 0
+ set local-preference 18 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_depref_v4uni permit 300
+ set metric 0
+ set local-preference 20 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_pwave_ultralight_v6 deny 50
+ match as-path  181
+route-map from_pwave_ultralight_v6 permit 100
+ match community  hpr-localpref-72
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_ultralight_v6 permit 110
+ match community  hpr-localpref-68
+ set local-preference 68 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map from_pwave_ultralight_v6 permit 120
+ set local-preference 70 
+ set comm-list CENIC_tags delete 
+ set community  2152:65436 2152:65438 2153:65419 2153:65421 2153:65436 2153:65438 2153:65506 additive 
+route-map to_newnet_depref_v4multi deny 10
+ match community  CENIC_No_Export
+route-map to_newnet_depref_v4multi deny 15
+ match ip address prefix-list to-repeer-32sanity
+route-map to_newnet_depref_v4multi deny 50
+ match ip address prefix-list i2-no-v4multi
+route-map to_newnet_depref_v4multi permit 70
+ match ip address prefix-list i2-pre2-v4multi
+route-map to_newnet_depref_v4multi permit 75
+ match ip address prefix-list i2-pre1-v4multi
+ set as-path prepend  2153
+route-map to_newnet_depref_v4multi permit 100
+ match community  deprecated-backbone
+ set community  11537:260 additive                                
+route-map to_newnet_depref_v4multi permit 110
+ match community  to-repeer
+route-map to_newnet_depref_v4multi permit 120
+ match community  to-repeer-i2-la
+route-map to_newnet_depref_v6multi deny 10
+ match community  CENIC_No_Export
+route-map to_newnet_depref_v6multi deny 15
+ match ipv6 address prefix-list to-repeer-v6sanity
+route-map to_newnet_depref_v6multi deny 50
+ match ipv6 address prefix-list i2-no-v6multi
+route-map to_newnet_depref_v6multi permit 70
+ match ipv6 address prefix-list i2-pre2-v6multi
+ set as-path prepend  2153 2153
+route-map to_newnet_depref_v6multi permit 75
+ match ipv6 address prefix-list i2-pre1-v6multi
+ set as-path prepend  2153
+route-map to_newnet_depref_v6multi permit 100
+ match community  deprecated-backbone
+ set community  11537:260 additive 
+route-map to_newnet_depref_v6multi permit 110
+ match community  to-repeer
+route-map to_newnet_depref_v6multi permit 120
+ match community  to-repeer-i2-la                                 
+route-map from_newnet_depref_v4multi deny 15
+ match ip address prefix-list to-repeer-32sanity
+route-map from_newnet_depref_v4multi permit 50
+ match ip address prefix-list i2-pref-v4multi
+ set metric 0
+ set local-preference 72 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_depref_v4multi permit 80
+ match ip address  105
+ set metric 0
+ set local-preference 11 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_depref_v4multi permit 90
+ match as-path  180
+ set metric 0
+ set local-preference 5 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_depref_v4multi permit 100
+ match as-path  392
+ set metric 0                                                     
+ set local-preference 18 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_depref_v4multi permit 110
+ match ip address prefix-list newnet_depref_v4multi_depref
+ set metric 0
+ set local-preference 18 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_depref_v4multi permit 300
+ set metric 0
+ set local-preference 20 
+ set comm-list CENIC_tags delete 
+ set community  2153:65397 2153:65419 2153:65436 additive 
+route-map from_newnet_depref_v6multi deny 15
+ match ipv6 address prefix-list to-repeer-v6sanity
+route-map from_newnet_depref_v6multi permit 100
+ match as-path  183
+ set metric 0
+ set local-preference 5 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2153:65506 additive 
+route-map from_newnet_depref_v6multi permit 101
+ match community  Abilene_Commercial                              
+ set metric 0
+ set local-preference 3 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2153:65506 additive 
+route-map from_newnet_depref_v6multi permit 102
+ match as-path  174
+ set metric 0
+ set local-preference 3 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2153:65506 additive 
+route-map from_newnet_depref_v6multi permit 103
+ match as-path  157
+ set metric 0
+ set local-preference 2 
+ set comm-list CENIC_tags delete 
+ set community  2153:11537 2153:65397 2153:65419 2153:65436 2153:65438 2153:65506 additive 

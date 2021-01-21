@@ -1,0 +1,191 @@
+---
+  ticket: NOC-639688
+  page_title: PDC-AGG1 Upgrade 17.3R3-S10
+  parent_page_id: 8884131
+  link: False
+  summary:
+    - Upgrade pdc-agg1
+  level:
+    - 3
+  rh:
+    - 
+  exec:
+    - Core
+  approval:
+    - 
+  impact:
+    - 16206
+    - 7071
+    - 7081
+    - 7141
+    - 6046
+    - 16211
+    - 7220
+    - 7111
+    - 2913
+    - 6329
+    - 7555
+  escalation:
+    - 
+  p_rollback:
+    - 'No'
+  rollback:
+    - Rollback is reverse of MOP
+  pm:
+    pdc-agg1:
+      - Verify OOB
+      - Upload code
+  shipping:
+  sections:
+    'Deactivate GRES/NSR/Sync':
+      - cmd-core:
+        - Remove GRES, NSR, and commit sync from pdc-agg1
+        - |-
+          deactivate routing-options nonstop-routing
+          deactivate chassis redundancy graceful-switchover
+          deactivate system commit synchronize
+          commit synchronize
+      - cmd-core:
+        - Verify code is uploaded
+        - file list /var/tmp/ | match vmhost
+      - cmd-core:
+        - Create a snapshot
+        - request system snapshot
+    'Upgrade Backup RE':
+      - cmd-core:
+        - Install code to backup RE, takes ~ 15 minutes
+        - request system software add re1 /var/tmp/junos-vmhost-install-mx-x86-64-17.3R3-S10.1.tgz
+      - cmd-core:
+        - Reboot RE1 - will cause connectivity to drop
+        - request system reboot other-routing-engine
+      - cmd-core:
+        - Wait until Backup RE reloads. Once Backup RE reboots, verify new code is loaded
+        - |-
+          show chassis routing-engine invoke-on other-routing-engine
+          show version invoke-on other-routing-engine
+    'Upgrade Master RE':
+      - cmd-core:
+        - Switch the REs (Master becomes the backup) and verify (wait until services restore, this can take ~15 minutes)
+        - |-
+          request chassis routing-engine master switch
+          show chassis routing-engine
+      - cmd-core:
+        - Install code to new backup RE, takes ~ 15 minutes
+        - request system software add validate re0 /var/tmp/junos-vmhost-install-mx-x86-64-17.3R3-S10.1.tgz
+      - cmd-core:
+        - Reboot router
+        - request vmhost reboot
+    'Verification':
+      - cmd-core:
+        - Check version
+        - show version invoke-on all-routing-engines
+      - cmd-core:
+        - Switch RE0 back to primary (if not already). Will cause impact.
+        - request chassis routing-engine master switch
+      - cmd-core:
+        - Activate GRES/NSR/Commit sync
+        - |- 
+          rollback 1
+          commit synchronize and-quit
+      - cmd-core:
+        - Verify GRES/NSR
+        - |-
+          show chassis routing-engine
+          request routing-engine login re1
+          show system switchover
+          show task replication
+
+
+
+
+# Fix spacing
+
+
+# Reset
+  # ticket: 
+  # summary:
+  #   - 
+  # level:
+  #   - 
+  # rh:
+  #   - 
+  # exec:
+  #   - 
+  # approval:
+  #   - 
+  # impact:
+  #   - 
+  # escalation:
+  #   - 
+  # p_rollback:
+  #   - 'Yes'
+  # rollback:
+  #   - Rollback is reverse of MOP
+  # pm:
+    
+  # shipping:
+    
+  # sections:
+
+
+
+# EXAMPLE
+
+  # ticket: 631299
+  # summary:
+  #   - Retrieve & ship linecard from tus-agg3
+  # level:
+  #   - '0'
+  # rh:
+  #   - TUST1
+  # exec:
+  #   - NOC
+  # approval:
+  #   - NOC-628538
+  # impact:
+  #   - 7766
+  # escalation:
+  #   - Deploying Engineer
+  # p_rollback:
+  #   - Yes
+  # rollback:
+  #   - Rollback is reverse of MOP
+  # pm: ENTER N/A if no pre-maint
+  #   fre-agg4:
+  #     - show interface Te0/3/0/0.1187
+  #     - show bgp neighbor 137.164.2.42 routes
+  #     - show bgp neighbor 137.164.2.42 advertised-routes
+  # shipping:
+  #   NOC-630009:
+  #     - 771472687949
+  #   NOC-631096:
+  #     - 771582072369
+  # sections:
+  #   'Migrate Optics':
+  #     - cmd: Shutdown all CLRs - do not add ':', opens a NO FORMAT block to fill in after
+  #     - cmd: Migrate optics as follows
+  #   Migrate 8889:
+  #     - rh: {{ STEP }}
+  #     - jumper:
+  #       - {{ STEP }}
+  #       - label: CLR1234
+  #         acage: 180
+  #         arack: 0204
+  #         adevice: A1234
+  #         aport: 17 front
+  #         acable: LC SMF
+  #         zcage: 180
+  #         zrack: 0204
+  #         zdevice: A1234
+  #         zport: 17 front
+  #         zcable: LC SMF
+  #       - label: CLR1345245
+  #         acage: 180
+  #         adevice: A1234
+  #         aport: 17 front
+  #         acable: LC SMF
+  #         zcage: 180
+  #         zrack: 0204
+  #         zdevice: A1234
+  #         zport: 17 front
+  #         zcable: LC SMF
