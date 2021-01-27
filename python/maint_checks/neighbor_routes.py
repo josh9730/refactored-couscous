@@ -81,6 +81,8 @@ class GetNeighborRoutes:
                             adv_count = 'Full DC IPv6 Table'
                         elif adv_count > 1:
                             adv_count = adv_count
+                        elif adv_count == 0:
+                            adv_count = 'No Adv. Routes'
                     elif vrf == 'vrf all ' and check_hpr == 'hpr':
                         if adv_count > 20000 and index == 0:
                             adv_count = 'Full HPR IPv4 Table'
@@ -88,6 +90,8 @@ class GetNeighborRoutes:
                             adv_count = 'Full HPR IPv6 Table'
                         elif adv_count > 1:
                             adv_count = adv_count
+                        elif adv_count == 0:
+                            adv_count = 'No Adv. Routes'
                 except:
                     adv_count = 'No Adv. Routes'
 
@@ -144,6 +148,8 @@ class GetNeighborRoutes:
                             adv_count = 'Full DC IPv6 Table'
                         elif adv_count > 1:
                             adv_count = adv_count
+                        elif adv_count == 0:
+                            adv_count = 'No Adv. Routes'
                     elif check_hpr == 'hpr':
                         if adv_count > 20000 and index == 0:
                             adv_count = 'Full HPR IPv4 Table'
@@ -151,6 +157,8 @@ class GetNeighborRoutes:
                             adv_count = 'Full HPR IPv6 Table'
                         elif adv_count > 1:
                             adv_count = adv_count
+                        elif adv_count == 0:
+                            adv_count = 'No Adv. Routes'
                 except:
                     self.adv_count = 'No Adv. Routes'
 

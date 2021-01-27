@@ -19,12 +19,11 @@ To Do:
 what does it do ?
 """
 
-from pprint import pprint
 import yaml
 import json
 import jsondiff
 import time
-from login import Login
+from pprint import pprint
 from checks import CircuitChecks, DeviceChecks
 
 
@@ -57,7 +56,7 @@ def main():
         print('\n','-' * 10 ,'END DEVICE CHECKS', '-' * 10, '\n')
 
     if data['do_diff']:
-        file = open(post, 'w') 
+        file = open(post, 'w')
         json.dump(output, file, indent=2)
         file.close()
 

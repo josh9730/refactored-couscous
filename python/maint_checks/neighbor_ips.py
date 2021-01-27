@@ -59,20 +59,23 @@ class GetNeighborIPs(IPChecks):
         """Use DNS to retrieve loopback IPs. Prints error if no IPv6.
         """
 
-        bashCmd = ['host', f'{self.hostname}'] # run 'host {{ DNS name }}
-        process = subprocess.Popen(bashCmd, stdout=subprocess.PIPE)
-        output, error = process.communicate()
+        if not self.circuit['v4_neighbor'] or not self.circuit['v6_neighbor']:
 
-        if error: print(error)
-        ipv4_nei = str(output,'utf-8').split('\n')[0].split()[3] # split string and select only the IPv4 address
-        try:
-            self.circuit['v6_neighbor'] = str(output,'utf-8').split('\n')[1].split()[4] # split string and select only the IPv6 address
-        except:
-            ipv6_nei = None
-            print(f'* WARNING: No AAAA record for {self.hostname}. Enter manually if v6 Peering exists and re-run.')
+            bashCmd = ['host', f'{self.hostname}'] # run 'host {{ DNS name }}
+            process = subprocess.Popen(bashCmd, stdout=subprocess.PIPE)
+            output, error = process.communicate()
 
-        if not self.circuit['v4_neighbor']: self.circuit['v4_neighbor'] = ipv4_nei
-        if not self.circuit['v6_neighbor']: self.circuit['v6_neighbor'] = ipv6_nei
+            if error: print(error)
+            ipv4_nei = str(output,'utf-8').split('\n')[0].split()[3] # split string and select only the IPv4 address
+            try:
+                self.circuit['v6_neighbor'] = str(output,'utf-8').split('\n')[1].split()[4] # split string and select only the IPv6 address
+            except:
+                ipv6_nei = None
+                if not self.circuit['v6_neighbor']:
+                    print(f'* WARNING: No AAAA record for {self.hostname}. Enter manually if v6 Peering exists and re-run.')
+
+            if not self.circuit['v4_neighbor']: self.circuit['v4_neighbor'] = ipv4_nei
+            if not self.circuit['v6_neighbor']: self.circuit['v6_neighbor'] = ipv6_nei
 
     def get_ebgp_static_ips(self, connection):
         """Uses napalm to get assume neighbor IP from port configs. Typical standard is +1/+16 for peer.
