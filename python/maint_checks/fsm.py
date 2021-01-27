@@ -41,7 +41,7 @@ Start
 template_junos_adv = r"""Value Count (\d+)
 
 Start
- ^\s+Accepted\sprefixes:\s+${Count} -> Record
+ ^\s+Advertised\sprefixes:\s+${Count} -> Record
 """
 
 template_static = r"""Value Prefix (([a-z0-9]*[.:]*)*\/\d{2})
@@ -66,4 +66,16 @@ template_xr_adv = r"""Value Count (\d+)
 
 Start
  ^No\sof\sprefixes\sAdvertised:\s${Count} -> Record
+"""
+
+template_xr_bgp_hpr = r"""Value HPR (\S+)
+
+Start
+ ^VRF: ${HPR} -> Record
+ """
+
+template_junos_bgp_hpr = r"""Value VRF (\S+)
+
+Start
+ ^\s+Group:\s\S+\s+Routing-Instance:\s${VRF} -> Record
 """

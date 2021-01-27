@@ -79,8 +79,8 @@ class ParseData:
         for i in isis_list:
             isis_parsed = ParseData(i, template=fsm.template_xr_isis_status).parse_FSM()
             isis_dict = {
-                isis_parsed[1]: {
-                    'Neighbor': isis_parsed[0],
+                isis_parsed[0]: {
+                    'Port': isis_parsed[1],
                     'Status': isis_parsed[2]
                 }
             }
@@ -126,7 +126,7 @@ class ParseData:
         """
 
         for i in self.data:
-            if self.data[i]['is_up'] == True and (self.device_type == 'junos' and i.startswith(('xe', 'et', 'ge')) and not re.search(r'\.[0-9]+$', i)) or (self.device_type == 'iosxr' and not i.startswith('Loop')):
+            if self.data[i]['is_up'] == True and not i.startswith('Loop'):
 
                 if optics_dict:
                     optics = optics_dict[i]
@@ -136,10 +136,11 @@ class ParseData:
                 iface_dict = {
                     i: {
                         'Description': self.data[i]['description'],
-                        'Tx Discards': iface_counters[i]['tx_discards'],
-                        'Rx Discards': iface_counters[i]['rx_discards'],
-                        'Tx Errors': iface_counters[i]['tx_errors'],
-                        'Rx Errors': iface_counters[i]['rx_errors'],
+                        'Errors': {
+                            'Tx Discards': iface_counters[i]['tx_discards'],
+                            'Rx Discards': iface_counters[i]['rx_discards'],
+                            'Tx Errors': iface_counters[i]['tx_errors'],
+                            'Rx Errors': iface_counters[i]['rx_errors']},
                         'Optic PMs': optics
                     }
                 }

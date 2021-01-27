@@ -12,7 +12,6 @@ from pprint import pprint
 import gspread
 from atlassian import Jira
 import json
-from atlassian import ServiceDesk
 import keyring
 
 regex = re.compile(r'\d+:\sCENIC')
@@ -20,11 +19,9 @@ regex = re.compile(r'\d+:\sCENIC')
 full_ticket_re = re.compile(r"(NOC|COR|DEV|SYS)-[0-9]{3,6}")
 ticket_re = re.compile(r"[0-9]{4,6}")
 
-passw = keyring.get_password('cas',user)
-
 def main():
     # if os.path.exists('token.pickle'):
-    with open('/Users/jdickman/Git/jrepo/calendar/token.pickle', 'rb') as token:
+    with open('/Users/jdickman/Git/refactored-couscous/calendar/token.pickle', 'rb') as token:
         creds = pickle.load(token)
 
     service = build('calendar', 'v3', credentials=creds)
@@ -32,7 +29,7 @@ def main():
     # Call the Calendar API
     now = datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
     d1 = ((datetime.utcnow() - timedelta(days=7)).isoformat() + 'Z')
-    d2 = ((datetime.utcnow() + timedelta(days=7)).isoformat() + 'Z')
+    # d2 = ((datetime.utcnow() + timedelta(days=7)).isoformat() + 'Z')
 
     maint_cal = service.events().list(calendarId='cenic.org_36uqe435vlel8qv9ul57tomo1g@group.calendar.google.com',
                                         timeMin=d1, timeMax=now, singleEvents=True,
@@ -53,9 +50,12 @@ def main():
     maint_data = []
     int_data = []
 
+    username = 'jdickman'
+    passw = keyring.get_password('cas', username)
+
     jira = Jira(
     url = 'https://servicedesk.cenic.org',
-    username = 'jdickman',
+    username = username,
     password = passw)
 
     for event in maint_events:

@@ -12,8 +12,6 @@ def update_rotating_bucket(bucket, hours):
     for i in bucket:
         start_date = jira.issue_field_value(i, 'customfield_10410')
         orig_est = {'timetracking': {'originalEstimate': str(hours)+ 'h'}}
-        print(i)
-        print(orig_est)
         jira.update_issue_field(i, orig_est)
 
         # Rotates the previous week's bucket to end of rotation

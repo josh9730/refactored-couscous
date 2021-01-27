@@ -1,11 +1,10 @@
 from login import Login
-from neighbor_ips import GetNeighborIPs
-from neighbor_routes import GetNeighborRoutes, GetRouteData
+from neighbor_routes import GetNeighborRoutes, GetNLRI
 from parse import ParseData, etree_to_dict
 import fsm
 import time
+import sys
 
-from pprint import pprint
 
 class CircuitChecks:
     """For per-circuit checks. Currently only BGP.
@@ -24,8 +23,9 @@ class CircuitChecks:
         self.global_agg = global_agg
         self.global_type = global_type
         self.circuit_checks = circuit_checks
-        self.global_connect = Login(username, global_agg, global_type).napalm_connect()
         self.output_dict = {}
+        self.global_connect = Login(username, global_agg, global_type).napalm_connect()
+
 
     def get_bgp_output_dict(self):
         """Return dict of BGP data.
@@ -33,43 +33,55 @@ class CircuitChecks:
         Returns:
             (dict): Output dict for each neighbor defined in the circuits_checks dict.
         """
-
-        self.global_connect.open()
+        try:
+            print(f'\nConnecting to BGP Table Source - {self.global_agg}')
+            start_time = time.time()
+            self.global_connect.open()
+            print(f'\t... Connected to {self.global_agg} with napalm.')
+        except:
+            print('\n\n\tAuthentication Error. Please wait and run again.\n\n')
+            sys.exit(1)
 
         for agg_router in self.circuit_checks:
 
             if agg_router != self.global_agg:
-                print(f'\t... resetting OTP (30 sec)')
-                time.sleep(30)
-                print('\t... done')
+                elapsed_time = time.time() - start_time
+                print(f'\n\t... resetting OTP ({int(30 - elapsed_time)} sec)')
+                time.sleep(30 - elapsed_time)
+                print(f'\t... done')
 
                 agg_type = self.circuit_checks[agg_router]['device_type']
                 self.agg_connect = Login(self.username, agg_router, agg_type).napalm_connect()
-                self.agg_connect.open()
+                try:
+                    print(f'Connecting to Agg Router - {agg_router}')
+                    self.agg_connect.open()
+                    print(f'\t... Connected to {agg_router} with napalm')
+                    start_time = time.time()
+                except:
+                    print('\n\n\tAuthentication Error. Please wait and run again.\n\n')
+                    sys.exit(1)
 
             else:
                 self.agg_connect = self.global_connect
                 agg_type = self.global_type
 
-            self.circuits = self.circuit_checks[agg_router]['circuits']
+            circuits = self.circuit_checks[agg_router]['circuits']
 
-            for circuit in self.circuits:
-                self.circuit_dict = self.circuits[circuit]
-                self.service = self.circuit_dict['service']
+            for circuit in circuits:
+                circuit_dict = circuits[circuit]
+                service = circuit_dict['service']
+                asn = None
+                print(f'\n\n\t----- Starting {circuit} -----')
 
-                if self.service.endswith('bgp'):
-                    if self.service == 'ibgp':
-                        GetNeighborIPs(self.circuit_dict, circuit).get_ibgp_ips()
-
-                    elif self.service == 'ebgp':
-                        GetNeighborIPs(self.circuit_dict, circuit).get_ebgp_ips(self.agg_connect)
+                if service.endswith('bgp'):
 
                     if agg_type == 'junos':
-                        bgp_routes = GetNeighborRoutes(self.agg_connect, self.circuit_dict).get_junos_bgp_routes()
+                        bgp_routes = GetNeighborRoutes(self.agg_connect, circuit_dict, circuit).get_junos_bgp_routes()
                     elif agg_type == 'iosxr':
-                        bgp_routes = GetNeighborRoutes(self.agg_connect, self.circuit_dict).get_xr_bgp_routes()
+                        bgp_routes = GetNeighborRoutes(self.agg_connect, circuit_dict, circuit).get_xr_bgp_routes()
                     else:
-                        print('Unsupported Agg Router type. Junos/IOS-XR are supported.')
+                        print('*** ERROR: Unsupported Agg Router type. Junos/IOS-XR are supported.')
+                        sys.exit(1)
 
                     v4_rx_routes = bgp_routes[0][0]
                     v4_adv_count = bgp_routes[0][1]
@@ -78,33 +90,41 @@ class CircuitChecks:
                     v6_adv_count = bgp_routes[1][1]
                     v6_default = bgp_routes[1][2]
 
-                elif self.circuit_dict['service'] == 'static':
-                    GetNeighborIPs(self.circuit_dict, circuit).get_ebgp_ips(self.agg_connect)
-                    static_routes = GetNeighborRoutes(self.agg_connect, self.circuit_dict).get_static_routes(agg_type)
+                elif service == 'static':
+
+                    static_routes =  GetNeighborRoutes(self.agg_connect, circuit_dict, circuit).get_static_routes(agg_type)
 
                     v4_rx_routes = static_routes[0]
                     v6_rx_routes = static_routes[1]
-                    v4_adv_count=v4_default=v6_adv_count=v6_default = 'N/A'
+                    v4_adv_count = v4_default = v6_adv_count = v6_default = None
+                    asn = circuit_dict['asn']
 
-                self.ipv4_nei = self.circuit_dict['ipv4_neighbor']
-                self.ipv6_nei = self.circuit_dict['ipv6_neighbor']
+                print(f'Getting BGP NLRIs per-BGP route for {circuit}.')
+                global_routes = GetNLRI(self.global_connect, [v4_rx_routes, v6_rx_routes], asn).get_bgp_nlri()
 
-                global_routes = GetRouteData(self.global_connect, [v4_rx_routes, v6_rx_routes]).get_bgp_nlri()
+                check_values = [circuit_dict['v4_neighbor'], circuit_dict['v6_neighbor'], v4_adv_count, v6_adv_count, v4_default, v6_default]
+                for index, value in enumerate(check_values):
+                    if not value:
+                        if index in (0,1):
+                            check_values[index] = 'No Address Defined'
+                        else:
+                            check_values[index] = 'N/A'
 
                 output_dict_1 = {
                     circuit: {
-                        'Service': self.circuit_dict['service'],
-                        'IPv4 Neighbor': self.ipv4_nei,
-                        'IPv6 Neighbor': self.ipv6_nei,
-                        'IPv4 Adv. Count': v4_adv_count,
-                        'IPv4 Adv. Default?': v4_default,
-                        'IPv6 Adv. Count': v6_adv_count,
-                        'IPv6 Adv. Default?': v6_default,
+                        'Service': circuit_dict['service'],
+                        'IPv4 Neighbor': check_values[0],
+                        'IPv6 Neighbor': check_values[1],
+                        'IPv4 Adv. Count': check_values[2],
+                        'IPv4 Adv. Default?': check_values[4],
+                        'IPv6 Adv. Count': check_values[3],
+                        'IPv6 Adv. Default?': check_values[5],
                         'IPv4 Routes': global_routes[0],
                         'IPv6 Routes': global_routes[1]
                     }
                 }
                 self.output_dict.update(output_dict_1)
+                print(f'\t----- Done with {circuit} -----')
 
         if self.agg_connect != self.global_connect:
             self.agg_connect.close()
@@ -115,16 +135,9 @@ class CircuitChecks:
 
 class DeviceChecks:
 
-    def __init__(self, username, device, device_type):
+    def __init__(self, username, device_dict):
         self.username = username
-        self.device = device
-        self.device_type = device_type
-
-        if device_type == 'junos':
-            device_type = None
-            self.connection = Login(self.username, self.device, device_type).pyez_connect()
-        elif device_type == 'iosxr':
-            self.connection = Login(self.username, self.device, self.device_type).napalm_connect()
+        self.device_dict = device_dict
 
     def get_device_main(self):
         """Main function call.
@@ -132,11 +145,39 @@ class DeviceChecks:
         Returns:
             dict: output dictionary
         """
+        output_dict = {}
+        for index, device in enumerate(self.device_dict):
+            start_time = time.time()
 
-        if self.device_type == 'junos':
-            output_dict = self.get_device_junos()
-        elif self.device_type == 'iosxr':
-            output_dict = self.get_device_iosxr()
+            for self.device, self.device_type in device.items():
+
+                if self.device_type == 'junos':
+                    try:
+                        print(f'Connecting to {self.device}')
+                        self.connection = Login(self.username, self.device, None).pyez_connect()
+                        print(f'\t... Connected to {self.device} with PyEZ')
+                        output_dict_1 = self.get_device_junos()
+                    except:
+                        print('\n\n\tAuthentication Error. Please wait and run again.\n\n')
+                        sys.exit(1)
+
+                elif self.device_type == 'iosxr':
+                    try:
+                        print(f'Connecting to {self.device}')
+                        self.connection = Login(self.username, self.device, self.device_type).napalm_connect()
+                        print(f'\t... Connected to {self.device} with napalm')
+                        output_dict_1 = self.get_device_iosxr()
+                    except:
+                        print('\n\n\tAuthentication Error. Please wait and run again.\n\n')
+                        sys.exit(1)
+
+            output_dict.update(output_dict_1)
+
+            elapsed_time = time.time() - start_time
+            if int(elapsed_time) < 30 and index != len(self.device_dict):
+                print(f'\t... resetting OTP ({int(30 - elapsed_time)} sec)')
+                time.sleep(30 - elapsed_time)
+                print('\t... done\n\n')
 
         return output_dict
 
@@ -149,23 +190,14 @@ class DeviceChecks:
 
         self.connection.open()
 
-        show_software = etree_to_dict(self.connection.rpc.get_software_information())
-        show_power = etree_to_dict(self.connection.rpc.get_power_usage_information_detail())
-        show_bgp = etree_to_dict(self.connection.rpc.get_bgp_summary_information())
-        show_isis = etree_to_dict(self.connection.rpc.get_isis_adjacency_information())
-        show_msdp = etree_to_dict(self.connection.rpc.get_msdp_information())
-        show_pim = etree_to_dict(self.connection.rpc.get_pim_neighbors_information())
-        show_optics = etree_to_dict(self.connection.rpc.get_interface_optics_diagnostics_information())
-        show_iface = etree_to_dict(self.connection.rpc.get_interface_information(detail=True, statistics=True))
-
-        software = show_software['software-information']['junos-version']
-        power = ParseData(show_power).parse_power_junos()
-        bgp = ParseData(show_bgp).parse_bgp_junos()
-        isis = ParseData(show_isis).parse_isis_junos()
-        msdp = ParseData(show_msdp).parse_msdp_junos()
-        pim = ParseData(show_pim).parse_pim_junos()
-        optics = ParseData(show_optics).parse_optics_junos()
-        iface = ParseData(show_iface).parse_iface_junos(optics)
+        software = etree_to_dict(self.connection.rpc.get_software_information())['software-information']['junos-version']
+        power = ParseData(etree_to_dict(self.connection.rpc.get_power_usage_information_detail())).parse_power_junos()
+        bgp = ParseData(etree_to_dict(self.connection.rpc.get_bgp_summary_information())).parse_bgp_junos()
+        isis = ParseData(etree_to_dict(self.connection.rpc.get_isis_adjacency_information())).parse_isis_junos()
+        msdp = ParseData(etree_to_dict(self.connection.rpc.get_msdp_information())).parse_msdp_junos()
+        pim = ParseData(etree_to_dict(self.connection.rpc.get_pim_neighbors_information())).parse_pim_junos()
+        optics = ParseData(etree_to_dict(self.connection.rpc.get_interface_optics_diagnostics_information())).parse_optics_junos()
+        iface = ParseData(etree_to_dict(self.connection.rpc.get_interface_information(detail=True, statistics=True))).parse_iface_junos(optics)
 
         vrfs = etree_to_dict(self.connection.rpc.get_instance_information(brief=True))
         vrf = None
@@ -185,14 +217,15 @@ class DeviceChecks:
         self.connection.close()
 
         output_dict = {
-            'Hostname': self.device,
-            'Software': software,
-            'Power': power,
-            'IS-IS': isis,
-            'PIM Enabled Ports': pim,
-            'Established MSDP Neighbors': msdp,
-            'Interfaces': iface,
-            'Established BGP Neighbors': bgp
+            self.device.upper(): {
+                'Software': software,
+                'Power': power,
+                'IS-IS': isis,
+                'PIM Enabled Ports': pim,
+                'Established MSDP Neighbors': msdp,
+                'Interfaces': iface,
+                'Established BGP Neighbors': bgp
+            }
         }
 
         return output_dict
@@ -204,6 +237,8 @@ class DeviceChecks:
         Returns:
             dict: Each return is a nest dict
         """
+
+        self.connection.open()
 
         show_isis = "show isis neighbors | in PtoP"
         show_msdp = "show msdp summary"
@@ -225,19 +260,18 @@ class DeviceChecks:
 
         bgp = ParseData(show_bgp, device_type=self.device_type).parse_bgp_xr()
 
+        self.connection.close()
+
         output_dict = {
-            'Hostname': self.device,
-            'Software': facts['os_version'],
-            'Power': 'Pending',
-            'IS-IS': isis,
-            'PIM Enabled Ports': pim,
-            'Established MSDP Neighbors': msdp,
-            'Interfaces': iface,
-            'Established BGP Neighbors': bgp
+            self.device.upper(): {
+                'Software': facts['os_version'],
+                'Power': 'Pending',
+                'IS-IS': isis,
+                'Established PIM Neighbors': pim,
+                'Established MSDP Neighbors': msdp,
+                'Interfaces': iface,
+                'Established BGP Neighbors': bgp
+            }
         }
 
         return output_dict
-
-    # def show_device_status(self):
-
-    #     get_status = get_device_status()

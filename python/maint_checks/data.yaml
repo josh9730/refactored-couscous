@@ -1,27 +1,34 @@
 ---
 username: jdickmanmfa
-global_agg: lax-agg10 # must be junos for circuits
-global_type: junos
-do_diff: false # set to true if a diff is desired
+do_diff: false
 pre_file_path: 'output_pre.json'
 post_file_path: 'output_post.json'
+check_type: device
 device_checks: # formerly N/A
   # - svl-agg10: junos
   - pdc-agg1: junos
-#   - riv-agg8: iosxr
-# circuit_checks: # formerly 'devices'
-#   tri-agg2:
-#     device_type: iosxr
-#     circuits:
-#       CLR1118:
-#         service: ebgp
-#         port: TenGigE0/7/0/22
-  # sac-agg4:
-  #   device_type: iosxr
-  #   circuits:
-  #     CLR2118:
-  #       service: ebgp
-  #       port: TenGigE0/7/0/18.132
+  - riv-agg8: iosxr
+global_agg: lax-agg10 # must be junos for circuits
+circuit_checks:
+  oak-agg8:
+    device_type: iosxr
+    circuits:
+      CLR-17525:
+        service: ebgp
+        v4_neighbor: 137.164.26.123
+        v6_neighbor: 2607:f380:1::108:9a41:a7b1
+  tri-agg2:
+    device_type: iosxr
+    circuits:
+      CLR1118:
+        service: ebgp
+        port: TenGigE0/7/0/22
+  sac-agg4:
+    device_type: iosxr
+    circuits:
+      CLR2118:
+        service: ebgp
+        port: TenGigE0/7/0/18.132
   # frg-agg4:
   #   device_type: iosxr
   #   circuits:
@@ -48,6 +55,9 @@ device_checks: # formerly N/A
   #   circuits: # agg_circuit_checks
   #     bumt-lib-1:
   #       service: ibgp
+  #     CLR7608:
+  #       service: ebgp
+  #       port: et-7/1/1.343
   #     lb-csu-2:
   #       service: ibgp
   #       v4_neighbor: 137.164.0.4
