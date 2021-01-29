@@ -1,57 +1,66 @@
-# Use algorithm to return the IPv6 address for a given IPv4 address
+"""Use algorithm to return the IPv6 address for a given IPv4 address
 
-# Args: 
-#    int/ext - internal facing or external facing link
-#    hpr/dc - HPR link or DC link
+Args:
+    int/ext - internal facing or external facing link
+    hpr/dc - HPR link or DC link
+"""
 
 import netaddr
-from sys import argv
+import argparse
 
-# pull mask, change to 'int' to convert to v6 mask
-mask = int(argv[1].split("/")[1])
+parser = argparse.ArgumentParser(description='Convert IPv4 to IPv6 address.')
+parser.add_argument('address', metavar='IPv4Address',
+                    help='IPv4 address with mask in slash notation.')
+parser.add_argument('link', metavar='LinkType',
+                    help='Link Options: "int" or "ext"',
+                    choices=['int', 'ext'])
+parser.add_argument('network', metavar='NetworkType',
+                    help=f'Network Options: "hpr" or "dc"',
+                    choices=['hpr', 'dc'])
+args = parser.parse_args()
 
-# IP only
-ip = netaddr.IPNetwork(argv[1]).ip
 
-# determine if internal or external facing
-if argv[2] == "int": 
-    int_ext = str(0)
-    print("\n=== Internal facing ===")
-elif argv[2] == "ext":
-    int_ext = str(1)
-    print("\n=== External facing ===")
-else: 
-    print("\nEnter either 'ext' or 'int'")
-    exit()
+def main(address, link_type, network_type):
+    mask = int(address.split("/")[1])
+    ip = netaddr.IPNetwork(address).ip
 
-# determine if HPR or DC
-if argv[3] == "hpr":
-    network = str(0)
-    print("=== HPR network ===")
-elif argv[3] == "dc":
-    network = str(1)
-    print("=== DC network ===")
-else: 
-    print("\nEnter either 'hpr' or 'dc'")
-    exit()
+    if link_type == "int":
+        int_ext = str(0)
+        link_name = 'Internal'
+    else:
+        int_ext = str(1)
+        link_name = 'External'
 
-# convert IP to hex
-v4_hex = hex(netaddr.IPAddress(ip)).lstrip("0x")
+    if network_type == "hpr":
+        network = str(0)
+        net_name = 'HPR'
+    else:
+        network_type = str(1)
+        net_name = 'DC'
 
-# break into 3 hex 'chunks'
-hex_a = v4_hex[0]
-hex_b = v4_hex[1:5]
-hex_c = v4_hex[5:len(v4_hex)]
+    # convert IP to hex
+    v4_hex = hex(netaddr.IPAddress(ip)).lstrip("0x")
 
-# convert mask v4 -> v6 
-final_mask = str(mask + 92)
+    # break into 3 hex 'chunks'
+    hex_a = v4_hex[0]
+    hex_b = v4_hex[1:5]
+    hex_c = v4_hex[5:len(v4_hex)]
 
-# create IPv6 string
-joined_ip = f"2607:F380:000{int_ext}:0:0:01{network}{hex_a}:{hex_b}:{hex_c}1"
+    # convert mask v4 -> v6
+    final_mask = str(mask + 92)
 
-# convert IPv6 string to an IPv6 address
-final_ip = str(netaddr.IPAddress(joined_ip, 6))
-final_net = final_ip + "/" + final_mask
+    # create IPv6 string
+    joined_ip = f"2607:F380:000{int_ext}:0:0:01{network}{hex_a}:{hex_b}:{hex_c}1"
 
-# print the result
-print (f"\nThe converted IPv4 to IPv6 address is: {final_net}")
+    # convert IPv6 string to an IPv6 address
+    final_ip = str(netaddr.IPAddress(joined_ip, 6))
+    final_net = final_ip + "/" + final_mask
+
+    print(f'\n- {link_name} link')
+    print(f'- {net_name} Network\n')
+    print (f'\t--- Translated IPv4: {final_net} ---\n')
+
+
+if __name__ == '__main__':
+    # script, address, link_type, network_type = argv
+    main(args.address, args.link, args.network)

@@ -1,64 +1,71 @@
-""" Gets username & password from LastPass.
-
-Args:
-    optical
-    enable
-    oob
-    cas
-    tacacs
-"""
-
 import pyotp
 from lastpass import Vault
 import keyring
-from sys import argv
 import re
+import argparse
 
-def get_lp(lp_account):
-# name is stored as 'bytes' in lastpass. Uses argv input and converts to bytes
 
-    lp_user = 'jdickman@cenic.org' # lastpass username
-    lp_pass = keyring.get_password('lp_pass','jdickman') # first factor password
-    otp_secret = keyring.get_password('lp',lp_user) # grab base32 secret for lastpass
-    otp_gen = pyotp.TOTP(otp_secret) # input base32 into pyotp
-    otp = otp_gen.now() # use pyotp to generate the 6-digit OTP
+class GetLP:
 
-    if lp_account == 'optical':
-        name = bytes('Optical', 'utf-8')
-    elif lp_account == 'enable':
-        name = bytes('CENIC Enable Account', 'utf-8')
-    elif lp_account == 'oob':
-        name = bytes('CENIC Out-of-Band- OOB', 'utf-8')
-    elif lp_account == 'cas':
-        name = bytes('CAS', 'utf-8')
-    elif lp_account == 'tacacs':
-        name = bytes('CENIC TACACS Key', 'utf-8')
+    shorthand = {
+        'optical': bytes('Optical', 'utf-8'),
+        'enable': bytes('CENIC Enable Account', 'utf-8'),
+        'oob': bytes('CENIC Out-of-Band- OOB', 'utf-8'),
+        'cas': bytes('CAS', 'utf-8'),
+        'tacacs': bytes('CENIC TACACS Key', 'utf-8')
+    }
 
-    vault = Vault.open_remote(lp_user, lp_pass, otp) # connect to lastpass
+    def __init__(self):
 
-    for i in vault.accounts:
-        if i.name == name: # if name matches the bytes name generated above
-            # OOB is stored as a custom entry, needs regex
-            if i.name != bytes('CENIC Out-of-Band- OOB', 'utf-8'):
-                lp_logon_user = str(i.username, 'utf-8')
-                lp_logon_pass = str(i.password, 'utf-8')
-                lp_logon_passthrough = ''
-            elif i.name == bytes('CENIC Out-of-Band- OOB', 'utf-8'):
-                user_re = re.compile(r'Super User:\S+')
-                pass_re = re.compile(r'Password:\S+')
-                passthrough_re = re.compile(r'Passthrough:\S+')
+        self.username = 'jdickman@cenic.org'
+        self.first_factor = keyring.get_password("lp_pass", 'jdickman')
+        otp_secret = keyring.get_password("lp", self.username)
+        self.otp = pyotp.TOTP(otp_secret)
 
-                lp_logon_user = user_re.search(str(i.notes, 'utf-8')).group().lstrip('Super User:')
-                lp_logon_pass = pass_re.search(str(i.notes, 'utf-8')).group().lstrip('Password:')
-                lp_logon_passthrough = passthrough_re.search(str(i.notes, 'utf-8')).group().lstrip('Passthrough:')
+    def get_lp(self, account):
+        """Connect to Lastpass using API.
 
-    return lp_logon_user, lp_logon_pass, lp_logon_passthrough
+        Args:
+            account (str): shorthand for the account, ex: 'optical' to reference the Optical account stored as bytes in Lastpass
+
+        Returns:
+            list: Username, password, and passthrough (OOB only)
+        """
+
+        name = self.shorthand[account]
+        vault = Vault.open_remote(self.username, self.first_factor, self.otp.now())
+
+        for i in vault.accounts:
+            if i.name == name:
+
+                if i.name != bytes('CENIC Out-of-Band- OOB', 'utf-8'):
+                    lp_logon_user = str(i.username, 'utf-8')
+                    lp_logon_pass = str(i.password, 'utf-8')
+                    lp_logon_passthrough = ''
+                elif i.name == bytes('CENIC Out-of-Band- OOB', 'utf-8'):
+                    user_re = re.compile(r'Super User:\S+')
+                    pass_re = re.compile(r'Password:\S+')
+                    passthrough_re = re.compile(r'Passthrough:\S+')
+
+                    lp_logon_user = user_re.search(str(i.notes, 'utf-8')).group().lstrip('Super User:')
+                    lp_logon_pass = pass_re.search(str(i.notes, 'utf-8')).group().lstrip('Password:')
+                    lp_logon_passthrough = passthrough_re.search(str(i.notes, 'utf-8')).group().lstrip('Passthrough:')
+
+        return lp_logon_user, lp_logon_pass, lp_logon_passthrough
+
 
 if __name__ == '__main__':
-    script, lp_account = argv
-    output = get_lp(lp_account)
+    parser = argparse.ArgumentParser(description='Retrieve logins from LastPass.')
+    parser.add_argument('account', metavar='account',
+                help=f'Account shortnames: {list(GetLP.shorthand)}',
+                choices=list(GetLP.shorthand))
+
+    args = parser.parse_args()
+    output = GetLP().get_lp(args.account)
+
     print('\n\tUsername:\t', output[0])
     print('\tPassword:\t', output[1])
-    if output[2] != '':
-        print('\tPassthrough:\t', output[2])
-    print('\n')
+    if output[2]:
+        print('\tPassthrough:\t', output[2], '\n')
+    else:
+        print('\n')
