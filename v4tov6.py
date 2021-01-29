@@ -20,22 +20,22 @@ parser.add_argument('network', metavar='NetworkType',
 args = parser.parse_args()
 
 
-def main(address, link_type, network_type):
-    mask = int(address.split("/")[1])
-    ip = netaddr.IPNetwork(address).ip
+def main(args):
+    mask = int(args.address.split("/")[1])
+    ip = netaddr.IPNetwork(args.address).ip
 
-    if link_type == "int":
+    if args.link_type == "int":
         int_ext = str(0)
         link_name = 'Internal'
     else:
         int_ext = str(1)
         link_name = 'External'
 
-    if network_type == "hpr":
+    if args.network_type == "hpr":
         network = str(0)
         net_name = 'HPR'
     else:
-        network_type = str(1)
+        network = str(1)
         net_name = 'DC'
 
     # convert IP to hex
@@ -62,5 +62,4 @@ def main(address, link_type, network_type):
 
 
 if __name__ == '__main__':
-    # script, address, link_type, network_type = argv
-    main(args.address, args.link, args.network)
+    main(args)
