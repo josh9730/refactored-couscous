@@ -1,0 +1,26 @@
+---
+username: jdickman
+sheet_key: '1dPZE1BZ-i7fY2lRMdpXiUqN9s0euqT0qvN8_e1N36GI'
+engrv_tickets:
+  Tunde: COR-1055
+  Nelson: COR-1056
+  Eugene: COR-1058
+  Josh: COR-1054
+  Mohammmed: COR-1057
+shipping_tickets:
+  Nelson: COR-1100
+  Eugene: COR-1099
+  Tunde: COR-1101
+  Mohammed: COR-1102
+circuit_tickets: # Order of Circuit bucket commented
+  Eugene: COR-732 #1
+  Nelson: COR-1059 #2
+  Tunde: COR-1060 #3
+  Mohammed: COR-1061 #4
+engineer:
+  - jdickman
+  - sbellamine
+  - nlo
+  - eho
+  - tsanda
+  - myunus
