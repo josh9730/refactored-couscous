@@ -133,25 +133,26 @@ class AtlassianStuff(Logins):
         worksheet = sh.worksheet('Tables')
 
         # Get # of active circuits, eng_list must match yaml (order in yaml)
-        engineer = [ worksheet.get('C2')[0][0], worksheet.get('C3')[0][0], worksheet.get('C4')[0][0], worksheet.get('C5')[0][0] ]
+        engineer = [
+            worksheet.get('C2')[0][0],
+            worksheet.get('C3')[0][0],
+            worksheet.get('C4')[0][0],
+            worksheet.get('C5')[0][0]
+        ]
 
         new_start = datetime.today().strftime('%Y-%m-%d')
         new_end = (datetime.today() + timedelta(weeks=(len(bucket)-1), days=5)).strftime('%Y-%m-%d')
 
         # Get time in hours - # of circuits * hours/circuit * 4 (weeks), and update list
-        j = 0
-        for i in engineer:
-            engineer[j] = str(int(i) * hours * 4) + 'h'
-            j += 1
+        for i, circuits in enumerate(engineer):
+            engineer[i] = str(int(circuits) * hours * 4) + 'h'
 
         # Update buckets - move start/end ahead one week, update hours
-        j = 0
-        for i in bucket:
+        for i, ticket in enumerate(bucket):
             field_start = {'customfield_10410': new_start}
             field_end = {'customfield_10411': new_end}
-            orig_est = {'timetracking': {'originalEstimate': engineer[j]}}
+            orig_est = {'timetracking': {'originalEstimate': engineer[i]}}
 
-            self.jira.update_issue_field(i, field_start)
-            self.jira.update_issue_field(i, field_end)
-            self.jira.update_issue_field(i, orig_est)
-            j += 1
+            self.jira.update_issue_field(ticket, field_start)
+            self.jira.update_issue_field(ticket, field_end)
+            self.jira.update_issue_field(ticket, orig_est)

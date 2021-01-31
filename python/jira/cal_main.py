@@ -79,7 +79,7 @@ class CalendarStuff:
         return maint_data
 
     def get_int_events(self, internal_events):
-        """Get interesting data from Internal Change events
+        """Get interesting data from Internal Change events.
 
         Args:
             internal_events (list): List of Internal Change events
@@ -109,6 +109,8 @@ class CalendarStuff:
         return int_data
 
     def weekly_events(self):
+        """Get calendar events on maintenance and internal change calendar.
+        """
 
         # if os.path.exists('token.pickle'):
         with open('/Users/jdickman/Git/refactored-couscous/python/jira/token.pickle', 'rb') as token:

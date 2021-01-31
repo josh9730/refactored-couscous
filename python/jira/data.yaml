@@ -1,6 +1,9 @@
 ---
 username: jdickman
 sheet_key: '1dPZE1BZ-i7fY2lRMdpXiUqN9s0euqT0qvN8_e1N36GI'
+engrv_hours: 4
+shipping_hours: 5
+circuit_hours: 2
 engrv_tickets:
   Tunde: COR-1055
   Nelson: COR-1056
@@ -19,8 +22,8 @@ circuit_tickets: # Order of Circuit bucket commented
   Mohammed: COR-1061 #4
 engineer:
   - jdickman
-  - sbellamine
   - nlo
   - eho
   - tsanda
   - myunus
+  - sbellamine
