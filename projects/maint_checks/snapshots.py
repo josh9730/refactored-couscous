@@ -25,19 +25,22 @@ import jsondiff
 import time
 from pprint import pprint
 from checks import CircuitChecks, DeviceChecks
+import argparse
 
 
-def main():
+parser = argparse.ArgumentParser(description='Run snapshots for devices and circuits')
+parser.add_argument('username', metavar='accousernameunt',
+                help=f'MFA username')
+args = parser.parse_args()
+
+def main(args):
     """Initialize checks type. Currently Per-Device or Per-Circuit.
     """
 
     with open('data.yaml') as file:
         data = yaml.full_load(file)
 
-    with open('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
-        usernames = yaml.full_load(file)
-
-    username = usernames['mfa']
+    username = args.username
     pre = data['pre_file_path']
     post = data['post_file_path']
 
@@ -83,4 +86,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(args)
