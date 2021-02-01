@@ -31,10 +31,10 @@ def main():
     """Initialize checks type. Currently Per-Device or Per-Circuit.
     """
 
-    with open('data.yml') as file:
+    with open('data.yaml') as file:
         data = yaml.full_load(file)
 
-    with open('/Users/jdickman/Git/refactored-couscous/usernames.yaml') as file:
+    with open('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
         usernames = yaml.full_load(file)
 
     username = usernames['mfa']

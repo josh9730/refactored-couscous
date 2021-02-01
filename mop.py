@@ -5,48 +5,52 @@ import keyring
 import shutil
 import sys
 
-username = 'jdickman'
-passw = keyring.get_password('cas', username) # encrypted CAS password
-confluence = Confluence(
-    url='https://documentation.cenic.org/',
-    username= username,
-    password= passw)
+sys.path.append('/Users/jdickman/Git/refactored-couscous/projects/jira')
+from atl_main import Logins
 
-env = Environment(loader=FileSystemLoader('.'), trim_blocks=True, lstrip_blocks=True)
-template = env.get_template("mop-gen.j2")
+def main():
+    env = Environment(loader=FileSystemLoader('.'), trim_blocks=True, lstrip_blocks=True)
+    template = env.get_template("mop-gen.j2")
 
-with open("mop.yaml") as file:
-    mop_file = yaml.full_load(file)
+    with open('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
+        usernames = yaml.full_load(file)
+    username = usernames['cas']
 
-if not mop_file['page_title']:
-    print('\n\tEnter Title\n')
-    sys.exit(1)
-else:
-    page_title = mop_file['page_title']
+    with open("mop.yaml") as file2:
+        mop_file = yaml.full_load(file2)
 
-if not mop_file['parent_page_id']:
-    print('\n\tEnter Parent Page ID\n')
-    sys.exit(1)
-else:
-    parent_page_id = mop_file['parent_page_id']
+    if not mop_file['page_title']:
+        print('\n\tEnter Title\n')
+        sys.exit(1)
+    else:
+        page_title = mop_file['page_title']
 
-if not mop_file['ticket']:
-    print('\n\tEnter Ticket\n')
-    sys.exit(1)
-else:
-    ticket = mop_file['ticket']
+    if not mop_file['parent_page_id']:
+        print('\n\tEnter Parent Page ID\n')
+        sys.exit(1)
+    else:
+        parent_page_id = mop_file['parent_page_id']
 
-page_body = template.render(mop_file)
-confluence.update_or_create(parent_page_id, page_title, page_body, representation='wiki')
+    if not mop_file['ticket']:
+        print('\n\tEnter Ticket\n')
+        sys.exit(1)
+    else:
+        ticket = mop_file['ticket']
 
-if mop_file['link'] == True:
-    jira = Jira(
-        url = 'https://servicedesk.cenic.org',
-        username= username,
-        password= passw)
+    page_body = template.render(mop_file)
+    confluence = Logins(username).conf_login()
+    confluence.update_or_create(parent_page_id, page_title, page_body, representation='wiki')
 
-    link_title = page_title.replace(" ", "+")
-    page_url = f'https://documentation.cenic.org/display/Core/{link_title}'
-    jira.create_or_update_issue_remote_links(ticket, page_url, page_title, relationship='mentioned in')
+    if mop_file['link'] == True:
+        jira = Logins(username).jira_login()
 
-shutil.copy('/Users/jdickman/Git/jrepo/mop.yaml', f'/Users/jdickman/Git/jrepo/1 - Docs/MOPs/YAML/{page_title}.yaml') 
+        jira = Logins(username).jira_login()
+
+        link_title = page_title.replace(" ", "+")
+        page_url = f'https://documentation.cenic.org/display/Core/{link_title}'
+        jira.create_or_update_issue_remote_links(ticket, page_url, page_title, relationship='mentioned in')
+
+    shutil.copy('/Users/jdickman/Git/refactored-couscous/mop.yaml', f'/Users/jdickman/Git/1 - Docs/MOPs/YAML/{page_title}.yaml')
+
+if __name__ == '__main__':
+    main()
