@@ -29,7 +29,7 @@ import argparse
 
 
 parser = argparse.ArgumentParser(description='Run snapshots for devices and circuits')
-parser.add_argument('username', metavar='accousernameunt',
+parser.add_argument('username', metavar='username',
                 help=f'MFA username')
 args = parser.parse_args()
 
