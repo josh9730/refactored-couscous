@@ -1,5 +1,4 @@
 ---
-username: jdickmanmfa
 do_diff: true
 pre_file_path: 'output_pre.json'
 post_file_path: 'output_post.json'
@@ -23,12 +22,13 @@ circuit_checks:
   #     CLR1118:
   #       service: ebgp
   #       port: TenGigE0/7/0/22
-  # sac-agg4:
-  #   device_type: iosxr
-  #   circuits:
-  #     CLR2118:
-  #       service: ebgp
-  #       port: TenGigE0/7/0/18.132
+  sac-agg4:
+    device_type: iosxr
+    circuits:
+      CLR2118:
+        service: ebgp
+        v4_neighbor: 137.164.24.130
+        v6_neighbor: 2607:f380:1::118:9a41:8821
   # frg-agg4:
   #   device_type: iosxr
   #   circuits:
@@ -50,25 +50,25 @@ circuit_checks:
   #   circuits:
   #     merritt-cc-3:
   #       service: ibgp
-  lax-agg10:
-    device_type: junos
-    circuits: # agg_circuit_checks
-      bumt-lib-1:
-        service: ibgp
-      CLR7608:
-        service: ebgp
-        port: et-7/1/1.343
-      lb-csu-2:
-        service: ibgp
-        v4_neighbor: 137.164.0.4
-        v6_neighbor: 2607:f380::118:9a40:41
-      oxnr-pub-lib-1:
-        service: ibgp
-      cyp-cc-3:
-        service: ibgp
-      CLR-7073:
-        service: ebgp
-        port: 'et-7/1/0.285'
+  # lax-agg10:
+  #   device_type: junos
+  #   circuits: # agg_circuit_checks
+  #     bumt-lib-1:
+  #       service: ibgp
+  #     CLR7608:
+  #       service: ebgp
+  #       port: et-7/1/1.343
+  #     lb-csu-2:
+  #       service: ibgp
+  #       v4_neighbor: 137.164.0.4
+  #       v6_neighbor: 2607:f380::118:9a40:41
+  #     oxnr-pub-lib-1:
+  #       service: ibgp
+  #     cyp-cc-3:
+  #       service: ibgp
+  #     CLR-7073:
+  #       service: ebgp
+  #       port: 'et-7/1/0.285'
   # lax-agg8:
   #   device_type: iosxr
   #   circuits:

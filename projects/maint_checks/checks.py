@@ -37,7 +37,7 @@ class CircuitChecks:
             print(f'\nConnecting to BGP Table Source - {self.global_agg}')
             start_time = time.time()
             self.global_connect.open()
-            print(f'\t... Connected to {self.global_agg} with napalm.')
+            print(f'\t... connected to {self.global_agg} with napalm.')
         except:
             print('\n\n\tAuthentication Error. Please wait and run again.\n\n')
             sys.exit(1)
@@ -46,7 +46,7 @@ class CircuitChecks:
 
             if agg_router != self.global_agg:
                 elapsed_time = time.time() - start_time
-                print(f'\n\t... resetting OTP ({int(30 - elapsed_time)} sec)')
+                print(f'\t... resetting OTP ({int(30 - elapsed_time)} sec)')
                 time.sleep(30 - elapsed_time)
                 print(f'\t... done')
 
@@ -55,7 +55,7 @@ class CircuitChecks:
                 try:
                     print(f'Connecting to Agg Router - {agg_router}')
                     self.agg_connect.open()
-                    print(f'\t... Connected to {agg_router} with napalm')
+                    print(f'\t... connected to {agg_router} with napalm')
                     start_time = time.time()
                 except:
                     print('\n\n\tAuthentication Error. Please wait and run again.\n\n')

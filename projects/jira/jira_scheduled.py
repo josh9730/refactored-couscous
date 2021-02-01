@@ -7,7 +7,7 @@ import argparse
 import datetime
 import yaml
 
-with open('/Users/jdickman/Git/refactored-couscous/python/jira/data.yaml') as file:
+with open('/Users/jdickman/Git/refactored-couscous/projects/jira/data.yaml') as file:
     data = yaml.full_load(file)
 
 parser = argparse.ArgumentParser(description='Manually run scheduled Jira tasks.')
@@ -74,7 +74,7 @@ def main(args):
 
         day = datetime.datetime.now().strftime("%a")
 
-        if day == 'Sun':
+        if day == 'Mon':
             buckets(atl_stuff)
             outages(atl_stuff)
             gcal_pull(cal_stuff)

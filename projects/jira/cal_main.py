@@ -113,7 +113,7 @@ class CalendarStuff:
         """
 
         # if os.path.exists('token.pickle'):
-        with open('/Users/jdickman/Git/refactored-couscous/python/jira/token.pickle', 'rb') as token:
+        with open('/Users/jdickman/Git/refactored-couscous/projects/jira/token.pickle', 'rb') as token:
             creds = pickle.load(token)
 
         service = build('calendar', 'v3', credentials=creds)

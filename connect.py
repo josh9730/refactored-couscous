@@ -33,20 +33,20 @@ class Login:
         """SSH with MFA account.
         """
 
-        child = pexpect.spawn (f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {self.username}@{self.hostname} | ct"')
-        child.expect('Password'):
-        child.sendline (self.first_factor + self.otp.now())
+        child = pexpect.spawn(f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {self.username}@{self.hostname} | ct"')
+        child.expect('Password:')
+        child.sendline(self.first_factor + self.otp.now())
         child.interact()
 
     def telnet_login(self):
         """Telnet with MFA account
         """
 
-        child = pexpect.spawn (f'/bin/bash -c "telnet -4 {self.hostname} | ct"')
-        child.expect ('Username:')
-        child.sendline (self.username)
-        child.expect ('Password:')
-        child.sendline (self.first_factor + self.otp.now())
+        child = pexpect.spawn(f'/bin/bash -c "telnet -4 {self.hostname} | ct"')
+        child.expect('Username:')
+        child.sendline(self.username)
+        child.expect('Password:')
+        child.sendline(self.first_factor + self.otp.now())
         child.interact()
 
     def telnet_enable(self):
@@ -55,11 +55,11 @@ class Login:
 
         enable_account = GetLP().get_lp('enable')
 
-        child = pexpect.spawn (f'/bin/bash -c "telnet -4 {self.hostname} | ct"')
-        child.expect ('Username:')
-        child.sendline (enable_account[0])
-        child.expect ('Password:')
-        child.sendline (enable_account[1])
+        child = pexpect.spawn(f'/bin/bash -c "telnet -4 {self.hostname} | ct"')
+        child.expect('Username:')
+        child.sendline(enable_account[0])
+        child.expect('Password:')
+        child.sendline(enable_account[1])
         child.interact()
 
     def enable_login(self):
@@ -68,9 +68,9 @@ class Login:
 
         enable_account = GetLP().get_lp('enable')
 
-        child = pexpect.spawn (f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {enable_account[0]}@{self.hostname} | ct"')
-        child.expect ('Password:')
-        child.sendline (enable_account[1])
+        child = pexpect.spawn(f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {enable_account[0]}@{self.hostname} | ct"')
+        child.expect('Password:')
+        child.sendline(enable_account[1])
         child.interact()
 
 

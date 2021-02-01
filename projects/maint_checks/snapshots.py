@@ -31,10 +31,13 @@ def main():
     """Initialize checks type. Currently Per-Device or Per-Circuit.
     """
 
-    with open('data.yaml') as file:
+    with open('data.yml') as file:
         data = yaml.full_load(file)
 
-    username = data['username']
+    with open('/Users/jdickman/Git/refactored-couscous/usernames.yaml') as file:
+        usernames = yaml.full_load(file)
+
+    username = usernames['mfa']
     pre = data['pre_file_path']
     post = data['post_file_path']
 
