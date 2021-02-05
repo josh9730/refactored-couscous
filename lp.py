@@ -12,7 +12,9 @@ class GetLP:
         'enable': bytes('CENIC Enable Account', 'utf-8'),
         'oob': bytes('CENIC Out-of-Band- OOB', 'utf-8'),
         'cas': bytes('CAS', 'utf-8'),
-        'tacacs': bytes('CENIC TACACS Key', 'utf-8')
+        'tacacs': bytes('CENIC TACACS Key', 'utf-8'),
+        'cll1': bytes('Cisco Learning Library #1', 'utf-8'),
+        'cll2': bytes('Cisco Learning Library #2', 'utf-8')
     }
 
     def __init__(self):

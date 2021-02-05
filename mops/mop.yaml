@@ -1,0 +1,91 @@
+---
+  ticket: NOC-641153
+  page_title: CLR16344 MTU Change
+  parent_page_id: 8885131
+  link: false
+  summary:
+    - Replace UCLA optic for CLR-16371
+    - Trace fibers & cross connect
+
+  cd:
+    start_time: 0900
+    end_time: 0930
+    start_day: today
+    changes:
+      - |-
+        test
+
+  level:
+    - 0
+  rh:
+    - Tustin
+  exec:
+    - NOC
+  approval:
+    - NOC-620652
+  impact:
+    - N/A
+  escalation:
+    -
+  p_rollback:
+    - 'No'
+  rollback:
+    - Rollback is reverse of MOP
+  pm:
+
+  shipping:
+    NOC-641282:
+      - '772814370685'
+  sections:
+    'Locate and Replace Optic':
+      - rh: Locate TUST1CA87TA1 Shelf 2 Slot 3 Port 2 in CL-10 Rack 003-007.
+      - rh: Trace the jumper from Port 2. Provide NOC with the far end port details.
+      - rh: Replace the optic in Port 2 with the shipped optic. Move the old optic to any free port in Slot 3.
+      - noc: Verify optic is recognized, and update AMS.
+      - rh: 'Locate and trace the following cross connect - 21396920. This is expected to be run as: A_Loc - LSANCA54ZG001 port 1 to Cabinet 1425 panel CP:1415:1211889 ports 11/12, Z_Loc - Panel 3.003.LC.A Ports 17/18'
+      - rh: If the cross connect is located, please provide the serial number to NOC.
+      - rh: The jumper from Port 2 should connect to the above cross connect. If this is NOT the case, please correct this so that Port 2 connects to the FRONT of the patch panel port, and the cross connect connects to the BACK of the same patch panel port.
+      - noc: If RH is able to connect this, place a facility loop on Slot 3 Port 2, and verify that the link comes up. Note in the ticket if this is not the case.
+
+
+
+
+# must handle ':' inside string
+
+# Reset
+  # ticket: 
+  # page_title: 
+  # parent_page_id: 
+  # link: false
+  # summary:
+  #   - 
+
+  # cd:
+  #   start_time:
+  #   end_time: 
+  #   start_day: today
+  #   cd:
+  #     - |-
+  #       TEST
+
+  # level:
+  #   - 
+  # rh:
+  #   - 
+  # exec:
+  #   - 
+  # approval:
+  #   - 
+  # impact:
+  #   - 
+  # escalation:
+  #   - 'Deploying Engineer'
+  # p_rollback:
+  #   - 'No'
+  # rollback:
+  #   - Rollback is reverse of MOP
+  # pm:
+
+  # shipping:
+
+  # sections:

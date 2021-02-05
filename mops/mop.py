@@ -4,13 +4,34 @@ import yaml
 import keyring
 import shutil
 import sys
+import argparse
 
 sys.path.append('/Users/jdickman/Git/refactored-couscous/projects/jira')
 from atl_main import Logins
 
-def main():
+parser = argparse.ArgumentParser(description='Generate MOP and push to Confluence/Jira')
+parser.add_argument('mop_type', metavar='mop_type',
+                    help='Either mop or cd (for Change Doc)')
+args = parser.parse_args()
+
+
+def mop_template():
     env = Environment(loader=FileSystemLoader('.'), trim_blocks=True, lstrip_blocks=True)
     template = env.get_template("mop-gen.j2")
+    page_body = template.render(mop_file)
+
+    return template
+
+def cd_template():
+    env = Environment(loader=FileSystemLoader('.'), trim_blocks=True, lstrip_blocks=True)
+    template = env.get_template("cd-gen.j2")
+    page_body = template.render(mop_file)
+
+    return template
+
+def confluence_update()
+
+def main(args):
 
     with open('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
         usernames = yaml.full_load(file)
@@ -37,13 +58,14 @@ def main():
     else:
         ticket = mop_file['ticket']
 
-    page_body = template.render(mop_file)
+    if args.mop_type == 'mop':
+
+
+
     confluence = Logins(username).conf_login()
     confluence.update_or_create(parent_page_id, page_title, page_body, representation='wiki')
 
     if mop_file['link'] == True:
-        jira = Logins(username).jira_login()
-
         jira = Logins(username).jira_login()
 
         link_title = page_title.replace(" ", "+")
@@ -53,4 +75,4 @@ def main():
     shutil.copy('/Users/jdickman/Git/refactored-couscous/mop.yaml', f'/Users/jdickman/Git/1 - Docs/MOPs/YAML/{page_title}.yaml')
 
 if __name__ == '__main__':
-    main()
+    main(args)

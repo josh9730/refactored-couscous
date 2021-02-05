@@ -1,5 +1,7 @@
 from googleapiclient.discovery import build
-from datetime import datetime, timedelta
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from datetime import datetime, timedelta, date
 import pickle
 import os.path
 import gspread
@@ -11,8 +13,29 @@ from atl_main import Logins
 
 class CalendarStuff:
 
-    def __init__(self, username):
+    def __init__(self, username=None):
         self.jira = Logins(username).jira_login()
+
+        # If modifying these scopes, delete the file token.pickle.
+        SCOPES = ['https://www.googleapis.com/auth/calendar.events']
+
+        creds = None
+        if os.path.exists('/Users/jdickman/Git/refactored-couscous/projects/jira/token.pickle'):
+            with open('/Users/jdickman/Git/refactored-couscous/projects/jira/token.pickle', 'rb') as token:
+                creds = pickle.load(token)
+
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    '/Users/jdickman/Git/refactored-couscous/projects/jira/credentials.json', SCOPES)
+                creds = flow.run_local_server(port=0)
+
+            with open('/Users/jdickman/Git/refactored-couscous/projects/jira/token.pickle', 'wb') as token:
+                pickle.dump(creds, token)
+
+        self.service = build('calendar', 'v3', credentials=creds)
 
     def create_row(self, requestor, ticket, cal_type, desc, event):
         """Create row for each event.
@@ -112,21 +135,17 @@ class CalendarStuff:
         """Get calendar events on maintenance and internal change calendar.
         """
 
-        # if os.path.exists('token.pickle'):
-        with open('/Users/jdickman/Git/refactored-couscous/projects/jira/token.pickle', 'rb') as token:
-            creds = pickle.load(token)
-
-        service = build('calendar', 'v3', credentials=creds)
         now = datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
         d1 = ((datetime.utcnow() - timedelta(days=7)).isoformat() + 'Z')
 
         # Call the Calendar API
-        maint_cal = service.events().list(calendarId='cenic.org_36uqe435vlel8qv9ul57tomo1g@group.calendar.google.com',
+        #pylint: disable=no-member
+        maint_cal = self.service.events().list(calendarId='cenic.org_36uqe435vlel8qv9ul57tomo1g@group.calendar.google.com',
                                             timeMin=d1, timeMax=now, singleEvents=True,
                                             orderBy='startTime').execute()
         maint_events = maint_cal.get('items', [])
 
-        internal_cal = service.events().list(calendarId='cenic.org_oggku8rjbli9v7163ocroug09s@group.calendar.google.com',
+        internal_cal = self.service.events().list(calendarId='cenic.org_oggku8rjbli9v7163ocroug09s@group.calendar.google.com',
                                             timeMin=d1, timeMax=now, singleEvents=True,
                                             orderBy='startTime').execute()
         internal_events = internal_cal.get('items', [])
@@ -145,3 +164,33 @@ class CalendarStuff:
 
             firstRow = lastRow + 1
             worksheet.update(f'C{firstRow}:H', cal_data)
+
+    def create_event(self, start_time, end_time, day, title):
+
+        if day == 'today':
+            start_day = date.today()
+        else:
+            print('enter valid day')
+
+        start_hour = int(start_time[0:2])
+        start_min = int(start_time[2:4])
+        end_hour = int(end_time[0:2])
+        end_min = int(end_time[2:4])
+
+        start_iso = datetime(start_day.year, start_day.month, start_day.day, start_hour, start_min).isoformat()
+        end_iso = datetime(start_day.year, start_day.month, start_day.day, end_hour, end_min).isoformat()
+
+        body = {
+            'summary': title,
+            'start': {
+                'timeZone': 'America/Los_Angeles',
+                'dateTime': start_iso
+            },
+            'end': {
+                'timeZone': 'America/Los_Angeles',
+                'dateTime': end_iso
+            }
+        }
+
+        #pylint: disable=no-member
+        self.service.events().insert(calendarId='cenic.org_oggku8rjbli9v7163ocroug09s@group.calendar.google.com', body=body).execute()

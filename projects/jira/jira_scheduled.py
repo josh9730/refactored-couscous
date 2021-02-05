@@ -7,7 +7,7 @@ import argparse
 import datetime
 import yaml
 
-with open('/Users/jdickman/Git/refactored-couscous/projects/jira/data.yaml') as file:
+with open('/Users/jdickman/Git/refactored-couscous/projects/jira/data.yml') as file:
     data = yaml.full_load(file)
 
 parser = argparse.ArgumentParser(description='Manually run scheduled Jira tasks.')
@@ -54,7 +54,7 @@ def main(args):
     sheet_key = data['sheet_key']
 
     atl_stuff = AtlassianStuff(username, sheet_key)
-    cal_stuff = CalendarStuff(username)
+    cal_stuff = CalendarStuff(username=username)
 
     username = data['username']
     sheet_key = data['sheet_key']

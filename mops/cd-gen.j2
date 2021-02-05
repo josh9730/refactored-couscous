@@ -1,0 +1,12 @@
+{jira:key={{ ticket }}}
+
+h2. SUMMARY
+{% for i in summary %}
+* {{ i }}
+{% endfor %}
+
+h2. CHANGES
+{noformat:nopanel=true}
+{{ cd['changes'][0] }}
+
+{noformat}

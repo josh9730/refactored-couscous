@@ -3,14 +3,18 @@ import pyotp
 import keyring
 import argparse
 import time
+import yaml
 from lp import GetLP
 
 
-class Login:
+class LoginInteract:
 
-    def __init__(self, args):
+    def __init__(self, args=None):
 
-        self.username = 'jdickmanmfa'
+        with open('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
+            usernames = yaml.full_load(file)
+        self.username = usernames['mfa']
+
         self.first_factor = keyring.get_password("mfa", self.username)
         otp_secret = keyring.get_password("otp", self.username)
         self.otp = pyotp.TOTP(otp_secret)
@@ -25,6 +29,9 @@ class Login:
         elif args.telnet_enable:
             print(f'\nConnecting to {self.hostname} with Telnet/Enable...\n')
             self.telnet_enable()
+        elif args.cas:
+            print(f'\nConnecting to {self.hostname} with SSH/CAS...\n')
+            self.cas_login()
         else:
             print(f'\nConnecting to {self.hostname} with SSH/MFA...\n')
             self.ssh_login()
@@ -73,21 +80,28 @@ class Login:
         child.sendline(enable_account[1])
         child.interact()
 
+    def cas_login(self):
+        """Retrieve CAS account from lastpass script and ssh
+        """
+
+        cas_account = GetLP().get_lp('cas')
+
+        child = pexpect.spawn(f'/bin/bash -c "ssh {self.username[:-3]}@{self.hostname} | ct"')
+        child.expect('Password:')
+        child.sendline(cas_account[1])
+        child.interact()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Login to device and return control.')
-    parser.add_argument('hostname', metavar='hostname',
-                        help='Device name or IP address to login to. Defaults to MFA via ssh.')
-    parser.add_argument("-t", "--telnet", help="Telnet with MFA account",
-                        action="store_true")
-    parser.add_argument("-te", "--telnet_enable", help="Telnet with enable account",
-                        action="store_true")
-    parser.add_argument("-e", "--enable", help="SSH with enable account",
-                        action="store_true")
+    parser.add_argument('hostname', metavar='hostname', help='Device name or IP address to login to. Defaults to MFA via ssh.')
+    parser.add_argument("-t", "--telnet", help="Telnet with MFA account", action="store_true")
+    parser.add_argument("-te", "--telnet_enable", help="Telnet with enable account", action="store_true")
+    parser.add_argument("-e", "--enable", help="SSH with enable account", action="store_true")
+    parser.add_argument("-c", "--cas", help="SSH with CAS account", action="store_true")
     args = parser.parse_args()
 
-    run_time = time.time()
-    Login(args)
+    LoginInteract(args)
 
 
 

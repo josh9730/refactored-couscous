@@ -24,14 +24,14 @@ def main(args):
     mask = int(args.address.split("/")[1])
     ip = netaddr.IPNetwork(args.address).ip
 
-    if args.link_type == "int":
+    if args.link == "int":
         int_ext = str(0)
         link_name = 'Internal'
     else:
         int_ext = str(1)
         link_name = 'External'
 
-    if args.network_type == "hpr":
+    if args.network == "hpr":
         network = str(0)
         net_name = 'HPR'
     else:
