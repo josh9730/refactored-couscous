@@ -1,78 +1,134 @@
 from jinja2 import Environment, FileSystemLoader
 from atlassian import Confluence, Jira
+from googleapiclient.discovery import build
 import yaml
 import keyring
 import shutil
 import sys
 import argparse
+import pickle
 
+#pylint: disable=import-error
 sys.path.append('/Users/jdickman/Git/refactored-couscous/projects/jira')
 from atl_main import Logins
-
-parser = argparse.ArgumentParser(description='Generate MOP and push to Confluence/Jira')
-parser.add_argument('mop_type', metavar='mop_type',
-                    help='Either mop or cd (for Change Doc)')
-args = parser.parse_args()
+from cal_main import CalendarStuff
 
 
-def mop_template():
-    env = Environment(loader=FileSystemLoader('.'), trim_blocks=True, lstrip_blocks=True)
-    template = env.get_template("mop-gen.j2")
-    page_body = template.render(mop_file)
+class CreateMOPs:
 
-    return template
+    def __init__(self):
+        """Create MOP/CD pages, link to Jira and create Calendar event (if applicable)."""
 
-def cd_template():
-    env = Environment(loader=FileSystemLoader('.'), trim_blocks=True, lstrip_blocks=True)
-    template = env.get_template("cd-gen.j2")
-    page_body = template.render(mop_file)
+        with open('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
+            usernames = yaml.full_load(file)
+        username = usernames['cas']
 
-    return template
+        self.jira = Logins(username).jira_login()
+        self.confluence = Logins(username).conf_login()
 
-def confluence_update()
+    def main(self, args):
+        """Open YAML, launch child methods
 
-def main(args):
+        Args:
+            args (str): either 'mop' or 'cd'
+        """
 
-    with open('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
-        usernames = yaml.full_load(file)
-    username = usernames['cas']
+        with open("mop.yaml") as file2:
+            self.mop_file = yaml.full_load(file2)
 
-    with open("mop.yaml") as file2:
-        mop_file = yaml.full_load(file2)
+        if args.mop_type == 'mop':
+            self.create_mop()
 
-    if not mop_file['page_title']:
-        print('\n\tEnter Title\n')
-        sys.exit(1)
-    else:
-        page_title = mop_file['page_title']
+        elif args.mop_type == 'cd':
+            self.create_cd()
 
-    if not mop_file['parent_page_id']:
-        print('\n\tEnter Parent Page ID\n')
-        sys.exit(1)
-    else:
-        parent_page_id = mop_file['parent_page_id']
+    def test_vars(self):
+        """Make sure variables are set in YAML."""
 
-    if not mop_file['ticket']:
-        print('\n\tEnter Ticket\n')
-        sys.exit(1)
-    else:
-        ticket = mop_file['ticket']
+        if not self.mop_file['page_title']:
+            print('\n\tEnter Title\n')
+            sys.exit(1)
+        else:
+            self.page_title = self.mop_file['page_title']
 
-    if args.mop_type == 'mop':
+        if not self.mop_file['parent_page_id']:
+            print('\n\tEnter Parent Page ID\n')
+            sys.exit(1)
+        else:
+            self.parent_page_id = self.mop_file['parent_page_id']
 
+        if not self.mop_file['ticket']:
+            print('\n\tEnter Ticket\n')
+            sys.exit(1)
+        else:
+            self.ticket = self.mop_file['ticket']
 
+    def create_mop(self):
+        """Create MOP from Jinja template, launch confluence & jira methods."""
 
-    confluence = Logins(username).conf_login()
-    confluence.update_or_create(parent_page_id, page_title, page_body, representation='wiki')
+        env = Environment(loader=FileSystemLoader('.'), trim_blocks=True, lstrip_blocks=True)
+        template = env.get_template("mop-gen.j2")
+        self.page_body = template.render(self.mop_file)
 
-    if mop_file['link'] == True:
-        jira = Logins(username).jira_login()
+        self.test_vars()
+        print(f'\n\tCreating MOP:\n\n\t\tTitle: {self.page_title}\n\t\tTicket: {self.ticket}\n\t\tJira Link: {self.mop_file["link"]}\n')
 
-        link_title = page_title.replace(" ", "+")
-        page_url = f'https://documentation.cenic.org/display/Core/{link_title}'
-        jira.create_or_update_issue_remote_links(ticket, page_url, page_title, relationship='mentioned in')
+        self.update_confluence()
+        self.update_jira()
+        self.move_yaml()
 
-    shutil.copy('/Users/jdickman/Git/refactored-couscous/mop.yaml', f'/Users/jdickman/Git/1 - Docs/MOPs/YAML/{page_title}.yaml')
+    def create_cd(self):
+        """Create CD from Jinja template, launch confluence, jira and calendar methods."""
+
+        env = Environment(loader=FileSystemLoader('.'), trim_blocks=True, lstrip_blocks=True)
+        template = env.get_template("cd-gen.j2")
+        self.page_body = template.render(self.mop_file)
+
+        self.test_vars()
+        print(f'\n\tCreating Change Doc:\n\n\t\tTitle: {self.page_title}\n\t\tTicket: {self.ticket}\n\t\tJira Link: {self.mop_file["link"]}\n')
+
+        self.update_confluence()
+        #pylint: disable=no-member
+        self.create_calendar_event()
+        self.update_jira()
+
+    def update_confluence(self):
+        """Create/Update Confluence page based on Title and parent page ID."""
+
+        print(f'\tPushing to Confluence page: {self.page_title}\n')
+        self.confluence.update_or_create(self.parent_page_id, self.page_title, self.page_body, representation='wiki')
+
+    def update_jira(self):
+        """Create Jira links to Confluence page if YAML 'link' entry is true."""
+
+        if self.mop_file['link']:
+
+            print(f'\tAdding link to {self.ticket}')
+
+            link_title = self.page_title.replace(" ", "+")
+            page_url = f'https://documentation.cenic.org/display/Core/{link_title}'
+            self.jira.create_or_update_issue_remote_links(self.ticket, page_url, self.page_title, relationship='mentioned in')
+
+    def create_calendar_event(self):
+        """Create Internal Change event for CD."""
+
+        start_time = self.mop_file['cd']['start_time']
+        end_time = self.mop_file['cd']['end_time']
+        day = self.mop_file['cd']['start_day']
+        title = self.mop_file['ticket'] + ': ' + self.mop_file['page_title']
+
+        print(f'\tCreating Internal Change entry:\n\n\t\tDay: {day}\n\t\tStart: {start_time}\n\t\tEnd: {end_time}\n')
+        CalendarStuff().create_event(start_time, end_time, day, title)
+
+    def move_yaml(self):
+        """Copy YAML to repo"""
+
+        shutil.copy('/Users/jdickman/Git/refactored-couscous/mop.yaml', f'/Users/jdickman/Git/1 - Docs/MOPs/YAML/{self.page_title}.yaml')
+
 
 if __name__ == '__main__':
-    main(args)
+    parser = argparse.ArgumentParser(description='Generate MOP and push to Confluence/Jira')
+    parser.add_argument('mop_type', metavar='mop_type', choices=['mop', 'cd'], help='Type of document to create')
+    args = parser.parse_args()
+
+    CreateMOPs().main(args)
