@@ -1,6 +1,7 @@
 from napalm.base import get_network_driver
 from netmiko import ConnectHandler
 from jnpr.junos import Device
+from ncclient import manager
 import keyring
 import pyotp
 
@@ -52,7 +53,7 @@ class Login:
 
         return connection
 
-    def pyez_connect(self):
+    def pyez_login(self):
         """Method for Junos PyEZ connections. Returns the connection parameters. Junos only.
 
         Returns:
@@ -63,5 +64,20 @@ class Login:
             host = self.hostname,
             user = self.username,
             passwd = self.first_factor + self.otp.now())
+
+        return connection
+
+    def ncc_login(self):
+        """Method for NCClient connections. Returns the connection parameters. Currently only used by XR.
+
+        Returns:
+            connection: NCClient connection. Must close.
+        """
+
+        connection = manager.connect(
+            host = self.hostname,
+            username = self.username,
+            password = self.first_factor + self.otp.now(),
+            hostkey_verify=False)
 
         return connection

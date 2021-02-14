@@ -29,7 +29,6 @@ class CircuitChecks:
 
     def get_bgp_output_dict(self):
         """Return dict of BGP data.
-
         Returns:
             (dict): Output dict for each neighbor defined in the circuits_checks dict.
         """
@@ -141,7 +140,6 @@ class DeviceChecks:
 
     def get_device_main(self):
         """Main function call.
-
         Returns:
             dict: output dictionary
         """
@@ -154,7 +152,7 @@ class DeviceChecks:
                 if self.device_type == 'junos':
                     try:
                         print(f'Connecting to {self.device}')
-                        self.connection = Login(self.username, self.device, None).pyez_connect()
+                        self.connection = Login(self.username, self.device, None).pyez_login()
                         print(f'\t... Connected to {self.device} with PyEZ')
                         output_dict_1 = self.get_device_junos()
                     except:
@@ -183,7 +181,6 @@ class DeviceChecks:
 
     def get_device_junos(self):
         """Use PyEZ to pull from Junos. Called from main class function
-
         Returns:
             dict: output dict
         """
@@ -233,7 +230,6 @@ class DeviceChecks:
     def get_device_iosxr(self):
         """Retrieve and parse output from IOS-XR Napalm getters
             1. Needs optics and to change
-
         Returns:
             dict: Each return is a nest dict
         """

@@ -1,8 +1,10 @@
 from collections import defaultdict
 from lxml import etree
+import xml.dom.minidom
+import xmltodict
 import tempfile
 import textfsm
-import fsm
+import filters
 import re
 
 def etree_to_dict(etree_data):
@@ -77,11 +79,11 @@ class ParseData:
         isis_list = self.data.split('\n')
 
         for i in isis_list:
-            isis_parsed = ParseData(i, template=fsm.template_xr_isis_status).parse_FSM()
+            isis_parsed = ParseData(i, template=filters.template_xr_isis_status).parse_FSM()
             isis_dict = {
                 isis_parsed[0]: {
                     'Port': isis_parsed[1],
-                    'Status': isis_parsed[2]
+                    'State': isis_parsed[2]
                 }
             }
             self.parsed_data.update(isis_dict)
@@ -89,7 +91,7 @@ class ParseData:
         return self.parsed_data
 
     def parse_optics_napalm_junos(self):
-        """Parse and return dict with only Rx/Tx per lane. Only supported on Junos currently.
+        """Parse and return dict with only Rx/Tx per lane. Only supported on Junos currently, from Napalm.
 
         Returns:
             dict: Rx/Tx per lane.
@@ -191,25 +193,29 @@ class ParseData:
         """
 
         for peer in self.data['bgp-information']['bgp-peer']:
-            try:
-                if peer['peer-state']['@format'] == 'Establ':
 
-                    if type(peer['bgp-rib']) == list:
-                        pref = peer['bgp-rib'][0]['accepted-prefix-count']
-                    elif type(peer['bgp-rib']) == dict:
-                        pref = peer['bgp-rib']['accepted-prefix-count']
+            if type(peer['peer-state']) == dict:
 
-                    bgp_dict = {
-                        peer['peer-address']: {
-                            'Description': peer['description'],
-                            'State': peer['peer-state']['@format'],
-                            'Accepted Prefixes': pref
-                        }
+                if type(peer['bgp-rib']) == list:
+                    pref = peer['bgp-rib'][0]['accepted-prefix-count']
+                elif type(peer['bgp-rib']) == dict:
+                    pref = peer['bgp-rib']['accepted-prefix-count']
+
+                try:
+                    desc = peer['description']
+                except:
+                    desc = 'None'
+
+                bgp_dict = {
+                    peer['peer-address']: {
+                        'Description': desc,
+                        'Peer AS': peer['peer-as'],
+                        'State': peer['peer-state']['@format'],
+                        'Accepted Prefixes': pref
                     }
-                self.parsed_data.update(bgp_dict)
+                }
 
-            except:
-                pass
+            self.parsed_data.update(bgp_dict)
 
         return self.parsed_data
 
@@ -355,5 +361,11 @@ class ParseData:
                 }
             }
             self.parsed_data.update(power_dict)
+
+        return self.parsed_data
+
+    def parse_rpc(self):
+
+        self.parsed_data = xmltodict.parse(xml.dom.minidom.parseString(self.data.xml).toprettyxml())
 
         return self.parsed_data

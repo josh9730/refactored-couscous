@@ -37,7 +37,6 @@ class GetNeighborRoutes:
 
     def get_xr_bgp_routes(self):
         """For XR Agg routers only.
-
         Returns:
             (list): v4 and v6 output lists
         """
@@ -105,7 +104,6 @@ class GetNeighborRoutes:
 
     def get_junos_bgp_routes(self):
         """For Junos Agg routers only.
-
         Returns:
             (list): v4 and v6 output lists
         """
@@ -172,10 +170,8 @@ class GetNeighborRoutes:
 
     def get_static_routes(self, device_type):
         """For static only. Requires ASN tag (may not always be tagged).
-
         Args:
             device_type: Junos or IOS-XR
-
         Returns:
             (list): List of v4/v6 static routes tagged with ASN
         """

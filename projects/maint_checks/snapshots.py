@@ -1,21 +1,16 @@
 """ Version = 2.0
 To Do:
-
     CircuitChecks:
         v6 routes only - does list work?
         check XR static
         per-port checks for CircuitChecks
-
     DeviceChecks:
         advertised prefix count per neighbor
         check if works on mx204, 9001
         IOSXR needs re-formatting to match junos
             optics, power support
-
     better diffs
     all outputs should be in same format (support pre on device A and post on Device B)
-
-
 what does it do ?
 """
 
