@@ -1,4 +1,3 @@
-
 from ipaddress import ip_address, IPv4Address, IPv6Address
 import subprocess
 import sys
@@ -15,26 +14,26 @@ class IPChecks:
         self.circuit = circuit
 
         try:
-            if self.circuit['v4_neighbor']:
-                ipv4_nei = self.circuit['v4_neighbor']
+            if self.circuit['ipv4_neighbor']:
+                ipv4_nei = self.circuit['ipv4_neighbor']
                 try:
                     ip_address(ipv4_nei)
                 except:
                     print(f'\nERROR: {ipv4_nei} is invalid. Enter a valid IPv4 address and re-run.')
                     sys.exit(1)
         except:
-            self.circuit['v4_neighbor'] = None
+            self.circuit['ipv4_neighbor'] = None
 
         try:
-            if self.circuit['v6_neighbor']:
-                ipv6_nei = self.circuit['v6_neighbor']
+            if self.circuit['ipv6_neighbor']:
+                ipv6_nei = self.circuit['ipv6_neighbor']
                 try:
                     ip_address(ipv6_nei)
                 except:
                     print(f'\nERROR: {ipv6_nei} is invalid. Enter a valid IPv6 address and re-run.')
                     sys.exit(1)
         except:
-            self.circuit['v6_neighbor'] = None
+            self.circuit['ipv6_neighbor'] = None
 
 
 class GetNeighborIPs(IPChecks):
@@ -51,8 +50,8 @@ class GetNeighborIPs(IPChecks):
         """
 
         super().__init__(circuit)
-        self.ipv4_nei = self.circuit['v4_neighbor']
-        self.ipv6_nei = self.circuit['v6_neighbor']
+        self.ipv4_nei = self.circuit['ipv4_neighbor']
+        self.ipv6_nei = self.circuit['ipv6_neighbor']
         self.hostname = hostname
         print(f'Getting {self.hostname} neighbor IPs...')
 
@@ -60,7 +59,7 @@ class GetNeighborIPs(IPChecks):
         """Use DNS to retrieve loopback IPs. Prints error if no IPv6.
         """
 
-        if not self.circuit['v4_neighbor'] or not self.circuit['v6_neighbor']:
+        if not self.circuit['ipv4_neighbor'] or not self.circuit['ipv6_neighbor']:
 
             bashCmd = ['host', f'{self.hostname}'] # run 'host {{ DNS name }}
             process = subprocess.Popen(bashCmd, stdout=subprocess.PIPE)
@@ -69,14 +68,14 @@ class GetNeighborIPs(IPChecks):
             if error: print(error)
             ipv4_nei = str(output,'utf-8').split('\n')[0].split()[3] # split string and select only the IPv4 address
             try:
-                self.circuit['v6_neighbor'] = str(output,'utf-8').split('\n')[1].split()[4] # split string and select only the IPv6 address
+                self.circuit['ipv6_neighbor'] = str(output,'utf-8').split('\n')[1].split()[4] # split string and select only the IPv6 address
             except:
                 ipv6_nei = None
-                if not self.circuit['v6_neighbor']:
+                if not self.circuit['ipv6_neighbor']:
                     print(f'* WARNING: No AAAA record for {self.hostname}. Enter manually if v6 Peering exists and re-run.')
 
-            if not self.circuit['v4_neighbor']: self.circuit['v4_neighbor'] = ipv4_nei
-            if not self.circuit['v6_neighbor']: self.circuit['v6_neighbor'] = ipv6_nei
+            if not self.circuit['ipv4_neighbor']: self.circuit['ipv4_neighbor'] = ipv4_nei
+            if not self.circuit['ipv6_neighbor']: self.circuit['ipv6_neighbor'] = ipv6_nei
 
     def get_ebgp_static_ips(self, connection):
         """Uses napalm to get assume neighbor IP from port configs. Typical standard is +1/+16 for peer.
@@ -88,7 +87,7 @@ class GetNeighborIPs(IPChecks):
         self.connection = connection
         ipv4_nei = ipv6_nei = None
 
-        if not self.circuit['v4_neighbor'] or not self.circuit['v6_neighbor']:
+        if not self.circuit['ipv4_neighbor'] or not self.circuit['ipv6_neighbor']:
 
             try:
                 self.port = self.circuit['port']
@@ -107,5 +106,5 @@ class GetNeighborIPs(IPChecks):
             except:
                 print(f'* WARNING: No IPv6 address configured on {self.port}. Enter manually if v6 Peering exists and re-run.')
 
-            if not self.circuit['v4_neighbor']: self.circuit['v4_neighbor'] = ipv4_nei
-            if not self.circuit['v6_neighbor']: self.circuit['v6_neighbor'] = ipv6_nei
+            if not self.circuit['ipv4_neighbor']: self.circuit['ipv4_neighbor'] = ipv4_nei
+            if not self.circuit['ipv6_neighbor']: self.circuit['ipv6_neighbor'] = ipv6_nei

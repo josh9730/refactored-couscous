@@ -17,37 +17,33 @@ circuit_checks:
   #   circuits:
   #     CLR-17525:
   #       service: ebgp
-  #       v4_neighbor: 137.164.26.123
-  #       v6_neighbor: 2607:f380:1::108:9a41:a7b1
+  #       ipv4_neighbor: 137.164.26.123
+  #       ipv6_neighbor: 2607:f380:1::108:9a41:a7b1
   # tri-agg2:
   #   device_type: iosxr
   #   circuits:
   #     CLR1118:
   #       service: ebgp
   #       port: TenGigE0/7/0/22
-  sac-agg4:
-    device_type: iosxr
-    circuits:
-      CLR2118:
-        service: ebgp
-        v4_neighbor: 137.164.24.130
-        v6_neighbor: 2607:f380:1::118:9a41:8821
-  # frg-agg4:
-  #   device_type: iosxr
-  #   circuits:
-  #     ama-coe-2:
-  #       service: ibgp
-  #     cal-coe-2:
-  #       service: ibgp
-  #     col-coe-2:
-  #       service: ibgp
+  # sac-agg4|iosxr:
+  #   CLR2118:
+  #     service: ebgp
+  #     ipv4_neighbor: 137.164.24.130
+  #     ipv6_neighbor: 2607:f380:1::118:9a41:8821
+  frg-agg4|iosxr:
+    ama-coe-2:
+      service: ibgp
+    cal-coe-2:
+      service: ibgp
+    col-coe-2:
+      service: ibgp
   # lax-agg6:
   #   device_type: iosxr
   #   circuits:
   #     DC-HPR_peering:
   #       service: ebgp
-  #       v4_neighbor: 137.164.26.209
-  #       v6_neighbor: 2607:f380::108:9a41:ad11
+  #       ipv4_neighbor: 137.164.26.209
+  #       ipv6_neighbor: 2607:f380::108:9a41:ad11
   # svl-agg8:
   #   device_type: iosxr
   #   circuits:
@@ -63,8 +59,8 @@ circuit_checks:
   #       port: et-7/1/1.343
   #     lb-csu-2:
   #       service: ibgp
-  #       v4_neighbor: 137.164.0.4
-  #       v6_neighbor: 2607:f380::118:9a40:41
+  #       ipv4_neighbor: 137.164.0.4
+  #       ipv6_neighbor: 2607:f380::118:9a40:41
   #     oxnr-pub-lib-1:
   #       service: ibgp
   #     cyp-cc-3:

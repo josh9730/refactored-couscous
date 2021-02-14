@@ -8,7 +8,7 @@ import pyotp
 
 class Login:
 
-    def __init__(self, username, hostname, device_type=''):
+    def __init__(self, username, hostname, device_type):
         """Connection parameters, initialize with open() & close()
 
         Args:
@@ -53,7 +53,7 @@ class Login:
 
         return connection
 
-    def pyez_login(self):
+    def pyez_connect(self):
         """Method for Junos PyEZ connections. Returns the connection parameters. Junos only.
 
         Returns:
@@ -67,7 +67,7 @@ class Login:
 
         return connection
 
-    def ncc_login(self):
+    def ncc_connect(self):
         """Method for NCClient connections. Returns the connection parameters. Currently only used by XR.
 
         Returns:
