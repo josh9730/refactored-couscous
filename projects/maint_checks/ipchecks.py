@@ -1,4 +1,5 @@
-from ipaddress import ip_address, IPv4Address, IPv6Address
+from parse import etree_to_dict
+from ipaddress import ip_address
 import subprocess
 import sys
 
@@ -77,34 +78,34 @@ class GetNeighborIPs(IPChecks):
             if not self.circuit['ipv4_neighbor']: self.circuit['ipv4_neighbor'] = ipv4_nei
             if not self.circuit['ipv6_neighbor']: self.circuit['ipv6_neighbor'] = ipv6_nei
 
-    def get_ebgp_static_ips(self, connection):
+    def get_ebgp_static_ips(self, device_type, connection):
         """Uses napalm to get assume neighbor IP from port configs. Typical standard is +1/+16 for peer.
 
         Args:
             connection: napalm
         """
 
-        self.connection = connection
-        ipv4_nei = ipv6_nei = None
+        if (not self.circuit['ipv4_neighbor'] or not self.circuit['ipv6_neighbor']) and self.circuit['port']:
+            from pprint import pprint
+            if device_type == 'junos':
+                arp = etree_to_dict(connection.rpc.get_arp_table_information(interface=self.circuit['port']))
+                nd = etree_to_dict(connection.rpc.get_ipv6_nd_information(interface=self.circuit['port']))
 
-        if not self.circuit['ipv4_neighbor'] or not self.circuit['ipv6_neighbor']:
+                addresses = self.parse_circuit_iface_junos(arp, nd)
 
-            try:
-                self.port = self.circuit['port']
-            except:
-                print(f'\n*** ERROR: Provide either Port or IPv4/v6 information for {self.hostname}.')
-                sys.exit(1)
+            if not self.circuit['ipv4_neighbor']: self.circuit['ipv4_neighbor'] = addresses[0]
+            if not self.circuit['ipv6_neighbor']: self.circuit['ipv6_neighbor'] = addresses[1]
 
-            ips = self.connection.get_interfaces_ip()[self.port]
+    def parse_circuit_iface_junos(self, arp, nd):
 
-            for i in ips['ipv4']:
-                ipv4_nei = str(IPv4Address(i) + 1) # adds 1 to v4 address to get neighbor IP, converts to string
+        try:
+            ipv4 = arp['arp-table-information']['arp-table-entry']['ip-address']
+        except:
+            ipv4 = None
 
-            try:
-                ipv6 = next(iter(ips['ipv6'])) # select global unicast, not link local
-                ipv6_nei = str(IPv6Address(ipv6) + 16) # adds 16 to v6 address to get neighbor IP, converts to string
-            except:
-                print(f'* WARNING: No IPv6 address configured on {self.port}. Enter manually if v6 Peering exists and re-run.')
+        try:
+            ipv6 = nd['ipv6-nd-information']['ipv6-nd-entry'][0]['ipv6-nd-neighbor-address']
+        except:
+            ipv6 = None
 
-            if not self.circuit['ipv4_neighbor']: self.circuit['ipv4_neighbor'] = ipv4_nei
-            if not self.circuit['ipv6_neighbor']: self.circuit['ipv6_neighbor'] = ipv6_nei
+        return ipv4, ipv6

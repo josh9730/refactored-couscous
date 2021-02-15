@@ -12,77 +12,58 @@ device_checks: # formerly N/A
     device_type: iosxr
 global_agg: lax-agg10 # must be junos for circuits
 circuit_checks:
-  # oak-agg8:
-  #   device_type: iosxr
-  #   circuits:
-  #     CLR-17525:
-  #       service: ebgp
-  #       ipv4_neighbor: 137.164.26.123
-  #       ipv6_neighbor: 2607:f380:1::108:9a41:a7b1
-  # tri-agg2:
-  #   device_type: iosxr
-  #   circuits:
-  #     CLR1118:
-  #       service: ebgp
-  #       port: TenGigE0/7/0/22
+  # oak-agg8|iosxr: #netconf not enabled?
+  #   CLR-17525:
+  #     service: ebgp
+  #     ipv4_neighbor: 137.164.26.123
+  #     ipv6_neighbor: 2607:f380:1::108:9a41:a7b1
+  # tri-agg2|iosxr:
+  #   CLR1118:
+  #     service: ebgp
+  #     port: TenGigE0/7/0/22
   # sac-agg4|iosxr:
   #   CLR2118:
   #     service: ebgp
   #     ipv4_neighbor: 137.164.24.130
   #     ipv6_neighbor: 2607:f380:1::118:9a41:8821
-  frg-agg4|iosxr:
-    ama-coe-2:
-      service: ibgp
-    cal-coe-2:
-      service: ibgp
-    col-coe-2:
-      service: ibgp
-  # lax-agg6:
-  #   device_type: iosxr
-  #   circuits:
-  #     DC-HPR_peering:
-  #       service: ebgp
-  #       ipv4_neighbor: 137.164.26.209
-  #       ipv6_neighbor: 2607:f380::108:9a41:ad11
-  # svl-agg8:
-  #   device_type: iosxr
-  #   circuits:
-  #     merritt-cc-3:
-  #       service: ibgp
-  # lax-agg10:
-  #   device_type: junos
-  #   circuits: # agg_circuit_checks
-  #     bumt-lib-1:
-  #       service: ibgp
-  #     CLR7608:
-  #       service: ebgp
-  #       port: et-7/1/1.343
-  #     lb-csu-2:
-  #       service: ibgp
-  #       ipv4_neighbor: 137.164.0.4
-  #       ipv6_neighbor: 2607:f380::118:9a40:41
-  #     oxnr-pub-lib-1:
-  #       service: ibgp
-  #     cyp-cc-3:
-  #       service: ibgp
-  #     CLR-7073:
-  #       service: ebgp
-  #       port: 'et-7/1/0.285'
-  # lax-agg8:
-  #   device_type: iosxr
-  #   circuits:
-  #     CLR7245:
-  #       service: ebgp
-  #       port: 'TenGigE0/0/0/19/1.245'
-  #     rh-cc-2:
-  #       service: ibgp
-  # cor-agg8:
-  #   device_type: junos
-  #   circuits:
-  #     CLR16527:
-  #       service: static
-  #       asn: '64544'
-  #       port: 'xe-0/0/0:0.101'
+  # frg-agg4|iosxr:
+  #   ama-coe-2:
+  #     service: ibgp
+  #   cal-coe-2:
+  #     service: ibgp
+  #   col-coe-2:
+  #     service: ibgp
+  # svl-agg8|iosxr:
+  #   merritt-cc-3:
+  #     service: ibgp
+  lax-agg10|junos:
+    # bumt-lib-1:
+    #   service: ibgp
+    CLR7608:
+      service: ebgp
+      port: et-7/1/1.343
+    # lb-csu-2:
+    #   service: ibgp
+    #   ipv4_neighbor: 137.164.0.4
+    #   ipv6_neighbor: 2607:f380::118:9a40:41
+    # oxnr-pub-lib-1:
+    #   service: ibgp
+    # cyp-cc-3:
+    #   service: ibgp
+    # CLR-7073:
+    #   service: ebgp
+    #   port: 'et-7/1/0.285'
+  # lax-agg8|iosxr:
+  #   CLR7245:
+  #     service: ebgp
+  #     port: 'TenGigE0/0/0/19/1.245'
+  #   rh-cc-2:
+  #     service: ibgp
+  # cor-agg8|junos:
+  #   CLR16527:
+  #     service: static
+  #     asn: '64544'
+  #     port: 'xe-0/0/0:0.101'
 
 
 # device_type: either 'iosxr' or 'junos'

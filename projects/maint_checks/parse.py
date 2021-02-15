@@ -3,8 +3,15 @@ from lxml import etree
 import xml.dom.minidom
 import xmltodict
 import filters
+import re
 
 def etree_to_dict(etree_data):
+    # Remove any comments (will cause error on json dump)
+    estring = etree.tostring(etree_data)
+    parser =  etree.XMLParser(remove_comments=True)
+    etree_data = etree.fromstring(estring, parser = parser)
+
+    # created nested dict by magic (???)
     etree_dict = {etree_data.tag: {} if etree_data.attrib else None}
     children = list(etree_data)
 
@@ -60,22 +67,21 @@ class ParseData:
         try:
             full_path = self.parsed_data['rpc-reply']['data']['oc-bgp']['bgp-rib']['afi-safi-table'][f'{version}-unicast']['open-config-neighbors']['open-config-neighbor']
             adv_count = full_path['adj-rib-out-post']['num-routes']['num-routes']
-
-            routes = {}
-            route_nlri_dict = {}
+            rx_count = full_path['adj-rib-in-post']['num-routes']['num-routes']
 
             try:
+                routes = {}
                 for route in full_path['adj-rib-in-post']['routes']['route']:
 
                     comm_list = []
                     for community in route['route-attr-list']['community']:
                         comm_list.append(community['objects'])
 
+                    route_nlri_dict = {}
                     route_nlri_dict = {
                         route['route']: {
                             'Next-Hop': route['route-attr-list']['next-hop'][f'{version}-address'],
                             'Local Preference': route['route-attr-list']['local-pref'],
-                            'Origin-Type': route['route-attr-list']['origin-type'],
                             'AS-Path': route['route-attr-list']['as-path'],
                             'MED': route['route-attr-list']['med'],
                             'Community': comm_list
@@ -89,7 +95,7 @@ class ParseData:
         except:
             adv_count = routes = 'No peering'
 
-        return adv_count, routes
+        return adv_count, rx_count, routes
 
     def parse_circuit_default_xr(self, version=''):
 
@@ -105,3 +111,90 @@ class ParseData:
             default = 'No peering'
 
         return default
+
+    def parse_circuit_bgp_junos(self):
+
+        try:
+            routes = {}
+            full_path = self.parsed_data['route-information']['route-table']['rt']
+
+            if type(full_path) == dict:
+
+                try: lp = full_path['rt-entry']['local-preference']
+                except: lp = "Not Set"
+
+                try: med = full_path['rt-entry']['med']
+                except: med = "Not Set"
+
+                prefix = full_path['rt-destination'] + '/' + full_path['rt-prefix-length']
+                as_path = full_path['rt-entry']['bgp-path-attributes']['attr-as-path-effective']['attr-value']
+                community = full_path['rt-entry']['communities']['community']
+                next_hop = full_path['rt-entry']['nh']['to']
+
+                routes.update(self.create_routes_dict_junos(prefix, next_hop, lp, as_path, med, community))
+
+            elif type(full_path) == list:
+
+                for route in full_path:
+
+                    try: lp = route['rt-entry']['local-preference']
+                    except: lp = "Not Set"
+
+                    try: med = route['rt-entry']['med']
+                    except: med = "Not Set"
+
+                    prefix = route['rt-destination'] + '/' + route['rt-prefix-length']
+                    as_path = route['rt-entry']['bgp-path-attributes']['attr-as-path-effective']['attr-value']
+                    community = route['rt-entry']['communities']['community']
+                    next_hop = route['rt-entry']['nh']['to']
+
+                    routes.update(self.create_routes_dict_junos(prefix, next_hop, lp, as_path, med, community))
+
+        except:
+            routes = 'No prefixes received'
+
+        return routes
+
+    def create_routes_dict_junos(self, route, nh, lp, asp, med, comm):
+
+        route_nlri_dict = {
+            route: {
+                'Next-Hop': nh,
+                'Local Preference': lp,
+                'AS-Path': asp,
+                'MED': med,
+                'Community': comm
+            }
+        }
+
+        return route_nlri_dict
+
+    def parse_circuit_default_junos(self, default=''):
+
+        try:
+            if self.parsed_data['route-information']['route-table']['rt']['rt-destination'] == default:
+                default = 'Yes'
+            else:
+                default = 'No'
+
+        except:
+            default = 'No'
+
+        return default
+
+    def parse_circuit_bgp_nei_junos(self):
+
+        vrf = self.parsed_data['bgp-information']['bgp-peer']['peer-fwd-rti']
+        full_path = self.parsed_data['bgp-information']['bgp-peer']['bgp-rib']
+
+        if type(full_path) == list:
+
+            if full_path[0]['name'] == 'inet.0' or 'inet6.0' or 'hpr.inet.0' or 'hpr.inet6.0':
+                adv_count = full_path[0]['advertised-prefix-count']
+                rx_count = full_path[0]['accepted-prefix-count']
+
+        elif full_path['name'] == 'inet.0' or 'inet6.0' or 'hpr.inet.0' or 'hpr.inet6.0':
+            adv_count = full_path['advertised-prefix-count']
+            rx_count = full_path['accepted-prefix-count']
+
+        return adv_count, rx_count, vrf

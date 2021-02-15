@@ -5,6 +5,15 @@
     Check:
         default checks on XR
         HPR checks (vrf)
+
+    transition status:
+        ibgp junos/xr: done
+        ebgp junos: done
+        ebgp xr:
+        static xr
+        static junos
+        hpr support junos: done
+        hpr support xr:
 """
 
 
@@ -12,6 +21,7 @@ from checks import CircuitChecks
 import yaml
 import json
 import argparse
+import time
 
 from pprint import pprint
 
@@ -35,11 +45,18 @@ def main():
     if data['check_type'] == 'circuit':
 
         output = {}
-        for router in data['circuit_checks']:
+        for index, router in enumerate(data['circuit_checks'], 1):
 
             device_name, device_type = router.split('|')
-            circuits_dict = data['circuit_checks'][router]
-            circuits_output = CircuitChecks(username, device_name, device_type, circuits_dict).get_circuit_main()
+
+            start_time = time.time()
+            circuits_output = CircuitChecks(username, device_name, device_type, data['circuit_checks'][router]).get_circuit_main()
+            elapsed_time = time.time() - start_time
+
+            if int(elapsed_time) < 30 and index != len(data['circuit_checks']):
+                print(f'\t... resetting OTP ({int(30 - elapsed_time)} sec)')
+                time.sleep(30 - elapsed_time)
+                print('\t... done\n\n')
 
             output[device_name.upper()] = circuits_output
 
