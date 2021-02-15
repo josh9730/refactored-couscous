@@ -1,5 +1,5 @@
 ---
-do_diff: false
+do_diff: true
 pre_file_path: 'output_pre.json'
 post_file_path: 'output_post.json'
 check_type: device
