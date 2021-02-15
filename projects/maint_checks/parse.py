@@ -191,25 +191,29 @@ class ParseData:
         """
 
         for peer in self.data['bgp-information']['bgp-peer']:
-            try:
-                if peer['peer-state']['@format'] == 'Establ':
 
-                    if type(peer['bgp-rib']) == list:
-                        pref = peer['bgp-rib'][0]['accepted-prefix-count']
-                    elif type(peer['bgp-rib']) == dict:
-                        pref = peer['bgp-rib']['accepted-prefix-count']
+            if type(peer['peer-state']) == dict:
 
-                    bgp_dict = {
-                        peer['peer-address']: {
-                            'Description': peer['description'],
-                            'State': peer['peer-state']['@format'],
-                            'Accepted Prefixes': pref
-                        }
+                if type(peer['bgp-rib']) == list:
+                    pref = peer['bgp-rib'][0]['accepted-prefix-count']
+                elif type(peer['bgp-rib']) == dict:
+                    pref = peer['bgp-rib']['accepted-prefix-count']
+
+                try:
+                    desc = peer['description']
+                except:
+                    desc = 'None'
+
+                bgp_dict = {
+                    peer['peer-address']: {
+                        'Description': desc,
+                        'Peer AS': peer['peer-as'],
+                        'State': peer['peer-state']['@format'],
+                        'Accepted Prefixes': pref
                     }
-                self.parsed_data.update(bgp_dict)
+                }
 
-            except:
-                pass
+            self.parsed_data.update(bgp_dict)
 
         return self.parsed_data
 

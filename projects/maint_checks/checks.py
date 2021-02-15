@@ -146,7 +146,7 @@ class DeviceChecks:
             dict: output dictionary
         """
         output_dict = {}
-        for index, device in enumerate(self.device_dict):
+        for index, device in enumerate(self.device_dict, 1):
             start_time = time.time()
 
             for self.device, self.device_type in device.items():

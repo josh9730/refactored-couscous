@@ -1,12 +1,12 @@
 ---
-do_diff: true
+do_diff: false
 pre_file_path: 'output_pre.json'
 post_file_path: 'output_post.json'
-check_type: circuit
+check_type: device
 device_checks: # formerly N/A
-  # - svl-agg10: junos
-  - pdc-agg1: junos
-  - riv-agg8: iosxr
+  - lax-agg10: junos
+  # - pdc-agg1: junos
+  # - riv-agg8: iosxr
 global_agg: lax-agg10 # must be junos for circuits
 circuit_checks:
   # oak-agg8:
