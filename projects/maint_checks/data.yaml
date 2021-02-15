@@ -37,22 +37,22 @@ circuit_checks:
   #   merritt-cc-3:
   #     service: ibgp
   lax-agg10|junos:
-    # bumt-lib-1:
-    #   service: ibgp
+    bumt-lib-1:
+      service: ibgp
     CLR7608:
-      service: ebgp
+      service: ebgp #hpr
       port: et-7/1/1.343
-    # lb-csu-2:
-    #   service: ibgp
-    #   ipv4_neighbor: 137.164.0.4
-    #   ipv6_neighbor: 2607:f380::118:9a40:41
-    # oxnr-pub-lib-1:
-    #   service: ibgp
-    # cyp-cc-3:
-    #   service: ibgp
-    # CLR-7073:
-    #   service: ebgp
-    #   port: 'et-7/1/0.285'
+    lb-csu-2:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.4
+      ipv6_neighbor: 2607:f380::118:9a40:41
+    oxnr-pub-lib-1:
+      service: ibgp
+    cyp-cc-3:
+      service: ibgp
+    CLR-7073:
+      service: ebgp
+      port: 'et-7/1/0.285'
   # lax-agg8|iosxr:
   #   CLR7245:
   #     service: ebgp

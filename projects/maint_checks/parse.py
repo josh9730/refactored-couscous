@@ -112,46 +112,35 @@ class ParseData:
 
         return default
 
-    def parse_circuit_bgp_junos(self):
+    def parse_circuit_bgp_junos(self, route):
+
+        full_path = self.parsed_data['route-information']['route-table']['rt']['rt-entry']
+        lp = full_path['local-preference']
+        try: med = full_path['metric']
+        except: med = "Not set"
+        as_path = full_path['bgp-path-attributes']['attr-as-path-effective']['attr-value'].rstrip(' I')
+        community = full_path['communities']['community']
+        next_hop = full_path['nh']['to']
+
+        route_dict = self.create_routes_dict_junos(route, next_hop, lp, as_path, med, community)
+
+        return route_dict
+
+    def parse_circuit_bgp_brief(self):
 
         try:
-            routes = {}
+            routes = []
             full_path = self.parsed_data['route-information']['route-table']['rt']
 
             if type(full_path) == dict:
-
-                try: lp = full_path['rt-entry']['local-preference']
-                except: lp = "Not Set"
-
-                try: med = full_path['rt-entry']['med']
-                except: med = "Not Set"
-
-                prefix = full_path['rt-destination'] + '/' + full_path['rt-prefix-length']
-                as_path = full_path['rt-entry']['bgp-path-attributes']['attr-as-path-effective']['attr-value']
-                community = full_path['rt-entry']['communities']['community']
-                next_hop = full_path['rt-entry']['nh']['to']
-
-                routes.update(self.create_routes_dict_junos(prefix, next_hop, lp, as_path, med, community))
+                routes = [ full_path['rt-destination'] ]
 
             elif type(full_path) == list:
-
                 for route in full_path:
-
-                    try: lp = route['rt-entry']['local-preference']
-                    except: lp = "Not Set"
-
-                    try: med = route['rt-entry']['med']
-                    except: med = "Not Set"
-
-                    prefix = route['rt-destination'] + '/' + route['rt-prefix-length']
-                    as_path = route['rt-entry']['bgp-path-attributes']['attr-as-path-effective']['attr-value']
-                    community = route['rt-entry']['communities']['community']
-                    next_hop = route['rt-entry']['nh']['to']
-
-                    routes.update(self.create_routes_dict_junos(prefix, next_hop, lp, as_path, med, community))
+                    routes.append(route['rt-destination'])
 
         except:
-            routes = 'No prefixes received'
+            'No prefixes recieved'
 
         return routes
 

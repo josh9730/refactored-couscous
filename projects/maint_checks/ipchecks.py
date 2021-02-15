@@ -1,5 +1,5 @@
 from parse import etree_to_dict
-from ipaddress import ip_address
+from ipaddress import ip_address, IPv4Address, IPv6Address
 import subprocess
 import sys
 
@@ -86,7 +86,7 @@ class GetNeighborIPs(IPChecks):
         """
 
         if (not self.circuit['ipv4_neighbor'] or not self.circuit['ipv6_neighbor']) and self.circuit['port']:
-            from pprint import pprint
+
             if device_type == 'junos':
                 arp = etree_to_dict(connection.rpc.get_arp_table_information(interface=self.circuit['port']))
                 nd = etree_to_dict(connection.rpc.get_ipv6_nd_information(interface=self.circuit['port']))
@@ -98,14 +98,10 @@ class GetNeighborIPs(IPChecks):
 
     def parse_circuit_iface_junos(self, arp, nd):
 
-        try:
-            ipv4 = arp['arp-table-information']['arp-table-entry']['ip-address']
-        except:
-            ipv4 = None
+        try: ipv4 = arp['arp-table-information']['arp-table-entry']['ip-address']
+        except: ipv4 = arp['arp-table-information']['arp-table-entry'][0]['ip-address']
 
-        try:
-            ipv6 = nd['ipv6-nd-information']['ipv6-nd-entry'][0]['ipv6-nd-neighbor-address']
-        except:
-            ipv6 = None
+        try: ipv6 = nd['ipv6-nd-information']['ipv6-nd-entry'][0]['ipv6-nd-neighbor-address']
+        except: ipv6 = None
 
         return ipv4, ipv6

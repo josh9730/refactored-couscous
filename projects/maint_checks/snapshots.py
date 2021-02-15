@@ -5,6 +5,9 @@
     Check:
         default checks on XR
         HPR checks (vrf)
+        check if XR routes = RIB routes
+            - should be accurate
+
 
     transition status:
         ibgp junos/xr: done
