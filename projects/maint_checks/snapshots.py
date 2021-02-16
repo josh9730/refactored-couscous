@@ -2,17 +2,16 @@
     argparse to run against one device or one circuit
     attach to ticket automatically
 
+    junos/xr share routes parser
+
     Check:
-        default checks on XR
-        HPR checks (vrf)
-        check if XR routes = RIB routes
-            - should be accurate
+        
 
 
     transition status:
         ibgp junos/xr: done
         ebgp junos: done
-        ebgp xr:
+        ebgp xr: done
         static xr
         static junos
         hpr support junos: done
@@ -34,7 +33,7 @@ parser.add_argument('-d', '--diffs', help='Run diffs, implies an output_pre.json
 args = parser.parse_args()
 
 def main():
-    """Initialize checks type. Currently Per-Device or Per-Circuit."""
+    """Initialize checks type. Per-Device or Per-Circuit."""
 
     with open('data.yaml') as file:
         data = yaml.full_load(file)

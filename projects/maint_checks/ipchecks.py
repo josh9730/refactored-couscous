@@ -1,5 +1,6 @@
-from parse import etree_to_dict
+from parse import ParseData
 from ipaddress import ip_address, IPv4Address, IPv6Address
+import filters
 import subprocess
 import sys
 
@@ -82,26 +83,24 @@ class GetNeighborIPs(IPChecks):
         """Uses napalm to get assume neighbor IP from port configs. Typical standard is +1/+16 for peer.
 
         Args:
-            connection: napalm
+            connection: PyEZ or ncclient
         """
 
         if (not self.circuit['ipv4_neighbor'] or not self.circuit['ipv6_neighbor']) and self.circuit['port']:
 
             if device_type == 'junos':
-                arp = etree_to_dict(connection.rpc.get_arp_table_information(interface=self.circuit['port']))
-                nd = etree_to_dict(connection.rpc.get_ipv6_nd_information(interface=self.circuit['port']))
+                arp = connection.rpc.get_arp_table_information(interface=self.circuit['port'])
+                nd = connection.rpc.get_ipv6_nd_information(interface=self.circuit['port'])
 
-                addresses = self.parse_circuit_iface_junos(arp, nd)
+                ipv4 = ParseData(arp, device_type).parse_circuit_arp_junos()
+                ipv6 = ParseData(nd, device_type).parse_circuit_nd_junos()
 
-            if not self.circuit['ipv4_neighbor']: self.circuit['ipv4_neighbor'] = addresses[0]
-            if not self.circuit['ipv6_neighbor']: self.circuit['ipv6_neighbor'] = addresses[1]
+            elif device_type == 'iosxr':
+                arp = connection.get((filters.arp.format(interface=self.circuit['port'])))
+                nd = connection.get((filters.nd.format(interface=self.circuit['port'])))
 
-    def parse_circuit_iface_junos(self, arp, nd):
+                ipv4 = ParseData(arp, device_type).parse_circuit_arp_xr()
+                ipv6 = ParseData(nd, device_type).parse_circuit_nd_xr()
 
-        try: ipv4 = arp['arp-table-information']['arp-table-entry']['ip-address']
-        except: ipv4 = arp['arp-table-information']['arp-table-entry'][0]['ip-address']
-
-        try: ipv6 = nd['ipv6-nd-information']['ipv6-nd-entry'][0]['ipv6-nd-neighbor-address']
-        except: ipv6 = None
-
-        return ipv4, ipv6
+            if not self.circuit['ipv4_neighbor']: self.circuit['ipv4_neighbor'] = ipv4
+            if not self.circuit['ipv6_neighbor']: self.circuit['ipv6_neighbor'] = ipv6

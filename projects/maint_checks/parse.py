@@ -48,59 +48,95 @@ class ParseData:
 
         self.data = data
         self.device_type = device_type
-        self.parsed_data = {}
+        # self.dict_data = {}
 
         if device_type == 'iosxr':
-            self.parsed_data = self.rpc_to_dict()
+            self.rpc_to_dict()
 
         elif device_type == 'junos':
-            self.parsed_data = etree_to_dict(self.data)
+            self.dict_data = etree_to_dict(self.data)
 
     def rpc_to_dict(self):
 
-        self.parsed_data = xmltodict.parse(xml.dom.minidom.parseString(self.data.xml).toprettyxml())
+        self.dict_data = xmltodict.parse(xml.dom.minidom.parseString(self.data.xml).toprettyxml())
 
-        return self.parsed_data
+    def parse_circuit_arp_junos(self):
+
+        try: ipv4 = self.dict_data['arp-table-information']['arp-table-entry']['ip-address']
+        except: ipv4 = self.dict_data['arp-table-information']['arp-table-entry'][0]['ip-address']
+
+        return ipv4
+
+    def parse_circuit_nd_junos(self):
+
+        try: ipv6 = self.dict_data['ipv6-nd-information']['ipv6-nd-entry'][0]['ipv6-nd-neighbor-address']
+        except: ipv6 = None
+
+        return ipv6
+
+    def parse_circuit_arp_xr(self):
+
+        try:
+            for ip in self.dict_data['rpc-reply']['data']['arp']['nodes']['node']['entries']['entry']:
+                if ip['state'] == 'state-dynamic':
+                    ipv4 = ip['address']
+        except: ipv4 = None
+
+        return ipv4
+
+    def parse_circuit_nd_xr(self):
+
+        try:
+            for ip in self.dict_data['rpc-reply']['data']['ipv6-node-discovery']['nodes']['node']['neighbor-interfaces']['neighbor-interface']['host-addresses']['host-address']:
+                if ip['is-router'] == 'true' and not ip['host-address'].startswith('fe80'):
+                    ipv6 = ip['host-address']
+        except: ipv6 = None
+
+        return ipv6
 
     def parse_circuit_bgp_xr(self, version=''):
 
         try:
-            full_path = self.parsed_data['rpc-reply']['data']['oc-bgp']['bgp-rib']['afi-safi-table'][f'{version}-unicast']['open-config-neighbors']['open-config-neighbor']
+            full_path = self.dict_data['rpc-reply']['data']['oc-bgp']['bgp-rib']['afi-safi-table'][f'{version}-unicast']['open-config-neighbors']['open-config-neighbor']
             adv_count = full_path['adj-rib-out-post']['num-routes']['num-routes']
             rx_count = full_path['adj-rib-in-post']['num-routes']['num-routes']
 
             try:
                 routes = {}
-                for route in full_path['adj-rib-in-post']['routes']['route']:
+                if type(full_path['adj-rib-in-post']['routes']['route']) == list:
+                    for route in full_path['adj-rib-in-post']['routes']['route']:
+                        path = route['route-attr-list']
+                        nh, lp, asp, med, comm = self.parse_circuit_bgp_xr_routes(path, version)
+                        routes.update(self.create_routes_dict(route['route'], nh, lp, asp, med, comm ))
 
-                    comm_list = []
-                    for community in route['route-attr-list']['community']:
-                        comm_list.append(community['objects'])
-
-                    route_nlri_dict = {}
-                    route_nlri_dict = {
-                        route['route']: {
-                            'Next-Hop': route['route-attr-list']['next-hop'][f'{version}-address'],
-                            'Local Preference': route['route-attr-list']['local-pref'],
-                            'AS-Path': route['route-attr-list']['as-path'],
-                            'MED': route['route-attr-list']['med'],
-                            'Community': comm_list
-                        }
-                    }
-                    routes.update(route_nlri_dict)
+                else:
+                    route = full_path['adj-rib-in-post']['routes']['route']
+                    nh, lp, asp, med, comm = self.parse_circuit_bgp_xr_routes(route['route-attr-list'], version)
+                    routes.update(self.create_routes_dict(route['route'], nh, lp, asp, med, comm ))
 
             except:
                 routes = 'No prefixes received'
 
         except:
-            adv_count = routes = 'No peering'
+            adv_count = rx_count = routes = 'No peering'
 
         return adv_count, rx_count, routes
+
+    def parse_circuit_bgp_xr_routes(self, path, version):
+
+        comm = []
+        for community in path['community']: comm.append(community['objects'])
+        nh = path['next-hop'][f'{version}-address']
+        lp = path['local-pref']
+        asp = path['as-path']
+        med = path['med']
+
+        return nh, lp, asp, med, comm
 
     def parse_circuit_default_xr(self, version=''):
 
         try:
-            default = self.parsed_data['rpc-reply']['data']['bgp']['instances']['instance']['instance-active']['default-vrf']['afs']['af']['neighbor-af-table']['neighbor']['af-data']['is-default-originate-sent']
+            default = self.dict_data['rpc-reply']['data']['bgp']['instances']['instance']['instance-active']['default-vrf']['afs']['af']['neighbor-af-table']['neighbor']['af-data']['is-default-originate-sent']
 
             if default == 'true':
                 default = 'Yes'
@@ -114,7 +150,7 @@ class ParseData:
 
     def parse_circuit_bgp_junos(self, route):
 
-        full_path = self.parsed_data['route-information']['route-table']['rt']['rt-entry']
+        full_path = self.dict_data['route-information']['route-table']['rt']['rt-entry']
         lp = full_path['local-preference']
         try: med = full_path['metric']
         except: med = "Not set"
@@ -122,7 +158,7 @@ class ParseData:
         community = full_path['communities']['community']
         next_hop = full_path['nh']['to']
 
-        route_dict = self.create_routes_dict_junos(route, next_hop, lp, as_path, med, community)
+        route_dict = self.create_routes_dict(route, next_hop, lp, as_path, med, community)
 
         return route_dict
 
@@ -130,7 +166,7 @@ class ParseData:
 
         try:
             routes = []
-            full_path = self.parsed_data['route-information']['route-table']['rt']
+            full_path = self.dict_data['route-information']['route-table']['rt']
 
             if type(full_path) == dict:
                 routes = [ full_path['rt-destination'] ]
@@ -144,7 +180,7 @@ class ParseData:
 
         return routes
 
-    def create_routes_dict_junos(self, route, nh, lp, asp, med, comm):
+    def create_routes_dict(self, route, nh, lp, asp, med, comm):
 
         route_nlri_dict = {
             route: {
@@ -161,7 +197,7 @@ class ParseData:
     def parse_circuit_default_junos(self, default=''):
 
         try:
-            if self.parsed_data['route-information']['route-table']['rt']['rt-destination'] == default:
+            if self.dict_data['route-information']['route-table']['rt']['rt-destination'] == default:
                 default = 'Yes'
             else:
                 default = 'No'
@@ -173,8 +209,8 @@ class ParseData:
 
     def parse_circuit_bgp_nei_junos(self):
 
-        vrf = self.parsed_data['bgp-information']['bgp-peer']['peer-fwd-rti']
-        full_path = self.parsed_data['bgp-information']['bgp-peer']['bgp-rib']
+        vrf = self.dict_data['bgp-information']['bgp-peer']['peer-fwd-rti']
+        full_path = self.dict_data['bgp-information']['bgp-peer']['bgp-rib']
 
         if type(full_path) == list:
 

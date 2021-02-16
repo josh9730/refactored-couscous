@@ -74,6 +74,7 @@ class CircuitChecks(Device):
         #pylint: disable=no-member
         if self.device_type == 'iosxr':
             self.connection.close_session()
+
         elif self.device_type == 'junos':
             self.connection.close()
 
@@ -88,13 +89,13 @@ class CircuitChecks(Device):
 
     def get_circuit_bgp_xr(self):
 
-        #pylint: disable=no-member
+        # pylint: disable=no-member
         if self.addresses[0]:
             ipv4_circuit_raw = self.connection.get((filters.bgp_routes_filter.format(version='ipv4', neighbor=self.addresses[0])))
             ipv4_default_raw = self.connection.get((filters.bgp_default_filter.format(version='ipv4', neighbor=self.addresses[0])))
-
             self.ipv4_circuit_bgp = ParseData(ipv4_circuit_raw, self.device_type).parse_circuit_bgp_xr(version='ipv4')
             self.ipv4_default_bgp = ParseData(ipv4_default_raw, self.device_type).parse_circuit_default_xr(version='ipv4')
+
         else:
             self.ipv4_circuit_bgp = [ 'No Peering', 'No Peering', 'No Peering']
             self.ipv4_default_bgp = 'No Peering'
@@ -102,9 +103,9 @@ class CircuitChecks(Device):
         if self.addresses[1]:
             ipv6_circuit_raw = self.connection.get((filters.bgp_routes_filter.format(version='ipv6', neighbor=self.addresses[1])))
             ipv6_default_raw = self.connection.get((filters.bgp_default_filter.format(version='ipv6', neighbor=self.addresses[1])))
-
             self.ipv6_circuit_bgp = ParseData(ipv6_circuit_raw, self.device_type).parse_circuit_bgp_xr(version='ipv6')
             self.ipv6_default_bgp = ParseData(ipv6_default_raw, self.device_type).parse_circuit_default_xr(version='ipv6')
+
         else:
             self.ipv6_circuit_bgp = [ 'No Peering', 'No Peering', 'No Peering']
             self.ipv6_default_bgp = 'No Peering'
@@ -112,7 +113,7 @@ class CircuitChecks(Device):
     def get_circuit_bgp_junos(self):
 
         if self.addresses[0]:
-            v4_data = self.junos_circuit_bgp(self.addresses[0])
+            v4_data = self.circuit_bgp_junos(self.addresses[0])
             self.ipv4_circuit_bgp = v4_data[0:3]
             self.ipv4_default_bgp = v4_data[3]
 
@@ -121,7 +122,7 @@ class CircuitChecks(Device):
             self.ipv4_default_bgp = 'No Peering'
 
         if self.addresses[1]:
-            v6_data = self.junos_circuit_bgp(self.addresses[1])
+            v6_data = self.circuit_bgp_junos(self.addresses[1])
             self.ipv6_circuit_bgp = v6_data[0:3]
             self.ipv6_default_bgp = v6_data[3]
 
@@ -129,7 +130,7 @@ class CircuitChecks(Device):
             self.ipv6_circuit_bgp = [ 'No Peering', 'No Peering', 'No Peering']
             self.ipv6_default_bgp = 'No Peering'
 
-    def junos_circuit_bgp(self, address):
+    def circuit_bgp_junos(self, address):
 
         counts_raw = self.connection.rpc.get_bgp_neighbor_information(neighbor_address=address)
         adv_count, rx_count, vrf = ParseData(counts_raw, self.device_type).parse_circuit_bgp_nei_junos()
