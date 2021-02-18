@@ -16,9 +16,9 @@ circuit_checks:
     CLR-7620:
       service: ebgp
       port: TenGigE0/0/0/8/3.340
-    CLR-7621:
-      service: ebgp #hpr
-      port: HundredGigE0/0/0/2.341
+    # CLR-7621:
+    #   service: ebgp #hpr
+    #   port: HundredGigE0/0/0/2.341
   # oak-agg8|iosxr: #netconf not enabled?
   #   CLR-17525:
   #     service: ebgp
@@ -43,16 +43,16 @@ circuit_checks:
   # svl-agg8|iosxr:
   #   merritt-cc-3:
   #     service: ibgp
-  # lax-agg10|junos:
-  #   bumt-lib-1:
-  #     service: ibgp
-  #   CLR7608:
-  #     service: ebgp #hpr
-  #     port: et-7/1/1.343
-  #   lb-csu-2:
-  #     service: ibgp
-  #     ipv4_neighbor: 137.164.0.4
-  #     ipv6_neighbor: 2607:f380::118:9a40:41
+  lax-agg10|junos:
+    bumt-lib-1:
+      service: ibgp
+    # CLR7608:
+    #   service: ebgp #hpr
+    #   port: et-7/1/1.343
+    # lb-csu-2:
+    #   service: ibgp
+    #   ipv4_neighbor: 137.164.0.4
+    #   ipv6_neighbor: 2607:f380::118:9a40:41
   #   oxnr-pub-lib-1:
   #     service: ibgp
   #   cyp-cc-3:

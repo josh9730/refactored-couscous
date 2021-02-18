@@ -2,20 +2,30 @@
     argparse to run against one device or one circuit
     attach to ticket automatically
 
-    junos/xr share routes parser
+    --- XR HPR REQUIRES PORT
+    Full Routes status (Full DC table)
 
     Check:
         
 
 
     transition status:
-        ibgp junos/xr: done
-        ebgp junos: done
-        ebgp xr: done
-        static xr
-        static junos
-        hpr support junos: done
-        hpr support xr:
+        Circuit:
+            ibgp junos/xr: done
+            ebgp junos: done
+            ebgp xr: done
+            hpr support junos: done
+            hpr support xr: done
+            static xr
+            static junos
+            xr port
+            junos port
+            xr isis/pim/msdp
+            junos isis/pim/msdp
+        Device:
+            xr device checks:
+            junos device checks:
+
 """
 
 
@@ -52,7 +62,7 @@ def main():
             device_name, device_type = router.split('|')
 
             start_time = time.time()
-            circuits_output = CircuitChecks(username, device_name, device_type, data['circuit_checks'][router]).get_circuit_main()
+            circuits_output, start_time = CircuitChecks(username, device_name, device_type, data['circuit_checks'][router]).get_circuit_main()
             elapsed_time = time.time() - start_time
 
             if int(elapsed_time) < 30 and index != len(data['circuit_checks']):

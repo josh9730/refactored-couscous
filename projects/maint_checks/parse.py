@@ -4,6 +4,8 @@ import xml.dom.minidom
 import xmltodict
 import filters
 import re
+import textfsm
+import tempfile
 
 def etree_to_dict(etree_data):
     # Remove any comments (will cause error on json dump)
@@ -38,7 +40,7 @@ def etree_to_dict(etree_data):
 
 class ParseData:
 
-    def __init__(self, data, device_type):
+    def __init__(self, data,  device_type):
         """Parse string (TextFSM) or dict (clean up napalm output) data.
 
         Args:
@@ -48,7 +50,7 @@ class ParseData:
 
         self.data = data
         self.device_type = device_type
-        # self.dict_data = {}
+        self.parsed_data = {}
 
         if device_type == 'iosxr':
             self.rpc_to_dict()
@@ -94,33 +96,42 @@ class ParseData:
 
         return ipv6
 
+    def parse_vrf_iface_xr(self):
+
+        iface_list = []
+        for iface in self.dict_data['rpc-reply']['data']['l3vpn']['vrfs']['vrf']['interface']:
+            iface_list.append(iface['interface-name'])
+
+        return iface_list
+
     def parse_circuit_bgp_xr(self, version=''):
 
         try:
             full_path = self.dict_data['rpc-reply']['data']['oc-bgp']['bgp-rib']['afi-safi-table'][f'{version}-unicast']['open-config-neighbors']['open-config-neighbor']
-            adv_count = full_path['adj-rib-out-post']['num-routes']['num-routes']
+            adv_count = int(full_path['adj-rib-out-post']['num-routes']['num-routes'])
             rx_count = full_path['adj-rib-in-post']['num-routes']['num-routes']
 
             try:
-                routes = {}
+                rx_routes = {}
                 if type(full_path['adj-rib-in-post']['routes']['route']) == list:
                     for route in full_path['adj-rib-in-post']['routes']['route']:
                         path = route['route-attr-list']
                         nh, lp, asp, med, comm = self.parse_circuit_bgp_xr_routes(path, version)
-                        routes.update(self.create_routes_dict(route['route'], nh, lp, asp, med, comm ))
+                        rx_routes.update(self.create_routes_dict(route['route'], nh, lp, asp, med, comm ))
 
                 else:
                     route = full_path['adj-rib-in-post']['routes']['route']
                     nh, lp, asp, med, comm = self.parse_circuit_bgp_xr_routes(route['route-attr-list'], version)
-                    routes.update(self.create_routes_dict(route['route'], nh, lp, asp, med, comm ))
+                    rx_routes.update(self.create_routes_dict(route['route'], nh, lp, asp, med, comm ))
 
             except:
-                routes = 'No prefixes received'
+                rx_routes = 'No prefixes received'
 
         except:
-            adv_count = rx_count = routes = 'No peering'
+            rx_count = rx_routes = 'No peering'
+            adv_count = None
 
-        return adv_count, rx_count, routes
+        return rx_routes, adv_count, rx_count
 
     def parse_circuit_bgp_xr_routes(self, path, version):
 
@@ -215,11 +226,190 @@ class ParseData:
         if type(full_path) == list:
 
             if full_path[0]['name'] == 'inet.0' or 'inet6.0' or 'hpr.inet.0' or 'hpr.inet6.0':
-                adv_count = full_path[0]['advertised-prefix-count']
+                adv_count = int(full_path[0]['advertised-prefix-count'])
                 rx_count = full_path[0]['accepted-prefix-count']
 
         elif full_path['name'] == 'inet.0' or 'inet6.0' or 'hpr.inet.0' or 'hpr.inet6.0':
-            adv_count = full_path['advertised-prefix-count']
+            adv_count = int(full_path['advertised-prefix-count'])
             rx_count = full_path['accepted-prefix-count']
 
         return adv_count, rx_count, vrf
+
+    def parse_device_bgp_junos(self):
+        """Return nested dict from dict of get_bgp_summary_information RPC call
+
+        Returns:
+            dict: peer, state, accepted prefixes
+        """
+
+        for peer in self.dict_data['bgp-information']['bgp-peer']:
+
+            if type(peer['peer-state']) == dict:
+
+                if type(peer['bgp-rib']) == list:
+                    pref = peer['bgp-rib'][0]['accepted-prefix-count']
+                elif type(peer['bgp-rib']) == dict:
+                    pref = peer['bgp-rib']['accepted-prefix-count']
+
+                try:
+                    desc = peer['description']
+                except:
+                    desc = 'None'
+
+                bgp_dict = {
+                    peer['peer-address']: {
+                        'Description': desc,
+                        'Peer AS': peer['peer-as'],
+                        'State': peer['peer-state']['@format'],
+                        'Accepted Prefixes': pref
+                    }
+                }
+
+            self.parsed_data.update(bgp_dict)
+
+        return self.parsed_data
+
+    def parse_device_isis_junos(self):
+        """Return nested dict from dict of get_isis_adjacency_information RPC call
+
+        Returns:
+            dict: name, port, state
+        """
+
+        for peer in self.dict_data['isis-adjacency-information']['isis-adjacency']:
+            isis_dict = {
+                peer['system-name']: {
+                    'Port': peer['interface-name'],
+                    'State': peer['adjacency-state']
+                }
+            }
+
+            self.parsed_data.update(isis_dict)
+
+        return self.parsed_data
+
+    def parse_device_msdp_junos(self):
+        """Return nested dict from dict of get_msdp_information RPC call
+
+        Returns:
+            dict: peer, local-address, state, group
+        """
+
+        for peer in self.dict_data['msdp-peer-information']['msdp-peer']:
+            if peer['msdp-state'] == 'Established':
+                msdp_dict = {
+                    peer['msdp-peer-address']: {
+                        'Local Address': peer['msdp-local-address'],
+                        'State': peer['msdp-state'],
+                        'Group': peer['msdp-group-name']
+                    }
+                }
+                self.parsed_data.update(msdp_dict)
+
+        return self.parsed_data
+
+    def parse_device_pim_junos(self):
+        """Return nested dict from dict of get_pim_neighbors_information RPC call
+
+        Returns:
+            dict: peer, local-address, state, group
+        """
+
+        for neighbor in self.data['pim-neighbors-information']['pim-interface']:
+            try:
+                pim_dict = {
+                    neighbor['pim-neighbor']['pim-interface-name']: {
+                        'Neighbor': neighbor['pim-neighbor']['pim-neighbor-address']
+                    }
+                }
+                self.parsed_data.update(pim_dict)
+            except:
+                pass
+
+        return self.parsed_data
+
+    def parse_device_optics_junos(self):
+        """Return nested dict from dict of get_interface_optics_diagnostics_information RPC call
+
+        Returns:
+            dict: Tx/Rx Power (dbm)
+        """
+
+        for port in self.dict_data['interface-information']['physical-interface']:
+            all_lane_dict = {}
+            if type(port['optics-diagnostics']['optics-diagnostics-lane-values']) == list:
+                for lane in port['optics-diagnostics']['optics-diagnostics-lane-values']:
+                    lane_num = lane['lane-index']
+                    lane_dict = {
+                        f'Lane {lane_num}': {
+                            'Rx Power': lane['laser-rx-optical-power-dbm']+'dBm',
+                            'Tx Power': lane['laser-output-power-dbm']+'dBm'
+                        }
+                    }
+                    all_lane_dict.update(lane_dict)
+            else:
+                lane_num = port['optics-diagnostics']['optics-diagnostics-lane-values']['lane-index']
+                all_lane_dict = {
+                    f'Lane {lane_num}': {
+                        'Rx Power': port['optics-diagnostics']['optics-diagnostics-lane-values']['laser-rx-optical-power-dbm']+'dBm',
+                        'Tx Power': port['optics-diagnostics']['optics-diagnostics-lane-values']['laser-output-power-dbm']+'dBm'
+                    }
+                }
+            optics_dict = {
+                port['name']: all_lane_dict
+            }
+            self.parsed_data.update(optics_dict)
+
+        return self.parsed_data
+
+    def parse_device_iface_junos(self, optics_dict):
+        """Return nested dict from dict of get_interface_information RPC call
+
+        Returns:
+            dict: name, errors, optics
+        """
+
+        for port in self.dict_data['interface-information']['physical-interface']:
+            try:
+                desc = port['description']
+            except:
+                desc = 'No description'
+            if port['oper-status'] == 'up' and port['name'].startswith(('xe', 'et', 'ge')):
+                port_dict = {
+                    port['name']: {
+                        'Description': desc,
+                        'Errors': {
+                            'Rx Errors': port['input-error-list']['input-errors'],
+                            'Rx Drops': port['input-error-list']['input-drops'],
+                            'Tx Errors': port['output-error-list']['output-errors'],
+                            'Tx Drops': port['output-error-list']['output-drops']},
+                        'Optics PMs': optics_dict[port['name']]
+                    }
+                }
+                self.parsed_data.update(port_dict)
+
+        return self.parsed_data
+
+    def parse_device_power_junos(self):
+        """Return nested dict from dict of get_power_usage_information_detail RPC call
+
+        Returns:
+            dict: status, capacity
+        """
+
+        for pem in self.dict_data['power-usage-information']['power-usage-item']:
+            try:
+                in_stat = pem['dc-input-detail2']['dc-input-status']
+            except:
+                in_stat = pem['dc-input-detail']['dc-input']
+
+            power_dict = {
+                pem['name']: {
+                    'Status': pem['state'],
+                    'Input Status': in_stat,
+                    'Capacity': pem['pem-capacity-detail']['capacity-actual'],
+                }
+            }
+            self.parsed_data.update(power_dict)
+
+        return self.parsed_data

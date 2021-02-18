@@ -46,3 +46,25 @@ nd = """
   </ipv6-node-discovery>
 </filter>
 """
+
+xr_vrf = """
+<filter>
+  <l3vpn xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-mpls-vpn-oper">
+    <vrfs><vrf><vrf-name>hpr</vrf-name>
+      <interface/>
+    </vrf></vrfs>
+  </l3vpn>
+</filter>
+"""
+
+template_bgp_rx = r"""Value Prefix (([a-z0-9]*[.:]*)*\/\d{1,2})
+
+Start
+ ^\D{0,3}${Prefix} -> Record
+"""
+
+template_xr_adv = r"""Value Count (\d+)
+
+Start
+ ^No\sof\sprefixes\sAdvertised:\s${Count} -> Record
+"""
