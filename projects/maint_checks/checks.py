@@ -134,9 +134,11 @@ class CircuitChecks(Device):
         # pylint: disable=no-member
         self.vrf = 'default'
         try:
+            xr_parse = ParseData(self.device_type)
+
             self.port = self.circuits_dict[self.circuit]['port']
             vrf = self.connection.get((filters.xr_vrf))
-            self.vrf_iface_list = ParseData(vrf, self.device_type).parse_vrf_iface_xr()
+            self.vrf_iface_list = xr_parse.parse_vrf_iface_xr(vrf)
 
             for iface in self.vrf_iface_list:
                 if str(iface) == str(self.port):
@@ -167,11 +169,13 @@ class CircuitChecks(Device):
         if address == self.addresses[0]: version = 'ipv4'
         else: version = 'ipv6'
 
+        xr_parse = ParseData(self.device_type)
+
         circuit_raw = self.connection.get((filters.bgp_routes_filter.format(version=version, neighbor=address)))
         default_raw = self.connection.get((filters.bgp_default_filter.format(version=version, neighbor=address)))
 
-        circuit_bgp = ParseData(circuit_raw, self.device_type).parse_circuit_bgp_xr(version=version)
-        default = ParseData(default_raw, self.device_type).parse_circuit_default_xr(version=version)
+        circuit_bgp = xr_parse.parse_circuit_bgp_xr(circuit_raw)
+        default = xr_parse.parse_circuit_default_xr(default_raw)
 
         return circuit_bgp[0], circuit_bgp[1], circuit_bgp[2], default
 
@@ -189,30 +193,28 @@ class CircuitChecks(Device):
 
     def circuit_bgp_junos(self, address):
 
+        junos_parse = ParseData(self.device_type)
         counts_raw = self.connection.rpc.get_bgp_neighbor_information(neighbor_address=address)
-        adv_count, rx_count, vrf = ParseData(counts_raw, self.device_type).parse_circuit_bgp_nei_junos()
+        adv_count, rx_count, self.vrf = junos_parse.parse_circuit_bgp_nei_junos(counts_raw)
 
         if address == self.addresses[0]:
             default = '0.0.0.0/0'
-            if vrf == 'master': table = 'inet.0'
-            elif vrf == 'hpr': table = 'hpr.inet.0'
+            if self.vrf == 'master': table = 'inet.0'
+            elif self.vrf == 'hpr': table = 'hpr.inet.0'
         else:
             default = '::/0'
-            if vrf == 'master': table = 'inet6.0'
-            elif vrf == 'hpr': table = 'hpr.inet6.0'
-
-        self.vrf = vrf
+            if self.vrf == 'master': table = 'inet6.0'
+            elif self.vrf == 'hpr': table = 'hpr.inet6.0'
 
         circuit_raw = self.connection.rpc.get_route_information(brief=True, table=table, peer=address, receive_protocol_name='bgp')
-        routes_list = ParseData(circuit_raw, self.device_type).parse_circuit_bgp_brief()
-
+        routes_list = junos_parse.parse_circuit_bgp_junos_brief(circuit_raw)
         rx_routes = {}
         for route in routes_list:
             route_data = self.connection.rpc.get_route_information(destination=route, table=table, exact=True, detail=True, source_gateway=address)
-            rx_routes.update(ParseData(route_data, self.device_type).parse_circuit_bgp_junos(route))
+            rx_routes.update(junos_parse.parse_circuit_bgp_junos(route_data))
 
         default_raw = self.connection.rpc.get_route_information(destination=default, exact=True, neighbor=address, advertising_protocol_name='bgp')
-        default = ParseData(default_raw, self.device_type).parse_circuit_default_junos(default=default)
+        default = junos_parse.parse_circuit_default_junos(default_raw)
 
         return rx_routes, adv_count, rx_count, default
 

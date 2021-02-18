@@ -7,6 +7,7 @@ import re
 import textfsm
 import tempfile
 
+
 def etree_to_dict(etree_data):
     # Remove any comments (will cause error on json dump)
     estring = etree.tostring(etree_data)
@@ -23,7 +24,7 @@ def etree_to_dict(etree_data):
             for k, v in dc.items():
                 dd[k].append(v)
         etree_dict = {etree_data.tag: {k: v[0] if len(v) == 1 else v
-                     for k, v in dd.items()}}
+                        for k, v in dd.items()}}
     if etree_data.attrib:
         etree_dict[etree_data.tag].update(('@' + k, v)
                         for k, v in etree_data.attrib.items())
@@ -31,16 +32,20 @@ def etree_to_dict(etree_data):
         text = etree_data.text.strip()
         if children or etree_data.attrib:
             if text:
-              etree_dict[etree_data.tag]['#text'] = text
+                etree_dict[etree_data.tag]['#text'] = text
         else:
             etree_dict[etree_data.tag] = text
 
     return etree_dict
 
+def rpc_to_dict(data):
+
+    return xmltodict.parse(xml.dom.minidom.parseString(data.xml).toprettyxml())
+
 
 class ParseData:
 
-    def __init__(self, data,  device_type):
+    def __init__(self, device_type):
         """Parse string (TextFSM) or dict (clean up napalm output) data.
 
         Args:
@@ -48,66 +53,159 @@ class ParseData:
             template (str, optional): Template file for TextFSM. Defaults to ''.
         """
 
-        self.data = data
         self.device_type = device_type
         self.parsed_data = {}
 
-        if device_type == 'iosxr':
-            self.rpc_to_dict()
+    # pylint: disable=no-self-argument, not-callable
+    def to_dict(func):
+        def wrapper(self, data):
 
-        elif device_type == 'junos':
-            self.dict_data = etree_to_dict(self.data)
+            if self.device_type == 'junos':
+                to_dict = func(self, etree_to_dict(data))
+            elif self.device_type == 'iosxr':
+                to_dict = func(self, rpc_to_dict(data))
 
-    def rpc_to_dict(self):
+            return to_dict
+        return wrapper
 
-        self.dict_data = xmltodict.parse(xml.dom.minidom.parseString(self.data.xml).toprettyxml())
+    def create_routes_dict(self, route, nh, lp, asp, med, comm):
 
-    def parse_circuit_arp_junos(self):
+        route_nlri_dict = {
+            route: {
+                'Next-Hop': nh,
+                'Local Preference': lp,
+                'AS-Path': asp,
+                'MED': med,
+                'Community': comm
+            }
+        }
 
-        try: ipv4 = self.dict_data['arp-table-information']['arp-table-entry']['ip-address']
-        except: ipv4 = self.dict_data['arp-table-information']['arp-table-entry'][0]['ip-address']
+        return route_nlri_dict
+
+    @to_dict
+    def parse_circuit_bgp_nei_junos(self, data):
+
+        vrf = data['bgp-information']['bgp-peer']['peer-fwd-rti']
+        full_path = data['bgp-information']['bgp-peer']['bgp-rib']
+
+        if type(full_path) == list:
+
+            if full_path[0]['name'] == 'inet.0' or 'inet6.0' or 'hpr.inet.0' or 'hpr.inet6.0':
+                adv_count = int(full_path[0]['advertised-prefix-count'])
+                rx_count = full_path[0]['accepted-prefix-count']
+
+        elif full_path['name'] == 'inet.0' or 'inet6.0' or 'hpr.inet.0' or 'hpr.inet6.0':
+            adv_count = int(full_path['advertised-prefix-count'])
+            rx_count = full_path['accepted-prefix-count']
+
+        return adv_count, rx_count, vrf
+
+    @to_dict
+    def parse_circuit_bgp_junos_brief(self, data):
+
+        try:
+            routes = []
+            full_path = data['route-information']['route-table']['rt']
+
+            if type(full_path) == dict:
+                routes = [ full_path['rt-destination'] ]
+
+            elif type(full_path) == list:
+                for route in full_path:
+                    routes.append(route['rt-destination'])
+
+        except:
+            'No prefixes recieved'
+
+        return routes
+
+    @to_dict
+    def parse_circuit_bgp_junos(self, data):
+
+        full_path = data['route-information']['route-table']['rt']
+        route = full_path['rt-destination'] + '/' + full_path['rt-prefix-length']
+
+        try: med = full_path['rt-entry']['metric']
+        except: med = "Not set"
+
+        lp = full_path['rt-entry']['local-preference']
+        as_path = full_path['rt-entry']['bgp-path-attributes']['attr-as-path-effective']['attr-value'].rstrip(' I')
+        community = full_path['rt-entry']['communities']['community']
+        next_hop = full_path['rt-entry']['nh']['to']
+
+        route_dict = self.create_routes_dict(route, next_hop, lp, as_path, med, community)
+
+        return route_dict
+
+    @to_dict
+    def parse_circuit_default_junos(self, data):
+
+        try:
+            if data['route-information']['route-table']['rt']['rt-destination'] == '0.0.0.0/0' or '::/0':
+                default = 'Yes'
+            else:
+                default = 'No'
+
+        except:
+            default = 'No'
+
+        return default
+
+    @to_dict
+    def parse_circuit_arp_junos(self, data):
+
+        try: ipv4 = data['arp-table-information']['arp-table-entry']['ip-address']
+        except: ipv4 = data['arp-table-information']['arp-table-entry'][0]['ip-address']
 
         return ipv4
 
-    def parse_circuit_nd_junos(self):
+    @to_dict
+    def parse_circuit_nd_junos(self, data):
 
-        try: ipv6 = self.dict_data['ipv6-nd-information']['ipv6-nd-entry'][0]['ipv6-nd-neighbor-address']
+        try: ipv6 = data['ipv6-nd-information']['ipv6-nd-entry'][0]['ipv6-nd-neighbor-address']
         except: ipv6 = None
 
         return ipv6
 
-    def parse_circuit_arp_xr(self):
+    @to_dict
+    def parse_circuit_arp_xr(self, data):
 
         try:
-            for ip in self.dict_data['rpc-reply']['data']['arp']['nodes']['node']['entries']['entry']:
+            for ip in data['rpc-reply']['data']['arp']['nodes']['node']['entries']['entry']:
                 if ip['state'] == 'state-dynamic':
                     ipv4 = ip['address']
         except: ipv4 = None
 
         return ipv4
 
-    def parse_circuit_nd_xr(self):
+    @to_dict
+    def parse_circuit_nd_xr(self, data):
 
         try:
-            for ip in self.dict_data['rpc-reply']['data']['ipv6-node-discovery']['nodes']['node']['neighbor-interfaces']['neighbor-interface']['host-addresses']['host-address']:
+            for ip in data['rpc-reply']['data']['ipv6-node-discovery']['nodes']['node']['neighbor-interfaces']['neighbor-interface']['host-addresses']['host-address']:
                 if ip['is-router'] == 'true' and not ip['host-address'].startswith('fe80'):
                     ipv6 = ip['host-address']
         except: ipv6 = None
 
         return ipv6
 
-    def parse_vrf_iface_xr(self):
+    @to_dict
+    def parse_vrf_iface_xr(self, data):
 
         iface_list = []
-        for iface in self.dict_data['rpc-reply']['data']['l3vpn']['vrfs']['vrf']['interface']:
+        for iface in data['rpc-reply']['data']['l3vpn']['vrfs']['vrf']['interface']:
             iface_list.append(iface['interface-name'])
 
         return iface_list
 
-    def parse_circuit_bgp_xr(self, version=''):
+    @to_dict
+    def parse_circuit_bgp_xr(self, data):
 
         try:
-            full_path = self.dict_data['rpc-reply']['data']['oc-bgp']['bgp-rib']['afi-safi-table'][f'{version}-unicast']['open-config-neighbors']['open-config-neighbor']
+            for table in data['rpc-reply']['data']['oc-bgp']['bgp-rib']['afi-safi-table'].keys():
+                version = re.match('(ipv(4|6))-unicast', table).groups()[0]
+
+            full_path = data['rpc-reply']['data']['oc-bgp']['bgp-rib']['afi-safi-table'][f'{version}-unicast']['open-config-neighbors']['open-config-neighbor']
             adv_count = int(full_path['adj-rib-out-post']['num-routes']['num-routes'])
             rx_count = full_path['adj-rib-in-post']['num-routes']['num-routes']
 
@@ -133,21 +231,11 @@ class ParseData:
 
         return rx_routes, adv_count, rx_count
 
-    def parse_circuit_bgp_xr_routes(self, path, version):
-
-        comm = []
-        for community in path['community']: comm.append(community['objects'])
-        nh = path['next-hop'][f'{version}-address']
-        lp = path['local-pref']
-        asp = path['as-path']
-        med = path['med']
-
-        return nh, lp, asp, med, comm
-
-    def parse_circuit_default_xr(self, version=''):
+    @to_dict
+    def parse_circuit_default_xr(self, data):
 
         try:
-            default = self.dict_data['rpc-reply']['data']['bgp']['instances']['instance']['instance-active']['default-vrf']['afs']['af']['neighbor-af-table']['neighbor']['af-data']['is-default-originate-sent']
+            default = data['rpc-reply']['data']['bgp']['instances']['instance']['instance-active']['default-vrf']['afs']['af']['neighbor-af-table']['neighbor']['af-data']['is-default-originate-sent']
 
             if default == 'true':
                 default = 'Yes'
@@ -159,90 +247,26 @@ class ParseData:
 
         return default
 
-    def parse_circuit_bgp_junos(self, route):
+    def parse_circuit_bgp_xr_routes(self, path, version):
 
-        full_path = self.dict_data['route-information']['route-table']['rt']['rt-entry']
-        lp = full_path['local-preference']
-        try: med = full_path['metric']
-        except: med = "Not set"
-        as_path = full_path['bgp-path-attributes']['attr-as-path-effective']['attr-value'].rstrip(' I')
-        community = full_path['communities']['community']
-        next_hop = full_path['nh']['to']
+        comm = []
+        for community in path['community']: comm.append(community['objects'])
+        nh = path['next-hop'][f'{version}-address']
+        lp = path['local-pref']
+        asp = path['as-path']
+        med = path['med']
 
-        route_dict = self.create_routes_dict(route, next_hop, lp, as_path, med, community)
+        return nh, lp, asp, med, comm
 
-        return route_dict
-
-    def parse_circuit_bgp_brief(self):
-
-        try:
-            routes = []
-            full_path = self.dict_data['route-information']['route-table']['rt']
-
-            if type(full_path) == dict:
-                routes = [ full_path['rt-destination'] ]
-
-            elif type(full_path) == list:
-                for route in full_path:
-                    routes.append(route['rt-destination'])
-
-        except:
-            'No prefixes recieved'
-
-        return routes
-
-    def create_routes_dict(self, route, nh, lp, asp, med, comm):
-
-        route_nlri_dict = {
-            route: {
-                'Next-Hop': nh,
-                'Local Preference': lp,
-                'AS-Path': asp,
-                'MED': med,
-                'Community': comm
-            }
-        }
-
-        return route_nlri_dict
-
-    def parse_circuit_default_junos(self, default=''):
-
-        try:
-            if self.dict_data['route-information']['route-table']['rt']['rt-destination'] == default:
-                default = 'Yes'
-            else:
-                default = 'No'
-
-        except:
-            default = 'No'
-
-        return default
-
-    def parse_circuit_bgp_nei_junos(self):
-
-        vrf = self.dict_data['bgp-information']['bgp-peer']['peer-fwd-rti']
-        full_path = self.dict_data['bgp-information']['bgp-peer']['bgp-rib']
-
-        if type(full_path) == list:
-
-            if full_path[0]['name'] == 'inet.0' or 'inet6.0' or 'hpr.inet.0' or 'hpr.inet6.0':
-                adv_count = int(full_path[0]['advertised-prefix-count'])
-                rx_count = full_path[0]['accepted-prefix-count']
-
-        elif full_path['name'] == 'inet.0' or 'inet6.0' or 'hpr.inet.0' or 'hpr.inet6.0':
-            adv_count = int(full_path['advertised-prefix-count'])
-            rx_count = full_path['accepted-prefix-count']
-
-        return adv_count, rx_count, vrf
-
-    def parse_device_bgp_junos(self):
+    @to_dict
+    def parse_device_bgp_junos(self, data):
         """Return nested dict from dict of get_bgp_summary_information RPC call
 
         Returns:
             dict: peer, state, accepted prefixes
         """
 
-        for peer in self.dict_data['bgp-information']['bgp-peer']:
+        for peer in data['bgp-information']['bgp-peer']:
 
             if type(peer['peer-state']) == dict:
 
@@ -269,14 +293,15 @@ class ParseData:
 
         return self.parsed_data
 
-    def parse_device_isis_junos(self):
+    @to_dict
+    def parse_device_isis_junos(self, data):
         """Return nested dict from dict of get_isis_adjacency_information RPC call
 
         Returns:
             dict: name, port, state
         """
 
-        for peer in self.dict_data['isis-adjacency-information']['isis-adjacency']:
+        for peer in data['isis-adjacency-information']['isis-adjacency']:
             isis_dict = {
                 peer['system-name']: {
                     'Port': peer['interface-name'],
@@ -288,14 +313,15 @@ class ParseData:
 
         return self.parsed_data
 
-    def parse_device_msdp_junos(self):
+    @to_dict
+    def parse_device_msdp_junos(self, data):
         """Return nested dict from dict of get_msdp_information RPC call
 
         Returns:
             dict: peer, local-address, state, group
         """
 
-        for peer in self.dict_data['msdp-peer-information']['msdp-peer']:
+        for peer in data['msdp-peer-information']['msdp-peer']:
             if peer['msdp-state'] == 'Established':
                 msdp_dict = {
                     peer['msdp-peer-address']: {
@@ -308,14 +334,15 @@ class ParseData:
 
         return self.parsed_data
 
-    def parse_device_pim_junos(self):
+    @to_dict
+    def parse_device_pim_junos(self, data):
         """Return nested dict from dict of get_pim_neighbors_information RPC call
 
         Returns:
             dict: peer, local-address, state, group
         """
 
-        for neighbor in self.data['pim-neighbors-information']['pim-interface']:
+        for neighbor in data['pim-neighbors-information']['pim-interface']:
             try:
                 pim_dict = {
                     neighbor['pim-neighbor']['pim-interface-name']: {
@@ -328,14 +355,15 @@ class ParseData:
 
         return self.parsed_data
 
-    def parse_device_optics_junos(self):
+    @to_dict
+    def parse_device_optics_junos(self, data):
         """Return nested dict from dict of get_interface_optics_diagnostics_information RPC call
 
         Returns:
             dict: Tx/Rx Power (dbm)
         """
 
-        for port in self.dict_data['interface-information']['physical-interface']:
+        for port in data['interface-information']['physical-interface']:
             all_lane_dict = {}
             if type(port['optics-diagnostics']['optics-diagnostics-lane-values']) == list:
                 for lane in port['optics-diagnostics']['optics-diagnostics-lane-values']:
@@ -362,14 +390,15 @@ class ParseData:
 
         return self.parsed_data
 
-    def parse_device_iface_junos(self, optics_dict):
+    @to_dict
+    def parse_device_iface_junos(self, data, optics_dict):
         """Return nested dict from dict of get_interface_information RPC call
 
         Returns:
             dict: name, errors, optics
         """
 
-        for port in self.dict_data['interface-information']['physical-interface']:
+        for port in data['interface-information']['physical-interface']:
             try:
                 desc = port['description']
             except:
@@ -390,14 +419,15 @@ class ParseData:
 
         return self.parsed_data
 
-    def parse_device_power_junos(self):
+    @to_dict
+    def parse_device_power_junos(self, data):
         """Return nested dict from dict of get_power_usage_information_detail RPC call
 
         Returns:
             dict: status, capacity
         """
 
-        for pem in self.dict_data['power-usage-information']['power-usage-item']:
+        for pem in data['power-usage-information']['power-usage-item']:
             try:
                 in_stat = pem['dc-input-detail2']['dc-input-status']
             except:

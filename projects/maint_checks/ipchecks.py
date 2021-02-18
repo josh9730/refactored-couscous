@@ -89,18 +89,22 @@ class GetNeighborIPs(IPChecks):
         if (not self.circuit['ipv4_neighbor'] or not self.circuit['ipv6_neighbor']) and self.circuit['port']:
 
             if device_type == 'junos':
+                junos_parse = ParseData(device_type)
+
                 arp = connection.rpc.get_arp_table_information(interface=self.circuit['port'])
                 nd = connection.rpc.get_ipv6_nd_information(interface=self.circuit['port'])
 
-                ipv4 = ParseData(arp, device_type).parse_circuit_arp_junos()
-                ipv6 = ParseData(nd, device_type).parse_circuit_nd_junos()
+                ipv4 = junos_parse.parse_circuit_arp_junos(arp)
+                ipv6 = junos_parse.parse_circuit_nd_junos(nd)
 
             elif device_type == 'iosxr':
+                xr_parse = ParseData(device_type)
+
                 arp = connection.get((filters.arp.format(interface=self.circuit['port'])))
                 nd = connection.get((filters.nd.format(interface=self.circuit['port'])))
 
-                ipv4 = ParseData(arp, device_type).parse_circuit_arp_xr()
-                ipv6 = ParseData(nd, device_type).parse_circuit_nd_xr()
+                ipv4 = xr_parse.parse_circuit_arp_xr(arp)
+                ipv6 = xr_parse.parse_circuit_nd_xr(nd)
 
             if not self.circuit['ipv4_neighbor']: self.circuit['ipv4_neighbor'] = ipv4
             if not self.circuit['ipv6_neighbor']: self.circuit['ipv6_neighbor'] = ipv6
