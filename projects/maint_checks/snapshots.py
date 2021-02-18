@@ -3,7 +3,6 @@
     attach to ticket automatically
 
     --- XR HPR REQUIRES PORT
-    Full Routes status (Full DC table)
 
     Check:
         
@@ -22,6 +21,7 @@
             junos port
             xr isis/pim/msdp
             junos isis/pim/msdp
+
         Device:
             xr device checks:
             junos device checks:
@@ -29,7 +29,7 @@
 """
 
 
-from checks import CircuitChecks
+from checks import CircuitChecks, DeviceChecks
 import yaml
 import json
 import argparse
@@ -41,6 +41,30 @@ parser = argparse.ArgumentParser(description='Run snapshots for devices and circ
 parser.add_argument('-u', '--username', metavar='username', help='MFA username')
 parser.add_argument('-d', '--diffs', help='Run diffs, implies an output_pre.json file exists', action='store_true')
 args = parser.parse_args()
+
+def start_checks(username, input_dict, check_type):
+
+    output = {}
+    for index, router in enumerate(input_dict, 1):
+
+        device_name, device_type = router.split('|')
+        start_time = time.time()
+
+        if check_type == 'circuit':
+            checks_output, start_time = CircuitChecks(username, device_name, device_type, input_dict[router]).get_circuit_main()
+        elif check_type == 'device':
+            checks_output = DeviceChecks(username, device_name, device_type).get_device_main()
+
+        elapsed_time = time.time() - start_time
+
+        if int(elapsed_time) < 30 and index != len(input_dict):
+            print(f'\t... resetting OTP ({int(30 - elapsed_time)} sec)')
+            time.sleep(30 - elapsed_time)
+            print('\t... done\n\n')
+
+        output[device_name.upper()] = checks_output
+
+    return output
 
 def main():
     """Initialize checks type. Per-Device or Per-Circuit."""
@@ -54,26 +78,13 @@ def main():
         with open ('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
             username = yaml.full_load(file)['mfa']
 
-    if data['check_type'] == 'circuit':
+    check_type = data['check_type']
+    input_dict = data[check_type]
 
-        output = {}
-        for index, router in enumerate(data['circuit_checks'], 1):
-
-            device_name, device_type = router.split('|')
-
-            start_time = time.time()
-            circuits_output, start_time = CircuitChecks(username, device_name, device_type, data['circuit_checks'][router]).get_circuit_main()
-            elapsed_time = time.time() - start_time
-
-            if int(elapsed_time) < 30 and index != len(data['circuit_checks']):
-                print(f'\t... resetting OTP ({int(30 - elapsed_time)} sec)')
-                time.sleep(30 - elapsed_time)
-                print('\t... done\n\n')
-
-            output[device_name.upper()] = circuits_output
+    final_output = start_checks(username, input_dict, check_type)
 
     file = open('output.json', 'w')
-    json.dump(output, file, indent=2)
+    json.dump(final_output, file, indent=2)
     file.close()
 
 if __name__ == '__main__':

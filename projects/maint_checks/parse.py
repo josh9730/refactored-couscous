@@ -54,7 +54,8 @@ class ParseData:
         """
 
         self.device_type = device_type
-        self.parsed_data = {}
+        self.addtl_dict = {}
+        self.optics_dict = {}
 
     # pylint: disable=no-self-argument, not-callable
     def to_dict(func):
@@ -81,6 +82,24 @@ class ParseData:
         }
 
         return route_nlri_dict
+
+    # Junos Circuit Parsing
+
+    @to_dict
+    def parse_circuit_arp_junos(self, data):
+
+        try: ipv4 = data['arp-table-information']['arp-table-entry']['ip-address']
+        except: ipv4 = data['arp-table-information']['arp-table-entry'][0]['ip-address']
+
+        return ipv4
+
+    @to_dict
+    def parse_circuit_nd_junos(self, data):
+
+        try: ipv6 = data['ipv6-nd-information']['ipv6-nd-entry'][0]['ipv6-nd-neighbor-address']
+        except: ipv6 = None
+
+        return ipv6
 
     @to_dict
     def parse_circuit_bgp_nei_junos(self, data):
@@ -143,29 +162,13 @@ class ParseData:
         try:
             if data['route-information']['route-table']['rt']['rt-destination'] == '0.0.0.0/0' or '::/0':
                 default = 'Yes'
-            else:
-                default = 'No'
+            else: default = 'No'
 
-        except:
-            default = 'No'
+        except: default = 'No'
 
         return default
 
-    @to_dict
-    def parse_circuit_arp_junos(self, data):
-
-        try: ipv4 = data['arp-table-information']['arp-table-entry']['ip-address']
-        except: ipv4 = data['arp-table-information']['arp-table-entry'][0]['ip-address']
-
-        return ipv4
-
-    @to_dict
-    def parse_circuit_nd_junos(self, data):
-
-        try: ipv6 = data['ipv6-nd-information']['ipv6-nd-entry'][0]['ipv6-nd-neighbor-address']
-        except: ipv6 = None
-
-        return ipv6
+    # XR Circuit Parsing
 
     @to_dict
     def parse_circuit_arp_xr(self, data):
@@ -237,13 +240,10 @@ class ParseData:
         try:
             default = data['rpc-reply']['data']['bgp']['instances']['instance']['instance-active']['default-vrf']['afs']['af']['neighbor-af-table']['neighbor']['af-data']['is-default-originate-sent']
 
-            if default == 'true':
-                default = 'Yes'
-            else:
-                default = 'No'
+            if default == 'true': default = 'Yes'
+            else: default = 'No'
 
-        except:
-            default = 'No peering'
+        except: default = 'No peering'
 
         return default
 
@@ -258,14 +258,43 @@ class ParseData:
 
         return nh, lp, asp, med, comm
 
+    # Junos device parsing
+
     @to_dict
-    def parse_device_bgp_junos(self, data):
+    def device_power_junos(self, data):
+        """Return nested dict from dict of get_power_usage_information_detail RPC call
+
+        Returns:
+            dict: status, capacity
+        """
+
+        pem_dict = {}
+        for pem in data['power-usage-information']['power-usage-item']:
+            try:
+                in_stat = pem['dc-input-detail2']['dc-input-status']
+            except:
+                in_stat = pem['dc-input-detail']['dc-input']
+
+            power_dict = {
+                pem['name']: {
+                    'Status': pem['state'],
+                    'Input Status': in_stat,
+                    'Capacity': pem['pem-capacity-detail']['capacity-actual'],
+                }
+            }
+            pem_dict.update(power_dict)
+
+        return pem_dict
+
+    @to_dict
+    def device_bgp_junos(self, data):
         """Return nested dict from dict of get_bgp_summary_information RPC call
 
         Returns:
             dict: peer, state, accepted prefixes
         """
 
+        bgp_dict = {}
         for peer in data['bgp-information']['bgp-peer']:
 
             if type(peer['peer-state']) == dict:
@@ -280,7 +309,7 @@ class ParseData:
                 except:
                     desc = 'None'
 
-                bgp_dict = {
+                nei_dict = {
                     peer['peer-address']: {
                         'Description': desc,
                         'Peer AS': peer['peer-as'],
@@ -289,74 +318,76 @@ class ParseData:
                     }
                 }
 
-            self.parsed_data.update(bgp_dict)
+            bgp_dict.update(nei_dict)
 
-        return self.parsed_data
+        return bgp_dict
 
     @to_dict
-    def parse_device_isis_junos(self, data):
+    def device_isis_junos(self, data):
         """Return nested dict from dict of get_isis_adjacency_information RPC call
 
         Returns:
             dict: name, port, state
         """
 
+        isis_dict = {}
         for peer in data['isis-adjacency-information']['isis-adjacency']:
-            isis_dict = {
+            nei_dict = {
                 peer['system-name']: {
                     'Port': peer['interface-name'],
                     'State': peer['adjacency-state']
                 }
             }
+            isis_dict.update(nei_dict)
 
-            self.parsed_data.update(isis_dict)
-
-        return self.parsed_data
+        return isis_dict
 
     @to_dict
-    def parse_device_msdp_junos(self, data):
+    def device_msdp_junos(self, data):
         """Return nested dict from dict of get_msdp_information RPC call
 
         Returns:
             dict: peer, local-address, state, group
         """
 
+        msdp_dict = {}
         for peer in data['msdp-peer-information']['msdp-peer']:
             if peer['msdp-state'] == 'Established':
-                msdp_dict = {
+                nei_dict = {
                     peer['msdp-peer-address']: {
                         'Local Address': peer['msdp-local-address'],
                         'State': peer['msdp-state'],
                         'Group': peer['msdp-group-name']
                     }
                 }
-                self.parsed_data.update(msdp_dict)
+                msdp_dict.update(nei_dict)
 
-        return self.parsed_data
+        return msdp_dict
 
     @to_dict
-    def parse_device_pim_junos(self, data):
+    def device_pim_junos(self, data):
         """Return nested dict from dict of get_pim_neighbors_information RPC call
 
         Returns:
             dict: peer, local-address, state, group
         """
 
+        pim_dict = {}
         for neighbor in data['pim-neighbors-information']['pim-interface']:
             try:
-                pim_dict = {
+                nei_dict = {
                     neighbor['pim-neighbor']['pim-interface-name']: {
                         'Neighbor': neighbor['pim-neighbor']['pim-neighbor-address']
                     }
                 }
-                self.parsed_data.update(pim_dict)
+                pim_dict.update(nei_dict)
             except:
                 pass
 
-        return self.parsed_data
+        return pim_dict
 
     @to_dict
-    def parse_device_optics_junos(self, data):
+    def device_optics_junos(self, data):
         """Return nested dict from dict of get_interface_optics_diagnostics_information RPC call
 
         Returns:
@@ -364,6 +395,7 @@ class ParseData:
         """
 
         for port in data['interface-information']['physical-interface']:
+
             all_lane_dict = {}
             if type(port['optics-diagnostics']['optics-diagnostics-lane-values']) == list:
                 for lane in port['optics-diagnostics']['optics-diagnostics-lane-values']:
@@ -375,6 +407,7 @@ class ParseData:
                         }
                     }
                     all_lane_dict.update(lane_dict)
+
             else:
                 lane_num = port['optics-diagnostics']['optics-diagnostics-lane-values']['lane-index']
                 all_lane_dict = {
@@ -383,26 +416,28 @@ class ParseData:
                         'Tx Power': port['optics-diagnostics']['optics-diagnostics-lane-values']['laser-output-power-dbm']+'dBm'
                     }
                 }
-            optics_dict = {
+            optic_dict = {
                 port['name']: all_lane_dict
             }
-            self.parsed_data.update(optics_dict)
+            self.optics_dict.update(optic_dict)
 
-        return self.parsed_data
+        # return optics_dict
 
     @to_dict
-    def parse_device_iface_junos(self, data, optics_dict):
+    def device_iface_junos(self, data):
         """Return nested dict from dict of get_interface_information RPC call
 
         Returns:
             dict: name, errors, optics
         """
 
+        iface_dict = {}
         for port in data['interface-information']['physical-interface']:
             try:
                 desc = port['description']
             except:
                 desc = 'No description'
+
             if port['oper-status'] == 'up' and port['name'].startswith(('xe', 'et', 'ge')):
                 port_dict = {
                     port['name']: {
@@ -412,34 +447,9 @@ class ParseData:
                             'Rx Drops': port['input-error-list']['input-drops'],
                             'Tx Errors': port['output-error-list']['output-errors'],
                             'Tx Drops': port['output-error-list']['output-drops']},
-                        'Optics PMs': optics_dict[port['name']]
+                        'Optics PMs': self.optics_dict[port['name']]
                     }
                 }
-                self.parsed_data.update(port_dict)
+                iface_dict.update(port_dict)
 
-        return self.parsed_data
-
-    @to_dict
-    def parse_device_power_junos(self, data):
-        """Return nested dict from dict of get_power_usage_information_detail RPC call
-
-        Returns:
-            dict: status, capacity
-        """
-
-        for pem in data['power-usage-information']['power-usage-item']:
-            try:
-                in_stat = pem['dc-input-detail2']['dc-input-status']
-            except:
-                in_stat = pem['dc-input-detail']['dc-input']
-
-            power_dict = {
-                pem['name']: {
-                    'Status': pem['state'],
-                    'Input Status': in_stat,
-                    'Capacity': pem['pem-capacity-detail']['capacity-actual'],
-                }
-            }
-            self.parsed_data.update(power_dict)
-
-        return self.parsed_data
+        return iface_dict
