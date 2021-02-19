@@ -25,6 +25,15 @@ class Device:
 
         self.start_time = time.time()
 
+    def close_connections(self):
+
+        #pylint: disable=no-member
+        if self.device_type == 'iosxr':
+            self.connection.close_session()
+
+        elif self.device_type == 'junos':
+            self.connection.close()
+
 
 class CircuitChecks(Device):
 
@@ -108,15 +117,6 @@ class CircuitChecks(Device):
                 elif adv_count == 0:
                     if index == 0: self.ipv4_adv_count = 'No Adv. Routes'
                     elif index == 1: self.ipv6_adv_count = 'No Adv. Routes'
-
-    def close_connections(self):
-
-        #pylint: disable=no-member
-        if self.device_type == 'iosxr':
-            self.connection.close_session()
-
-        elif self.device_type == 'junos':
-            self.connection.close()
 
     def get_circuit_bgp(self):
 
@@ -222,10 +222,19 @@ class DeviceChecks(Device):
         """
 
         if self.device_type == 'junos':
+            output_dict_list = self.get_device_junos()
 
-            output_dict = self.get_device_junos()
+        elif self.device_type == 'iosxr':
+            output_dict_list = self.get_device_xr()
+
+        output_dict = self.create_output_dict(output_dict_list)
+        self.close_connections()
 
         return output_dict
+
+    def get_device_xr(self):
+
+
 
     def get_device_junos(self):
         """Use PyEZ to pull from Junos. Called from main class method
@@ -233,9 +242,6 @@ class DeviceChecks(Device):
         Returns:
             dict: output dict
         """
-        from pprint import pprint
-
-        junos_parse = ParseData(self.device_type)
 
         software = etree_to_dict(self.connection.rpc.get_software_information())['software-information']['junos-version']
         power_raw = self.connection.rpc.get_power_usage_information_detail()
@@ -245,6 +251,8 @@ class DeviceChecks(Device):
         pim_raw = self.connection.rpc.get_pim_neighbors_information()
         optics_raw = self.connection.rpc.get_interface_optics_diagnostics_information()
         iface_raw = self.connection.rpc.get_interface_information(detail=True, statistics=True)
+
+        junos_parse = ParseData(self.device_type)
 
         power = junos_parse.device_power_junos(power_raw)
         bgp = junos_parse.device_bgp_junos(bgp_raw)
@@ -274,16 +282,18 @@ class DeviceChecks(Device):
             pim_hpr = junos_parse.device_pim_junos(pim_hpr_raw)
             pim.update(pim_hpr)
 
-        self.connection.close()
+        return software, power, isis, pim, msdp, iface, bgp
+
+    def create_output_dict(self, output_dict_list):
 
         output_dict = {
-            'Software': software,
-            'Power': power,
-            'IS-IS': isis,
-            'PIM Enabled Ports': pim,
-            'Established MSDP Neighbors': msdp,
-            'Interfaces': iface,
-            'Established BGP Neighbors': bgp
+            'Software': output_dict_list[0],
+            'Power': output_dict_list[1],
+            'IS-IS': output_dict_list[2],
+            'PIM Enabled Ports': output_dict_list[3],
+            'Established MSDP Neighbors': output_dict_list[4],
+            'Interfaces': output_dict_list[5],
+            'Established BGP Neighbors': output_dict_list[6]
         }
 
         return output_dict

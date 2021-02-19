@@ -453,3 +453,41 @@ class ParseData:
                 iface_dict.update(port_dict)
 
         return iface_dict
+
+    @to_dict
+    def device_isis_xr(self, data):
+
+        id_name_dict = {}
+        for neighbor in data['rpc-reply']['data']['isis']['instances']['instance']['host-names']['host-name']:
+            id_name_list  = list(neighbor.values())
+            nei = { id_name_list[0]: id_name_list[1] }
+            id_name_dict.update(nei)
+
+        isis_dict = {}
+        for neighbor in data['rpc-reply']['data']['isis']['instances']['instance']['neighbors']['neighbor']:
+            if neighbor['neighbor-state'] == 'isis-adj-up-state': state = 'Up'
+            else: state = 'Down'
+
+            nei_dict = {
+                id_name_dict[neighbor['system-id']]: {
+                    'Port': neighbor['interface-name'],
+                    'State': state
+                }
+            }
+            isis_dict.update(nei_dict)
+
+        return isis_dict
+
+    @to_dict
+    def device_pim_xr(self, data):
+
+        pim_dict = {}
+        for neighbor in data['rpc-reply']['data']['pim']['active']['default-context']['neighbor-old-formats']['neighbor-old-format']:
+            nei_dict = {
+                neighbor['interface-name']: {
+                    'Neighbor': neighbor['neighbor-address']
+                }
+            }
+            pim_dict.update(nei_dict)
+
+        return pim_dict

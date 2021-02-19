@@ -57,6 +57,31 @@ xr_vrf = """
 </filter>
 """
 
+isis_device = """
+<filter>
+  <isis xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-clns-isis-oper">
+    <instances><instance>
+      <host-names><host-name>
+        <system-id/><host-name/>
+      </host-name></host-names>
+      <neighbors><neighbor>
+        <system-id/><interface-name/><neighbor-state/>
+      </neighbor></neighbors>
+    </instance></instances>
+  </isis>
+</filter>
+"""
+
+pim_device = """
+<filter>
+  <pim xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-pim-oper">
+    <active><default-context><neighbor-old-formats><neighbor-old-format>
+      <interface-name/><neighbor-address/>
+    </neighbor-old-format></neighbor-old-formats></default-context></active>
+  </pim>
+</filter>
+"""
+
 template_bgp_rx = r"""Value Prefix (([a-z0-9]*[.:]*)*\/\d{1,2})
 
 Start
