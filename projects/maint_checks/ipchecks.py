@@ -55,7 +55,6 @@ class GetNeighborIPs(IPChecks):
         self.ipv4_nei = self.circuit['ipv4_neighbor']
         self.ipv6_nei = self.circuit['ipv6_neighbor']
         self.hostname = hostname
-        print(f'Getting {self.hostname} neighbor IPs...')
 
     def get_ibgp_ips(self):
         """Use DNS to retrieve loopback IPs. Prints error if no IPv6.
@@ -74,7 +73,7 @@ class GetNeighborIPs(IPChecks):
             except:
                 ipv6_nei = None
                 if not self.circuit['ipv6_neighbor']:
-                    print(f'* WARNING: No AAAA record for {self.hostname}. Enter manually if v6 Peering exists and re-run.')
+                    print(f'\t\t\t* WARNING: No AAAA record for {self.hostname}.\n\t\t\tEnter manually if v6 Peering exists and re-run.')
 
             if not self.circuit['ipv4_neighbor']: self.circuit['ipv4_neighbor'] = ipv4_nei
             if not self.circuit['ipv6_neighbor']: self.circuit['ipv6_neighbor'] = ipv6_nei

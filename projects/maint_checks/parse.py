@@ -9,6 +9,14 @@ import tempfile
 
 
 def etree_to_dict(etree_data):
+    """Convert lxml to nested dict. Will overwrite if duplicate keys. Currently Junos only
+
+    Args:
+        etree_data (element): lxml Element type
+
+    Returns:
+        dict: Nested dict of output
+    """
     # Remove any comments (will cause error on json dump)
     estring = etree.tostring(etree_data)
     parser =  etree.XMLParser(remove_comments=True)
@@ -39,6 +47,14 @@ def etree_to_dict(etree_data):
     return etree_dict
 
 def rpc_to_dict(data):
+    """Convert xml to dict. XR only.
+
+    Args:
+        data (xml): RPC call XML return
+
+    Returns:
+        dict: nested dict of output
+    """
 
     return xmltodict.parse(xml.dom.minidom.parseString(data.xml).toprettyxml())
 
@@ -46,7 +62,7 @@ def rpc_to_dict(data):
 class ParseData:
 
     def __init__(self, device_type):
-        """Parse string (TextFSM) or dict (clean up napalm output) data.
+        """Parse nested dictionaries of RPC calls for interesting items.
 
         Args:
             data (str or dict): Data to be parsed
@@ -54,11 +70,13 @@ class ParseData:
         """
 
         self.device_type = device_type
-        self.addtl_dict = {}
+        self.stats_dict = {}
         self.optics_dict = {}
 
     # pylint: disable=no-self-argument, not-callable
     def to_dict(func):
+        """Decorator function to call lxml/xml-dict functions based on device_type."""
+
         def wrapper(self, data):
 
             if self.device_type == 'junos':
@@ -83,8 +101,8 @@ class ParseData:
 
         return route_nlri_dict
 
-    # Junos Circuit Parsing
 
+    # JUNOS CIRCUIT PARSING
     @to_dict
     def parse_circuit_arp_junos(self, data):
 
@@ -168,8 +186,8 @@ class ParseData:
 
         return default
 
-    # XR Circuit Parsing
 
+    # XR CIRCUIT PARSING
     @to_dict
     def parse_circuit_arp_xr(self, data):
 
@@ -258,15 +276,10 @@ class ParseData:
 
         return nh, lp, asp, med, comm
 
-    # Junos device parsing
 
+    # JUNOS DEVICE PARSING
     @to_dict
     def device_power_junos(self, data):
-        """Return nested dict from dict of get_power_usage_information_detail RPC call
-
-        Returns:
-            dict: status, capacity
-        """
 
         pem_dict = {}
         for pem in data['power-usage-information']['power-usage-item']:
@@ -288,11 +301,6 @@ class ParseData:
 
     @to_dict
     def device_bgp_junos(self, data):
-        """Return nested dict from dict of get_bgp_summary_information RPC call
-
-        Returns:
-            dict: peer, state, accepted prefixes
-        """
 
         bgp_dict = {}
         for peer in data['bgp-information']['bgp-peer']:
@@ -324,11 +332,6 @@ class ParseData:
 
     @to_dict
     def device_isis_junos(self, data):
-        """Return nested dict from dict of get_isis_adjacency_information RPC call
-
-        Returns:
-            dict: name, port, state
-        """
 
         isis_dict = {}
         for peer in data['isis-adjacency-information']['isis-adjacency']:
@@ -344,11 +347,6 @@ class ParseData:
 
     @to_dict
     def device_msdp_junos(self, data):
-        """Return nested dict from dict of get_msdp_information RPC call
-
-        Returns:
-            dict: peer, local-address, state, group
-        """
 
         msdp_dict = {}
         for peer in data['msdp-peer-information']['msdp-peer']:
@@ -366,11 +364,6 @@ class ParseData:
 
     @to_dict
     def device_pim_junos(self, data):
-        """Return nested dict from dict of get_pim_neighbors_information RPC call
-
-        Returns:
-            dict: peer, local-address, state, group
-        """
 
         pim_dict = {}
         for neighbor in data['pim-neighbors-information']['pim-interface']:
@@ -388,11 +381,7 @@ class ParseData:
 
     @to_dict
     def device_optics_junos(self, data):
-        """Return nested dict from dict of get_interface_optics_diagnostics_information RPC call
-
-        Returns:
-            dict: Tx/Rx Power (dbm)
-        """
+        """Stores optics pull from RPC, output is used in device_iface_junos method."""
 
         for port in data['interface-information']['physical-interface']:
 
@@ -421,15 +410,9 @@ class ParseData:
             }
             self.optics_dict.update(optic_dict)
 
-        # return optics_dict
-
     @to_dict
     def device_iface_junos(self, data):
-        """Return nested dict from dict of get_interface_information RPC call
-
-        Returns:
-            dict: name, errors, optics
-        """
+        """Uses device_optics_junos method above"""
 
         iface_dict = {}
         for port in data['interface-information']['physical-interface']:
@@ -454,27 +437,52 @@ class ParseData:
 
         return iface_dict
 
+
+    # XR DEVICE PARSING
     @to_dict
     def device_isis_xr(self, data):
 
         id_name_dict = {}
-        for neighbor in data['rpc-reply']['data']['isis']['instances']['instance']['host-names']['host-name']:
-            id_name_list  = list(neighbor.values())
-            nei = { id_name_list[0]: id_name_list[1] }
-            id_name_dict.update(nei)
+        full_path = data['rpc-reply']['data']['isis']['instances']['instance']
+        if type(full_path) == dict:
 
-        isis_dict = {}
-        for neighbor in data['rpc-reply']['data']['isis']['instances']['instance']['neighbors']['neighbor']:
-            if neighbor['neighbor-state'] == 'isis-adj-up-state': state = 'Up'
-            else: state = 'Down'
+            for neighbor in full_path['host-names']['host-name']:
+                id_name_list  = list(neighbor.values())
+                nei = { id_name_list[0]: id_name_list[1] }
+                id_name_dict.update(nei)
 
-            nei_dict = {
-                id_name_dict[neighbor['system-id']]: {
-                    'Port': neighbor['interface-name'],
-                    'State': state
+            isis_dict = {}
+            for neighbor in full_path['neighbors']['neighbor']:
+                if neighbor['neighbor-state'] == 'isis-adj-up-state': state = 'Up'
+                else: state = 'Down'
+
+                nei_dict = {
+                    id_name_dict[neighbor['system-id']]: {
+                        'Port': neighbor['interface-name'],
+                        'State': state
+                    }
                 }
-            }
-            isis_dict.update(nei_dict)
+                isis_dict.update(nei_dict)
+
+        else:
+            for index in range(2):
+                for neighbor in full_path[index]['host-names']['host-name']:
+                    id_name_list  = list(neighbor.values())
+                    nei = { id_name_list[0]: id_name_list[1] }
+                    id_name_dict.update(nei)
+
+                isis_dict = {}
+                for neighbor in full_path[index]['neighbors']['neighbor']:
+                    if neighbor['neighbor-state'] == 'isis-adj-up-state': state = 'Up'
+                    else: state = 'Down'
+
+                    nei_dict = {
+                        id_name_dict[neighbor['system-id']]: {
+                            'Port': neighbor['interface-name'],
+                            'State': state
+                        }
+                    }
+                    isis_dict.update(nei_dict)
 
         return isis_dict
 
@@ -491,3 +499,85 @@ class ParseData:
             pim_dict.update(nei_dict)
 
         return pim_dict
+
+    @to_dict
+    def device_stats_xr(self, data):
+        """Stores stats for use in device_iface_xr method."""
+
+        for iface in data['rpc-reply']['data']['infra-statistics']['interfaces']['interface']:
+            try:
+                iface_dict = {
+                    iface['interface-name']: {
+                        'Rx Errors': iface['interfaces-mib-counters']['input-errors'],
+                        'Rx Drops': iface['interfaces-mib-counters']['input-drops'],
+                        'Tx Errors': iface['interfaces-mib-counters']['output-errors'],
+                        'Tx Drops': iface['interfaces-mib-counters']['output-drops']
+                    }
+                }
+                self.stats_dict.update(iface_dict)
+
+            except: pass
+
+    @to_dict
+    def device_iface_xr(self, data):
+        """Uses output from device_stats_xr method."""
+
+        iface_dict = {}
+        for iface in data['rpc-reply']['data']['ethernet-interface']['interfaces']['interface']:
+            try:
+                iface_name = iface['interface-name']
+                port_dict = {
+                    iface_name: {
+                        'Errors': self.stats_dict[iface_name],
+                        'Optics PMs': 'Not Supported'
+                    }
+                }
+                iface_dict.update(port_dict)
+
+            except: pass
+
+        return iface_dict
+
+    @to_dict
+    def device_bgp_xr(self, data):
+
+        bgp_dict = {}
+        for nei_def_vrf in data['rpc-reply']['data']['bgp']['instances']['instance']['instance-active']['default-vrf']['afs']['af']:
+
+          for nei in nei_def_vrf['neighbor-af-table']['neighbor']:
+
+            try: desc = nei['description']
+            except: desc = 'None'
+            try: pref = nei['af-data'][0]['prefixes-accepted']
+            except: pref = nei['af-data']['prefixes-accepted']
+
+            nei_dict = {
+              nei['neighbor-address']: {
+                'Description': desc,
+                'Peer AS': nei['remote-as'],
+                'State': nei['connection-state'].lstrip('bgp-st-').capitalize(),
+                'Accepted Prefixes': pref
+              }
+            }
+            bgp_dict.update(nei_dict)
+
+        try:
+            for nei_hpr in data['rpc-reply']['data']['bgp']['instances']['instance']['instance-active']['vrfs']['vrf']['neighbors']['neighbor']:
+
+                try: desc = nei_hpr['description']
+                except: desc = 'None'
+                try: pref = nei_hpr['af-data'][0]['prefixes-accepted']
+                except: pref = nei_hpr['af-data']['prefixes-accepted']
+
+                nei_dict = {
+                  nei_hpr['neighbor-address']: {
+                    'Description': desc,
+                    'Peer AS': nei_hpr['remote-as'],
+                    'State': nei_hpr['connection-state'].lstrip('bgp-st-').capitalize(),
+                    'Accepted Prefixes': pref
+                  }
+                }
+                bgp_dict.update(nei_dict)
+        except: pass
+
+        return bgp_dict

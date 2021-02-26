@@ -1,7 +1,7 @@
 from parse import ParseData, etree_to_dict
 from login import Login
 from ipchecks import GetNeighborIPs
-from xr_hpr import XRGetHPR
+from napalm_xr import NapalmXR
 import filters
 import time
 import sys
@@ -10,18 +10,28 @@ import sys
 class Device:
 
     def __init__(self, username, device_name, device_type):
+        """Device login parameters
+
+        Args:
+            username (str): mfa username
+            device_name (str): device for the circuit
+            device_type (str): device type (iosxr or junos)
+        """
 
         self.username = username
         self.device_name = device_name
         self.device_type = device_type
         creds = Login(username, device_name, device_type)
 
-        if device_type == 'iosxr':
-            self.connection = creds.ncc_connect()
-
-        elif device_type == 'junos':
-            self.connection = creds.pyez_connect()
-            self.connection.open()
+        try:
+            if device_type == 'iosxr':
+                self.connection = creds.ncc_connect()
+            elif device_type == 'junos':
+                self.connection = creds.pyez_connect()
+                self.connection.open()
+        except:
+            print('\n\n\tAuthentication Error. Please wait and run again.\n\n')
+            sys.exit(1)
 
         self.start_time = time.time()
 
@@ -38,27 +48,45 @@ class Device:
 class CircuitChecks(Device):
 
     def __init__(self, username, device_name, device_type, circuits_dict):
+        """Return circuit-based pre/post maintenance checks.
+
+        Args:
+            username (str): mfa username
+            device_name (str): device for the circuit
+            device_type (str): device type (iosxr or junos)
+            circuits_dict (dict): dict of circuit name, service type, IPs
+        """
+
         super().__init__(username, device_name, device_type)
         self.circuits_dict = circuits_dict
 
     def get_circuit_main(self):
+        """Main method for circuit checks.
+
+        Returns:
+            dict: nested dict of interesting items
+        """
 
         circuits_output = {}
         for self.circuit in self.circuits_dict:
 
-            get_ips = GetNeighborIPs(self.circuits_dict[self.circuit], self.circuit)
+            print(f'\t{self.circuit.upper()}: {{')
 
+            # get IPs unless defined manually
+            print(f'\t\t1) Getting Neighbor IPs')
+            get_ips = GetNeighborIPs(self.circuits_dict[self.circuit], self.circuit)
             if self.circuits_dict[self.circuit]['service'] == ('ebgp' or 'static'):
                 get_ips.get_ebgp_static_ips(self.device_type, self.connection)
             else:
                 get_ips.get_ibgp_ips()
-
             self.addresses = [ self.circuits_dict[self.circuit]['ipv4_neighbor'], self.circuits_dict[self.circuit]['ipv6_neighbor']]
-            output_dict = {}
 
+            # main method calls
+            print(f'\t\t2) Getting BGP Routes')
             self.get_circuit_bgp()
             self.adv_counts([ self.ipv4_circuit_data[1], self.ipv6_circuit_data[1] ])
 
+            # output dict returned
             output_dict = {
                 self.circuit: {
                     'Service': self.circuits_dict[self.circuit]['service'],
@@ -79,10 +107,21 @@ class CircuitChecks(Device):
                 }
             }
             circuits_output.update(output_dict)
+            print('\t}')
 
         self.close_connections()
 
         return circuits_output, self.start_time
+
+    def get_circuit_bgp(self):
+        """Call device-specific methods. HPR check called first for XR"""
+
+        if self.device_type == 'iosxr':
+            self.check_hpr_xr()
+            self.get_circuit_bgp_xr()
+
+        elif self.device_type == 'junos':
+            self.get_circuit_bgp_junos()
 
     def adv_counts(self, adv_counts):
         """Convert adv_count int to string for diffs - adv. counts fluctuate.
@@ -97,6 +136,7 @@ class CircuitChecks(Device):
                 if index == 0: self.ipv4_adv_count = 'No Adv. Routes'
                 elif index == 1: self.ipv6_adv_count = 'No Adv. Routes'
 
+            # HPR Full Table ~ 20,000 / 20,000
             elif self.vrf == 'hpr':
                 if adv_count > 20000:
                     if index == 0: self.ipv4_adv_count = 'Full HPR IPv4 Table'
@@ -108,6 +148,7 @@ class CircuitChecks(Device):
                     if index == 0: self.ipv4_adv_count = 'No Adv. Routes'
                     elif index == 1: self.ipv6_adv_count = 'No Adv. Routes'
 
+            # DC Full Table ~ 800,000 / 100,000
             elif self.vrf == 'default' or 'master':
                 if adv_count > 800000 and index == 0: self.ipv4_adv_count = 'Full DC IPv4 Table'
                 elif adv_count > 100000 and index == 1: self.ipv6_adv_count = 'Full DC IPv6 Table'
@@ -118,16 +159,10 @@ class CircuitChecks(Device):
                     if index == 0: self.ipv4_adv_count = 'No Adv. Routes'
                     elif index == 1: self.ipv6_adv_count = 'No Adv. Routes'
 
-    def get_circuit_bgp(self):
 
-        if self.device_type == 'iosxr':
-            self.check_hpr_xr()
-            self.get_circuit_bgp_xr()
-
-        elif self.device_type == 'junos':
-            self.get_circuit_bgp_junos()
-
+    # XR CIRCUIT METHODS
     def check_hpr_xr(self):
+        """HPR VRF not check-able via RPC in 6.3.3. Using napalm"""
 
         # pylint: disable=no-member
         self.vrf = 'default'
@@ -141,14 +176,15 @@ class CircuitChecks(Device):
             for iface in self.vrf_iface_list:
                 if str(iface) == str(self.port):
                     self.vrf = 'hpr'
-
-        except: pass
+        except:
+            pass
 
     def get_circuit_bgp_xr(self):
+        """Check HPR, if not HPR pass addresses to get checks data"""
 
         if self.vrf == 'hpr':
             elapsed_time = int(time.time() - self.start_time)
-            self.ipv4_circuit_data,  self.ipv6_circuit_data, self.start_time = XRGetHPR(elapsed_time, self.username, self.device_name, self.addresses).get_xr_bgp_main()
+            self.ipv4_circuit_data,  self.ipv6_circuit_data, self.start_time, = NapalmXR(elapsed_time, self.username, self.device_name, addresses=self.addresses).get_circuit_hpr()
 
         else:
             if self.addresses[0]: self.ipv4_circuit_data = self.circuit_bgp_xr(self.addresses[0])
@@ -158,6 +194,7 @@ class CircuitChecks(Device):
             else: self.ipv6_circuit_data = [ 'No Peering', None, 'No Peering', 'No Peering']
 
     def circuit_bgp_xr(self, address):
+        """Run twice per circuit, once for v4 and once for v6"""
 
         # pylint: disable=no-member
         if address == self.addresses[0]: version = 'ipv4'
@@ -173,7 +210,10 @@ class CircuitChecks(Device):
 
         return circuit_bgp[0], circuit_bgp[1], circuit_bgp[2], default
 
+
+    # JUNOS CIRCUIT METHODS
     def get_circuit_bgp_junos(self):
+        """Pass addresses to get checks data"""
 
         if self.addresses[0]: self.ipv4_circuit_data = self.circuit_bgp_junos(self.addresses[0])
         else: self.ipv4_circuit_data = [ 'No Peering', None, 'No Peering', 'No Peering']
@@ -182,6 +222,7 @@ class CircuitChecks(Device):
         else: self.ipv6_circuit_data = [ 'No Peering', None, 'No Peering', 'No Peering']
 
     def circuit_bgp_junos(self, address):
+        """Run twice per circuit, once for v4 and once for v6"""
 
         junos_parse = ParseData(self.device_type)
         counts_raw = self.connection.rpc.get_bgp_neighbor_information(neighbor_address=address)
@@ -198,6 +239,7 @@ class CircuitChecks(Device):
 
         circuit_raw = self.connection.rpc.get_route_information(brief=True, table=table, peer=address, receive_protocol_name='bgp')
         routes_list = junos_parse.parse_circuit_bgp_junos_brief(circuit_raw)
+
         rx_routes = {}
         for route in routes_list:
             route_data = self.connection.rpc.get_route_information(destination=route, table=table, exact=True, detail=True, source_gateway=address)
@@ -212,6 +254,14 @@ class CircuitChecks(Device):
 class DeviceChecks(Device):
 
     def __init__(self, username, device_name, device_type):
+        """Return device-based pre/post maintenance checks.
+
+        Args:
+            username (str): mfa username
+            device_name (str): device for the circuit
+            device_type (str): device type (iosxr or junos)
+        """
+
         super().__init__(username, device_name, device_type)
 
     def get_device_main(self):
@@ -222,6 +272,7 @@ class DeviceChecks(Device):
         """
 
         if self.device_type == 'junos':
+
             output_dict_list = self.get_device_junos()
 
         elif self.device_type == 'iosxr':
@@ -230,61 +281,10 @@ class DeviceChecks(Device):
         output_dict = self.create_output_dict(output_dict_list)
         self.close_connections()
 
-        return output_dict
-
-    def get_device_xr(self):
-
-
-
-    def get_device_junos(self):
-        """Use PyEZ to pull from Junos. Called from main class method
-
-        Returns:
-            dict: output dict
-        """
-
-        software = etree_to_dict(self.connection.rpc.get_software_information())['software-information']['junos-version']
-        power_raw = self.connection.rpc.get_power_usage_information_detail()
-        bgp_raw = self.connection.rpc.get_bgp_summary_information()
-        isis_raw = self.connection.rpc.get_isis_adjacency_information()
-        msdp_raw = self.connection.rpc.get_msdp_information()
-        pim_raw = self.connection.rpc.get_pim_neighbors_information()
-        optics_raw = self.connection.rpc.get_interface_optics_diagnostics_information()
-        iface_raw = self.connection.rpc.get_interface_information(detail=True, statistics=True)
-
-        junos_parse = ParseData(self.device_type)
-
-        power = junos_parse.device_power_junos(power_raw)
-        bgp = junos_parse.device_bgp_junos(bgp_raw)
-        isis = junos_parse.device_isis_junos(isis_raw)
-        msdp = junos_parse.device_msdp_junos(msdp_raw)
-        pim = junos_parse.device_pim_junos(pim_raw)
-        junos_parse.device_optics_junos(optics_raw)
-        iface = junos_parse.device_iface_junos(iface_raw)
-
-        vrfs = etree_to_dict(self.connection.rpc.get_instance_information(brief=True))
-        vrf = None
-        for i in vrfs['instance-information']['instance-core']:
-            if i['instance-name'] == 'hpr':
-                vrf = 'hpr'
-                break
-
-        if vrf == 'hpr':
-            isis_hpr_raw = self.connection.rpc.get_isis_adjacency_information(instance='hpr')
-            isis_hpr = junos_parse.device_isis_junos(isis_hpr_raw)
-            isis.update(isis_hpr)
-
-            msdp_hpr_raw = self.connection.rpc.get_msdp_information(instance='hpr')
-            msdp_hpr = junos_parse.device_msdp_junos(msdp_hpr_raw)
-            msdp.update(msdp_hpr)
-
-            pim_hpr_raw = self.connection.rpc.get_pim_neighbors_information(instance='hpr')
-            pim_hpr = junos_parse.device_pim_junos(pim_hpr_raw)
-            pim.update(pim_hpr)
-
-        return software, power, isis, pim, msdp, iface, bgp
+        return output_dict, self.start_time
 
     def create_output_dict(self, output_dict_list):
+        """Convert to nested dict"""
 
         output_dict = {
             'Software': output_dict_list[0],
@@ -297,3 +297,106 @@ class DeviceChecks(Device):
         }
 
         return output_dict
+
+
+    # XR DEVICE METHODS
+    def get_device_xr(self):
+
+        # pylint: disable=no-member
+
+        xr_parse = ParseData(self.device_type)
+
+        power = 'Not Supported'
+        print(f'\t1) PIM Neighbors')
+        pim_raw = self.connection.get((filters.pim_device))
+        pim = xr_parse.device_pim_xr(pim_raw)
+
+        print(f'\t2) IS-IS Adjacencies')
+        isis_raw = self.connection.get((filters.isis_device))
+        isis = xr_parse.device_isis_xr(isis_raw)
+
+        print(f'\t3) BGP Neighbors')
+        bgp_raw = self.connection.get((filters.bgp_device))
+        bgp = xr_parse.device_bgp_xr(bgp_raw)
+
+        # print(f'\t4) Interface Stats')
+        # stats_raw = self.connection.get((filters.stats_device))
+        # iface_raw = self.connection.get((filters.iface_device))
+        # xr_parse.device_stats_xr(stats_raw)
+        # iface = xr_parse.device_iface_xr(iface_raw)
+
+        self.napalm_device_xr()
+
+        return self.software, power, isis, pim, self.msdp, self.ifaces, bgp
+
+    def napalm_device_xr(self):
+
+        elapsed_time = int(time.time() - self.start_time)
+        self.software, self.msdp, self.ifaces, self.start_time = NapalmXR(elapsed_time, self.username, self.device_name, circuit=False).get_device_xr()
+
+
+    # JUNOS DEVICE METHODS
+    def get_device_junos(self):
+        """Use PyEZ to pull from Junos. Called from main class method
+
+        Returns:
+            dict: output dict
+        """
+
+        junos_parse = ParseData(self.device_type)
+
+        print(f'\t1) PIM Neighbors')
+        pim_raw = self.connection.rpc.get_pim_neighbors_information()
+        pim = junos_parse.device_pim_junos(pim_raw)
+
+        print(f'\t2) IS-IS Adjacencies')
+        isis_raw = self.connection.rpc.get_isis_adjacency_information()
+        isis = junos_parse.device_isis_junos(isis_raw)
+
+        print(f'\t3) BGP Neighbors')
+        bgp_raw = self.connection.rpc.get_bgp_summary_information()
+        bgp = junos_parse.device_bgp_junos(bgp_raw)
+
+        print(f'\t4) Interface Stats')
+        optics_raw = self.connection.rpc.get_interface_optics_diagnostics_information()
+        iface_raw = self.connection.rpc.get_interface_information(detail=True, statistics=True)
+        junos_parse.device_optics_junos(optics_raw)
+        iface = junos_parse.device_iface_junos(iface_raw)
+
+        print(f'\t5) Software')
+        software = etree_to_dict(self.connection.rpc.get_software_information())['software-information']['junos-version']
+
+        print(f'\t6) MSDP Neighbors')
+        msdp_raw = self.connection.rpc.get_msdp_information()
+        msdp = junos_parse.device_msdp_junos(msdp_raw)
+
+        print(f'\t7) Power')
+        power_raw = self.connection.rpc.get_power_usage_information_detail()
+        power = junos_parse.device_power_junos(power_raw)
+
+        vrfs = etree_to_dict(self.connection.rpc.get_instance_information(brief=True))
+        vrf = None
+        for i in vrfs['instance-information']['instance-core']:
+            if i['instance-name'] == 'hpr':
+                vrf = 'hpr'
+                break
+
+        if vrf == 'hpr':
+            print(f'\t8) HPR: {{')
+            print(f'\t\t1) IS-IS HPR Adjacencies')
+            isis_hpr_raw = self.connection.rpc.get_isis_adjacency_information(instance='hpr')
+            isis_hpr = junos_parse.device_isis_junos(isis_hpr_raw)
+            isis.update(isis_hpr)
+
+            print(f'\t\t2) MSDP HPR Neighbors')
+            msdp_hpr_raw = self.connection.rpc.get_msdp_information(instance='hpr')
+            msdp_hpr = junos_parse.device_msdp_junos(msdp_hpr_raw)
+            msdp.update(msdp_hpr)
+
+            print(f'\t\t3) PIM HPR Neighbors')
+            pim_hpr_raw = self.connection.rpc.get_pim_neighbors_information(instance='hpr')
+            pim_hpr = junos_parse.device_pim_junos(pim_hpr_raw)
+            pim.update(pim_hpr)
+            print('\t}')
+
+        return software, power, isis, pim, msdp, iface, bgp

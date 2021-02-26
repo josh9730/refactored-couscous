@@ -78,6 +78,7 @@ class Login:
             host = self.hostname,
             username = self.username,
             password = self.first_factor + self.otp.now(),
+            timeout=120,
             hostkey_verify=False)
 
         return connection

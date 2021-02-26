@@ -82,6 +82,58 @@ pim_device = """
 </filter>
 """
 
+bgp_device = """
+<filter>
+  <bgp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-bgp-oper">
+    <instances><instance><instance-active><default-vrf><afs><af>
+      <af-name>ipv4-unicast</af-name>
+      <neighbor-af-table><neighbor>
+        <neighbor-address/><remote-as/><description/>
+          <connection-state>bgp-st-estab</connection-state>
+          <af-data><af-name>ipv4</af-name><prefixes-accepted/></af-data>
+      </neighbor></neighbor-af-table>
+      </af>
+      <af><af-name>ipv6-unicast</af-name>
+      <neighbor-af-table><neighbor>
+        <neighbor-address/><remote-as/><description/>
+          <connection-state>bgp-st-estab</connection-state>
+          <af-data><af-name>ipv6</af-name><prefixes-accepted/></af-data>
+      </neighbor></neighbor-af-table>
+    </af></afs></default-vrf>
+    <vrfs><vrf>
+      <vrf-name>hpr</vrf-name>
+      <neighbors><neighbor>
+        <neighbor-address/><remote-as/><description/>
+          <connection-state>bgp-st-estab</connection-state>
+          <af-data><af-name/><prefixes-accepted/></af-data>
+      </neighbor></neighbors>
+    </vrf></vrfs></instance-active></instance></instances>
+  </bgp>
+</filter>
+"""
+
+iface_device = """
+<filter>
+  <ethernet-interface xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-drivers-media-eth-oper">
+    <interfaces><interface>
+      <interface-name/><oper-state-up>true</oper-state-up>
+    </interface></interfaces>
+  </ethernet-interface>
+</filter>
+"""
+
+stats_device = """
+<filter>
+  <infra-statistics xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-infra-statsd-oper">
+    <interfaces><interface><interface-name/>
+      <interfaces-mib-counters>
+        <output-drops/><input-drops/><input-errors/><output-errors/>
+      </interfaces-mib-counters>
+    </interface></interfaces>
+  </infra-statistics>
+</filter>
+"""
+
 template_bgp_rx = r"""Value Prefix (([a-z0-9]*[.:]*)*\/\d{1,2})
 
 Start
@@ -92,4 +144,10 @@ template_xr_adv = r"""Value Count (\d+)
 
 Start
  ^No\sof\sprefixes\sAdvertised:\s${Count} -> Record
+"""
+
+template_xr_msdp = r"""Value Peer (\S+)
+
+Start
+ ^\s${Peer}\s+\d+\s+Established -> Record
 """

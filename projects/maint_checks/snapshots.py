@@ -1,6 +1,9 @@
 """
     argparse to run against one device or one circuit
     attach to ticket automatically
+    multiple HPR in same XR agg for circuits?
+    keep optics checks on device junos?
+    adv. counts for Device?
 
     --- XR HPR REQUIRES PORT
 
@@ -9,23 +12,18 @@
 
 
     transition status:
+
+        diffs
+
         Circuit:
-            ibgp junos/xr: done
-            ebgp junos: done
-            ebgp xr: done
-            hpr support junos: done
-            hpr support xr: done
+
             static xr
             static junos
+
             xr port
             junos port
             xr isis/pim/msdp
             junos isis/pim/msdp
-
-        Device:
-            xr device checks:
-            junos device checks:
-
 """
 
 
@@ -34,7 +32,6 @@ import yaml
 import json
 import argparse
 import time
-
 from pprint import pprint
 
 parser = argparse.ArgumentParser(description='Run snapshots for devices and circuits')
@@ -45,24 +42,31 @@ args = parser.parse_args()
 def start_checks(username, input_dict, check_type):
 
     output = {}
+    print('\n','-' * 10 ,'BEGIN {type} CHECKS'.format(type=check_type.upper()), '-' * 10)
+
     for index, router in enumerate(input_dict, 1):
 
         device_name, device_type = router.split('|')
         start_time = time.time()
 
+        print(f'\n({index}/{len(input_dict)})')
+        print(f'{device_name.upper()}: {{')
+
         if check_type == 'circuit':
             checks_output, start_time = CircuitChecks(username, device_name, device_type, input_dict[router]).get_circuit_main()
+
         elif check_type == 'device':
-            checks_output = DeviceChecks(username, device_name, device_type).get_device_main()
+            checks_output, start_time = DeviceChecks(username, device_name, device_type).get_device_main()
 
+        print('}')
         elapsed_time = time.time() - start_time
-
         if int(elapsed_time) < 30 and index != len(input_dict):
-            print(f'\t... resetting OTP ({int(30 - elapsed_time)} sec)')
+            print(f'\n--- Resetting OTP ({int(30 - elapsed_time)} sec) ---')
             time.sleep(30 - elapsed_time)
-            print('\t... done\n\n')
 
         output[device_name.upper()] = checks_output
+
+    print('\n','-' * 10 ,'END {type} CHECKS'.format(type=check_type.upper()), '-' * 10, '\n')
 
     return output
 

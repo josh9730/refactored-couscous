@@ -4,18 +4,18 @@ pre_file_path: 'output_pre.json'
 post_file_path: 'output_post.json'
 check_type: device
 device: # formerly N/A
-  - svl-agg10|junos
-  - lax-agg10|junos
-  # - riv-agg8|iosxr
+  # - svl-agg10|junos
+  # - lax-agg10|junos
+  - riv-agg8|iosxr
 # global_agg: lax-agg10 # must be junos for circuits
 circuit:
-  # riv-agg8|iosxr:
-  #   CLR-7620:
-  #     service: ebgp
-  #     port: TenGigE0/0/0/8/3.340
-  #   CLR-7621:
-  #     service: ebgp #hpr
-  #     port: HundredGigE0/0/0/2.341
+  riv-agg8|iosxr:
+    CLR-7620:
+      service: ebgp
+      port: TenGigE0/0/0/8/3.340
+    CLR-7621:
+      service: ebgp #hpr
+      port: HundredGigE0/0/0/2.341
   # oak-agg8|iosxr: #netconf not enabled?
   #   CLR-17525:
   #     service: ebgp
@@ -43,20 +43,20 @@ circuit:
   lax-agg10|junos:
     bumt-lib-1:
       service: ibgp
-  #   CLR7608:
-  #     service: ebgp #hpr
-  #     port: et-7/1/1.343
-  #   lb-csu-2:
-  #     service: ibgp
-  #     ipv4_neighbor: 137.164.0.4
-  #     ipv6_neighbor: 2607:f380::118:9a40:41
-  #   oxnr-pub-lib-1:
-  #     service: ibgp
-  #   cyp-cc-3:
-  #     service: ibgp
-  #   CLR-7073:
-  #     service: ebgp
-  #     port: 'et-7/1/0.285'
+    CLR7608:
+      service: ebgp #hpr
+      port: et-7/1/1.343
+    lb-csu-2:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.4
+      ipv6_neighbor: 2607:f380::118:9a40:41
+    oxnr-pub-lib-1:
+      service: ibgp
+    cyp-cc-3:
+      service: ibgp
+    CLR-7073:
+      service: ebgp
+      port: 'et-7/1/0.285'
   # lax-agg8|iosxr:
   #   CLR7245:
   #     service: ebgp
