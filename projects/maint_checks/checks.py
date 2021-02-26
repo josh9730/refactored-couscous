@@ -70,10 +70,15 @@ class CircuitChecks(Device):
         circuits_output = {}
         for self.circuit in self.circuits_dict:
 
+            try: self.port = self.circuits_dict[self.circuit]['port']
+            except:
+                print('\n\n\tPlease enter a valid port and re-run.\n\n')
+                sys.exit(1)
+
             print(f'\t{self.circuit.upper()}: {{')
 
             # get IPs unless defined manually
-            print(f'\t\t1) Getting Neighbor IPs')
+            print(f'\t\t1) Neighbor IPs')
             get_ips = GetNeighborIPs(self.circuits_dict[self.circuit], self.circuit)
             if self.circuits_dict[self.circuit]['service'] == ('ebgp' or 'static'):
                 get_ips.get_ebgp_static_ips(self.device_type, self.connection)
@@ -82,14 +87,28 @@ class CircuitChecks(Device):
             self.addresses = [ self.circuits_dict[self.circuit]['ipv4_neighbor'], self.circuits_dict[self.circuit]['ipv6_neighbor']]
 
             # main method calls
-            print(f'\t\t2) Getting BGP Routes')
-            self.get_circuit_bgp()
-            self.adv_counts([ self.ipv4_circuit_data[1], self.ipv6_circuit_data[1] ])
+            if self.circuits_dict[self.circuit]['service'] == 'static':
+                print(f'\t\t2) IPv4 Static')
+
+                print(f'\t\t3) IPv6 Static')
+
+            else:
+                print(f'\t\t2) BGP Routes')
+                self.get_circuit_bgp()
+                self.adv_counts([ self.ipv4_circuit_data[1], self.ipv6_circuit_data[1] ])
+
+                print(f'\t\t3) Interface')
+                self.get_circuit_iface()
+
+                print(f'\t\t4) IS-IS')
+                self.get_circuit_isis()
 
             # output dict returned
             output_dict = {
                 self.circuit: {
                     'Service': self.circuits_dict[self.circuit]['service'],
+                    'Interface': self.iface,
+                    'IS-IS': self.isis,
                     'IPv4 BGP Data': {
                         'IPv4 Neighbor': self.addresses[0],
                         'IPv4 Adv. Count': self.ipv4_adv_count,
@@ -120,8 +139,17 @@ class CircuitChecks(Device):
             self.check_hpr_xr()
             self.get_circuit_bgp_xr()
 
-        elif self.device_type == 'junos':
-            self.get_circuit_bgp_junos()
+        elif self.device_type == 'junos': self.get_circuit_bgp_junos()
+
+    def get_circuit_iface(self):
+
+        if self.device_type == 'iosxr': self.get_circuit_iface_xr()
+        elif self.device_type == 'junos': self.get_circuit_iface_junos()
+
+    def get_circuit_isis(self):
+
+        if self.device_type == 'iosxr': self.get_circuit_isis_xr()
+        elif self.device_type == 'junos': self.get_circuit_isis_junos()
 
     def adv_counts(self, adv_counts):
         """Convert adv_count int to string for diffs - adv. counts fluctuate.
@@ -210,6 +238,24 @@ class CircuitChecks(Device):
 
         return circuit_bgp[0], circuit_bgp[1], circuit_bgp[2], default
 
+    def get_circuit_iface_xr(self):
+
+        # pylint: disable=no-member
+        xr_parse = ParseData(self.device_type)
+
+        iface_name_raw = self.connection.get((filters.iface_name_circuit.format(iface=self.port)))
+        iface_raw = self.connection.get((filters.iface_circuit.format(iface=self.port)))
+
+        xr_parse.parse_circuit_iface_name_xr(iface_name_raw)
+        self.iface = xr_parse.parse_circuit_iface_xr(iface_raw)
+
+    def get_circuit_isis_xr(self):
+
+        # pylint: disable=no-member
+        xr_parse = ParseData(self.device_type)
+        isis_raw = self.connection.get((filters.isis_circuit.format(iface=self.port)))
+        self.isis = xr_parse.parse_circuit_isis_xr(isis_raw)
+
 
     # JUNOS CIRCUIT METHODS
     def get_circuit_bgp_junos(self):
@@ -249,6 +295,23 @@ class CircuitChecks(Device):
         default = junos_parse.parse_circuit_default_junos(default_raw)
 
         return rx_routes, adv_count, rx_count, default
+
+    def get_circuit_iface_junos(self):
+
+        junos_parse = ParseData(self.device_type)
+
+        optics_raw = self.connection.rpc.get_interface_optics_diagnostics_information(interface_name=self.port)
+        junos_parse.parse_circuit_optics_junos(optics_raw)
+        iface_raw = self.connection.rpc.get_interface_information(interface_name=self.port, extensive=True)
+        self.iface = junos_parse.parse_circuit_iface_junos(iface_raw)
+
+    def get_circuit_isis_junos(self):
+
+        isis_raw = self.connection.rpc.get_isis_interface_information(interface_name=self.port, extensive=True)
+        junos_parse = ParseData(self.device_type)
+        self.isis = junos_parse.parse_circuit_isis_junos(isis_raw)
+
+
 
 
 class DeviceChecks(Device):

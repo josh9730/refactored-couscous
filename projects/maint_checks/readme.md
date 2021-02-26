@@ -136,11 +136,11 @@ circuit:
 ```
 Note that as this is YAML, the indentation is important!
 
-1. `do_diff`: true/false depending on if you want a diff at the end (ie pre- vs post-maintenance)
-2. `pre_file_path`: The name of pre-maintenance file (either the name of the file to write pre- output to, or the name for diffs to reference)
-3. `post_file_path`: Name of the post- file (both the pre_ and post_ file locations default to the same directory as the program)
-4. `check_type`: 'device' for Device Checks, or 'circuit' for Circuit Checks
-5. `device`: List of devices to run Device Checks on. Format is 'device_name|device_type' where device type is either 'junos' or 'iosxr'
+1. `do_diff`: true/false depending on if you want a diff at the end (ie pre- vs post-maintenance).
+2. `pre_file_path`: The name of pre-maintenance file (either the name of the file to write pre- output to, or the name for diffs to reference).
+3. `post_file_path`: Name of the post- file (both the pre_ and post_ file locations default to the same directory as the program).
+4. `check_type`: `device` for Device Checks, or `circuit` for Circuit Checks.
+5. `device`: List of devices to run Device Checks on. Format is `device_name|device_type` where device type is either `junos` or `iosxr`.
 6. `circuit`: See below for more details. This details what circuits to run Circuit Checks on. Intention is to ONLY need info available from the circuit record.
 
 #### Circuit Checks structure:

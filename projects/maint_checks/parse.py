@@ -186,6 +186,97 @@ class ParseData:
 
         return default
 
+    @to_dict
+    def parse_circuit_optics_junos(self, data):
+
+        try:
+            self.optics_dict = {}
+            full_path = data['interface-information']['physical-interface']['optics-diagnostics']['optics-diagnostics-lane-values']
+
+            if type(full_path) == list:
+                for lane in full_path:
+                    lane_num = lane['lane-index']
+                    lane_dict = {
+                        f'Lane {lane_num}': {
+                            'Rx Power': lane['laser-rx-optical-power-dbm'] + ' dBm',
+                            'Tx Power': lane['laser-output-power-dbm'] + ' dBm'
+                        }
+                    }
+                    self.optics_dict.update(lane_dict)
+
+            else:
+                lane_num = full_path['lane-index']
+                self.optics_dict = {
+                    f'Lane {lane_num}': {
+                        'Rx Power': full_path['laser-rx-optical-power-dbm'] + ' dBm',
+                        'Tx Power': full_path['laser-output-power-dbm'] + ' dBm'
+                    }
+                }
+
+        except:
+            self.optics_dict = 'Logical Interface'
+
+        return self.optics_dict
+
+    @to_dict
+    def parse_circuit_isis_junos(self, data):
+
+        try:
+            full_path = data['isis-interface-information']['isis-interface']
+            if full_path['interface-level-data']['adjacency-count'] == '1': state = 'Up'
+            else: state = 'Down'
+
+            try: v6_metric = full_path['interface-level-data']['isis-interface-level-topology']['isis-topology-metric']
+            except: v6_metric = 'No IPv6 Adjacency'
+
+            isis_dict = {
+                full_path['interface-name']: {
+                    'State': state,
+                    'IPv4 Metric': full_path['interface-level-data']['metric'],
+                    'IPv6 Metric': v6_metric
+                }
+            }
+        except:
+            isis_dict = 'No IS-IS Adjacency'
+
+        return isis_dict
+
+    @to_dict
+    def parse_circuit_iface_junos(self, data):
+
+        iface_type = list(data['interface-information'].keys())[0]
+        full_path = data['interface-information'][iface_type]
+
+        if not re.search(r"\.\d{1,4}", full_path['name']):
+            stats = {
+                'Errors': {
+                    'Rx Errors': full_path['input-error-list']['input-errors'],
+                    'Tx Errors': full_path['output-error-list']['output-errors']
+                },
+                'Drops': {
+                    'Rx Drops': full_path['input-error-list']['input-drops'],
+                    'Tx Drops': full_path['output-error-list']['output-drops']
+                }
+            }
+            input_rate = full_path['traffic-statistics']['input-bps'] + ' bps'
+            output_rate = full_path['traffic-statistics']['output-bps'] + ' bps'
+
+        else:
+            stats = 'Logical Interface'
+            input_rate = full_path['transit-traffic-statistics']['input-bps'] + ' bps'
+            output_rate = full_path['transit-traffic-statistics']['output-bps'] + ' bps'
+
+        iface_dict = {
+            full_path['name']: {
+                'Description': full_path['description'],
+                'Output Rate': output_rate,
+                'Input Rate': input_rate,
+                'Stats': stats,
+                'Optics': self.optics_dict
+            }
+        }
+        return iface_dict
+
 
     # XR CIRCUIT PARSING
     @to_dict
@@ -275,6 +366,67 @@ class ParseData:
         med = path['med']
 
         return nh, lp, asp, med, comm
+
+    @to_dict
+    def parse_circuit_iface_name_xr(self, data):
+
+        try:
+            self.iface_name = data['rpc-reply']['data']['interface-configurations']['interface-configuration']['description']
+        except:
+            self.iface_name = 'No Description'
+
+    @to_dict
+    def parse_circuit_iface_xr(self, data):
+
+        full_path = data['rpc-reply']['data']['infra-statistics']['interfaces']['interface']
+
+        iface_dict = {
+            full_path['interface-name']: {
+                'Description': self.iface_name,
+                'Output Rate': full_path['data-rate']['output-data-rate'] + '000 bps',
+                'Input Rate': full_path['data-rate']['input-data-rate'] + '000 bps',
+                'Stats': {
+                    'Errors': {
+                        'Rx Errors': full_path['interfaces-mib-counters']['input-errors'],
+                        'Tx Errors': full_path['interfaces-mib-counters']['output-errors']
+                    },
+                    'Drops': {
+                        'Rx Drops': full_path['interfaces-mib-counters']['input-drops'],
+                        'Tx Drops': full_path['interfaces-mib-counters']['output-drops']
+                    }
+                },
+                'Optics': 'Not Supported'
+            }
+        }
+
+        return iface_dict
+
+    @to_dict
+    def parse_circuit_isis_xr(self, data):
+
+        try:
+            full_path = data['rpc-reply']['data']['isis']['instances']['instance']['interfaces']['interface']
+
+            try: v4_metric = full_path['interface-status-and-data']['enabled']['per-topology-data'][0]['status']['enabled']['level2-metric']
+            except: v4_metric = full_path['interface-status-and-data']['enabled']['per-topology-data']['status']['enabled']['level2-metric']
+            try: v6_metric = full_path['interface-status-and-data']['enabled']['per-topology-data'][1]['status']['enabled']['level2-metric']
+            except: v6_metric = 'No IPv6 Adjacency'
+
+            if full_path['interface-status-and-data']['enabled']['clns-data']['clns-status']['status'] == 'isis-up': state = 'Up'
+            else: state = 'Down'
+
+            isis_dict = {
+                full_path['interface-name']: {
+                    'State': state,
+                    'IPv4 Metric': v4_metric,
+                    'IPv6 Metric': v6_metric
+                }
+            }
+
+        except:
+            isis_dict = 'No IS-IS Adjacency'
+
+        return isis_dict
 
 
     # JUNOS DEVICE PARSING

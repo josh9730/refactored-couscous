@@ -134,6 +134,48 @@ stats_device = """
 </filter>
 """
 
+iface_name_circuit = """
+<filter>
+  <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">
+    <interface-configuration>
+      <interface-name>{iface}</interface-name>
+  </interface-configuration></interface-configurations>
+</filter>
+"""
+
+iface_circuit = """
+<filter>
+  <infra-statistics xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-infra-statsd-oper">
+    <interfaces><interface>
+      <interface-name>{iface}</interface-name>
+      <interfaces-mib-counters>
+        <output-drops/><input-drops/><input-errors/><output-errors/>
+      </interfaces-mib-counters>
+      <data-rate>
+        <input-data-rate/><output-data-rate/>
+      </data-rate>
+    </interface></interfaces>
+  </infra-statistics>
+</filter>
+"""
+
+isis_circuit = """
+<filter>
+  <isis xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-clns-isis-oper">
+    <instances><instance><interfaces><interface>
+      <interface-name>{iface}</interface-name>
+        <interface-status-and-data><enabled>
+          <clns-data><clns-status></clns-status></clns-data>
+          <per-topology-data>
+            <topology-id><af-name/></topology-id>
+            <status><enabled><level2-metric/></enabled></status>
+          </per-topology-data>
+        </enabled></interface-status-and-data>
+    </interface></interfaces></instance></instances>
+  </isis>
+</filter>
+"""
+
 template_bgp_rx = r"""Value Prefix (([a-z0-9]*[.:]*)*\/\d{1,2})
 
 Start

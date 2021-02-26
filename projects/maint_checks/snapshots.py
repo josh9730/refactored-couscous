@@ -8,8 +8,6 @@
     --- XR HPR REQUIRES PORT
 
     Check:
-        
-
 
     transition status:
 
@@ -19,11 +17,9 @@
 
             static xr
             static junos
+            list of routes in yaml
 
-            xr port
-            junos port
-            xr isis/pim/msdp
-            junos isis/pim/msdp
+            nexus switchport
 """
 
 

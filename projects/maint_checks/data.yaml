@@ -8,13 +8,13 @@ device: # formerly N/A
   - lax-agg10|junos
   # - riv-agg8|iosxr
 circuit:
-  riv-agg8|iosxr:
-    CLR-7620:
-      service: ebgp
-      port: TenGigE0/0/0/8/3.340
-    # CLR-7621:
-    #   service: ebgp #hpr
-    #   port: HundredGigE0/0/0/2.341
+  # riv-agg8|iosxr:
+  #   CLR-7620:
+  #     service: ebgp
+  #     port: TenGigE0/0/0/8/3.340
+  #   CLR-7621:
+  #     service: ebgp #hpr
+  #     port: HundredGigE0/0/0/2.341
   # oak-agg8|iosxr: #netconf not enabled?
   #   CLR-17525:
   #     service: ebgp
@@ -32,30 +32,36 @@ circuit:
   # frg-agg4|iosxr:
   #   ama-coe-2:
   #     service: ibgp
+  #     port: TenGigE0/3/0/17
   #   cal-coe-2:
   #     service: ibgp
+  #     port: TenGigE0/3/0/18
   #   col-coe-2:
   #     service: ibgp
+  #     port: TenGigE0/3/0/18
   # svl-agg8|iosxr:
   #   merritt-cc-3:
   #     service: ibgp
   lax-agg10|junos:
-    # bumt-lib-1:
-    #   service: ibgp
-    # CLR7608:
-    #   service: ebgp #hpr
-    #   port: et-7/1/1.343
-    # lb-csu-2:
-    #   service: ibgp
-    #   ipv4_neighbor: 137.164.0.4
-    #   ipv6_neighbor: 2607:f380::118:9a40:41
     oxnr-pub-lib-1:
       service: ibgp
-    cyp-cc-3:
+      port: et-6/1/0.211
+    bumt-lib-1:
       service: ibgp
-    CLR-7073:
-      service: ebgp
-      port: 'et-7/1/0.285'
+      port: et-6/1/0.309
+    CLR7608:
+      service: ebgp #hpr
+      port: et-7/1/1.343
+    lb-csu-2:
+      service: ibgp
+      port: et-6/5/0
+      ipv4_neighbor: 137.164.0.4
+      ipv6_neighbor: 2607:f380::118:9a40:41
+  #   cyp-cc-3:
+  #     service: ibgp
+  #   CLR-7073:
+  #     service: ebgp
+  #     port: 'et-7/1/0.285'
   # lax-agg8|iosxr:
   #   CLR7245:
   #     service: ebgp
