@@ -1,6 +1,6 @@
 from parse import ParseData, etree_to_dict
 from login import Login
-from ipchecks import GetNeighborIPs
+from ipchecks import GetNeighborIPs, get_agg_v4
 from napalm_xr import NapalmXR
 import filters
 import time
@@ -70,29 +70,45 @@ class CircuitChecks(Device):
         circuits_output = {}
         for self.circuit in self.circuits_dict:
 
-            try: self.port = self.circuits_dict[self.circuit]['port']
-            except:
-                print('\n\n\tPlease enter a valid port and re-run.\n\n')
-                sys.exit(1)
-
             print(f'\t{self.circuit.upper()}: {{')
-
-            # get IPs unless defined manually
-            print(f'\t\t1) Neighbor IPs')
-            get_ips = GetNeighborIPs(self.circuits_dict[self.circuit], self.circuit)
-            if self.circuits_dict[self.circuit]['service'] == ('ebgp' or 'static'):
-                get_ips.get_ebgp_static_ips(self.device_type, self.connection)
-            else:
-                get_ips.get_ibgp_ips()
-            self.addresses = [ self.circuits_dict[self.circuit]['ipv4_neighbor'], self.circuits_dict[self.circuit]['ipv6_neighbor']]
 
             # main method calls
             if self.circuits_dict[self.circuit]['service'] == 'static':
-                print(f'\t\t2) IPv4 Static')
 
-                print(f'\t\t3) IPv6 Static')
+                try:
+                    print(f'\t\t1) IPv4 Static')
+                    ipv4_static = self.get_circuit_static('inet.0', self.circuits_dict[self.circuit]['ipv4_routes'])
+                except: ipv4_static = 'None'
+
+                try:
+                    print(f'\t\t2) IPv6 Static')
+                    ipv6_static = self.get_circuit_static('inet6.0', self.circuits_dict[self.circuit]['ipv6_routes'])
+                except: ipv6_static = 'None'
+
+                output_dict = {
+                    self.circuit: {
+                        'Service': self.circuits_dict[self.circuit]['service'],
+                        'IPv4 BGP Data': ipv4_static,
+                        'IPv6 BGP Data': ipv6_static
+                    }
+                }
 
             else:
+
+                try: self.port = self.circuits_dict[self.circuit]['port']
+                except:
+                    print('\n\n\tPlease enter a valid port and re-run.\n\n')
+                    sys.exit(1)
+
+                # get IPs unless defined manually
+                print(f'\t\t1) Neighbor IPs')
+                get_ips = GetNeighborIPs(self.circuits_dict[self.circuit], self.circuit)
+                if self.circuits_dict[self.circuit]['service'] == ('ebgp' or 'static'):
+                    get_ips.get_ebgp_static_ips(self.device_type, self.connection)
+                else:
+                    get_ips.get_ibgp_ips()
+                self.addresses = [ self.circuits_dict[self.circuit]['ipv4_neighbor'], self.circuits_dict[self.circuit]['ipv6_neighbor']]
+
                 print(f'\t\t2) BGP Routes')
                 self.get_circuit_bgp()
                 self.adv_counts([ self.ipv4_circuit_data[1], self.ipv6_circuit_data[1] ])
@@ -103,28 +119,28 @@ class CircuitChecks(Device):
                 print(f'\t\t4) IS-IS')
                 self.get_circuit_isis()
 
-            # output dict returned
-            output_dict = {
-                self.circuit: {
-                    'Service': self.circuits_dict[self.circuit]['service'],
-                    'Interface': self.iface,
-                    'IS-IS': self.isis,
-                    'IPv4 BGP Data': {
-                        'IPv4 Neighbor': self.addresses[0],
-                        'IPv4 Adv. Count': self.ipv4_adv_count,
-                        'IPv4 Adv. Default?': self.ipv4_circuit_data[3],
-                        'IPv4 Rx. Count': self.ipv4_circuit_data[2],
-                        'IPv4 Rx. Prefixes': self.ipv4_circuit_data[0]
-                    },
-                    'IPv6 BGP Data': {
-                        'IPv6 Neighbor': self.addresses[1],
-                        'IPv6 Adv. Count': self.ipv6_adv_count,
-                        'IPv6 Adv. Default?': self.ipv6_circuit_data[3],
-                        'IPv6 Rx. Count': self.ipv6_circuit_data[2],
-                        'IPv6 Rx. Prefixes': self.ipv6_circuit_data[0]
+                # output dict returned
+                output_dict = {
+                    self.circuit: {
+                        'Service': self.circuits_dict[self.circuit]['service'],
+                        'Interface': self.iface,
+                        'IS-IS': self.isis,
+                        'IPv4 BGP Data': {
+                            'IPv4 Neighbor': self.addresses[0],
+                            'IPv4 Adv. Count': self.ipv4_adv_count,
+                            'IPv4 Adv. Default?': self.ipv4_circuit_data[3],
+                            'IPv4 Rx. Count': self.ipv4_circuit_data[2],
+                            'IPv4 Rx. Prefixes': self.ipv4_circuit_data[0]
+                        },
+                        'IPv6 BGP Data': {
+                            'IPv6 Neighbor': self.addresses[1],
+                            'IPv6 Adv. Count': self.ipv6_adv_count,
+                            'IPv6 Adv. Default?': self.ipv6_circuit_data[3],
+                            'IPv6 Rx. Count': self.ipv6_circuit_data[2],
+                            'IPv6 Rx. Prefixes': self.ipv6_circuit_data[0]
+                        }
                     }
                 }
-            }
             circuits_output.update(output_dict)
             print('\t}')
 
@@ -285,16 +301,27 @@ class CircuitChecks(Device):
 
         circuit_raw = self.connection.rpc.get_route_information(brief=True, table=table, peer=address, receive_protocol_name='bgp')
         routes_list = junos_parse.parse_circuit_bgp_junos_brief(circuit_raw)
-
-        rx_routes = {}
-        for route in routes_list:
-            route_data = self.connection.rpc.get_route_information(destination=route, table=table, exact=True, detail=True, source_gateway=address)
-            rx_routes.update(junos_parse.parse_circuit_bgp_junos(route_data))
+        rx_routes = self.rx_routes_junos(routes_list, table, address)
 
         default_raw = self.connection.rpc.get_route_information(destination=default, exact=True, neighbor=address, advertising_protocol_name='bgp')
         default = junos_parse.parse_circuit_default_junos(default_raw)
 
         return rx_routes, adv_count, rx_count, default
+
+    def rx_routes_junos(self, routes_list, table, address, connection_static=''):
+
+        junos_parse = ParseData(self.device_type)
+        if connection_static != '':
+            connection = connection_static
+
+        else: connection = self.connection
+
+        rx_routes = {}
+        for route in routes_list:
+            route_data = connection.rpc.get_route_information(destination=route, table=table, exact=True, detail=True, source_gateway=address)
+            rx_routes.update(junos_parse.parse_circuit_bgp_junos(route_data))
+
+        return rx_routes
 
     def get_circuit_iface_junos(self):
 
@@ -311,6 +338,31 @@ class CircuitChecks(Device):
         junos_parse = ParseData(self.device_type)
         self.isis = junos_parse.parse_circuit_isis_junos(isis_raw)
 
+    def get_circuit_static(self, table, routes_list):
+        """No good RPC for XR, all statics done via Junos"""
+
+        address = get_agg_v4(self.device_name)
+        if self.device_type != 'junos':
+            self.device_type = 'junos'
+            switch = True
+
+            elapsed_time = int(time.time() - self.start_time)
+            if elapsed_time < 30:
+                print(f'\t\t\t... {int(30 - elapsed_time)} sec')
+                time.sleep(30 - elapsed_time)
+
+            connection = Login(self.username, 'lax-agg10', 'junos').pyez_connect()
+            connection.open()
+        else: connection = self.connection
+
+        rx_routes = self.rx_routes_junos(routes_list, table, address, connection_static=connection)
+
+        self.start_time = time.time()
+        if switch:
+            connection.close()
+            self.device_type = 'iosxr'
+
+        return rx_routes
 
 
 
@@ -382,12 +434,6 @@ class DeviceChecks(Device):
         bgp_raw = self.connection.get((filters.bgp_device))
         bgp = xr_parse.device_bgp_xr(bgp_raw)
 
-        # print(f'\t4) Interface Stats')
-        # stats_raw = self.connection.get((filters.stats_device))
-        # iface_raw = self.connection.get((filters.iface_device))
-        # xr_parse.device_stats_xr(stats_raw)
-        # iface = xr_parse.device_iface_xr(iface_raw)
-
         self.napalm_device_xr()
 
         return self.software, power, isis, pim, self.msdp, self.ifaces, bgp
@@ -421,9 +467,7 @@ class DeviceChecks(Device):
         bgp = junos_parse.device_bgp_junos(bgp_raw)
 
         print(f'\t4) Interface Stats')
-        optics_raw = self.connection.rpc.get_interface_optics_diagnostics_information()
         iface_raw = self.connection.rpc.get_interface_information(detail=True, statistics=True)
-        junos_parse.device_optics_junos(optics_raw)
         iface = junos_parse.device_iface_junos(iface_raw)
 
         print(f'\t5) Software')

@@ -112,28 +112,6 @@ bgp_device = """
 </filter>
 """
 
-iface_device = """
-<filter>
-  <ethernet-interface xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-drivers-media-eth-oper">
-    <interfaces><interface>
-      <interface-name/><oper-state-up>true</oper-state-up>
-    </interface></interfaces>
-  </ethernet-interface>
-</filter>
-"""
-
-stats_device = """
-<filter>
-  <infra-statistics xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-infra-statsd-oper">
-    <interfaces><interface><interface-name/>
-      <interfaces-mib-counters>
-        <output-drops/><input-drops/><input-errors/><output-errors/>
-      </interfaces-mib-counters>
-    </interface></interfaces>
-  </infra-statistics>
-</filter>
-"""
-
 iface_name_circuit = """
 <filter>
   <interface-configurations xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ifmgr-cfg">

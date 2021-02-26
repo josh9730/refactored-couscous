@@ -533,7 +533,7 @@ class ParseData:
 
     @to_dict
     def device_optics_junos(self, data):
-        """Stores optics pull from RPC, output is used in device_iface_junos method."""
+        """Stores optics pull from RPC, output is used in device_iface_junos method. Not currently used."""
 
         for port in data['interface-information']['physical-interface']:
 
@@ -564,7 +564,7 @@ class ParseData:
 
     @to_dict
     def device_iface_junos(self, data):
-        """Uses device_optics_junos method above"""
+        """Uses device_optics_junos method above. Not currently used"""
 
         iface_dict = {}
         for port in data['interface-information']['physical-interface']:
@@ -582,7 +582,7 @@ class ParseData:
                             'Rx Drops': port['input-error-list']['input-drops'],
                             'Tx Errors': port['output-error-list']['output-errors'],
                             'Tx Drops': port['output-error-list']['output-drops']},
-                        'Optics PMs': self.optics_dict[port['name']]
+                        # 'Optics PMs': self.optics_dict[port['name']]
                     }
                 }
                 iface_dict.update(port_dict)
@@ -681,7 +681,7 @@ class ParseData:
                 port_dict = {
                     iface_name: {
                         'Errors': self.stats_dict[iface_name],
-                        'Optics PMs': 'Not Supported'
+                        # 'Optics PMs': 'Not Supported'
                     }
                 }
                 iface_dict.update(port_dict)

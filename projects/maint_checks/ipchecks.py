@@ -4,6 +4,18 @@ import filters
 import subprocess
 import sys
 
+
+def get_agg_v4(hostname):
+
+    bashCmd = ['host', f'{hostname}']
+    process = subprocess.Popen(bashCmd, stdout=subprocess.PIPE)
+    output, error = process.communicate()
+
+    if error: print(error)
+    ipv4_nei = str(output,'utf-8').split('\n')[0].split()[3] # split string and select only the IPv4 address
+
+    return ipv4_nei
+
 class IPChecks:
 
     def __init__(self, circuit):

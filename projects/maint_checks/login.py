@@ -2,6 +2,7 @@ from napalm.base import get_network_driver
 from netmiko import ConnectHandler
 from jnpr.junos import Device
 from ncclient import manager
+from atlassian import Jira
 import keyring
 import pyotp
 
@@ -22,6 +23,16 @@ class Login:
         self.hostname = hostname
         self.first_factor = keyring.get_password("mfa", username)
         self.otp = pyotp.TOTP(keyring.get_password("otp", username))
+
+    def jira_login(self, password):
+        """Connects to Jira. Requires CAS password"""
+
+        jira = Jira(
+            url = 'https://servicedesk.cenic.org',
+            username = self.username.rstrip('mfa'),
+            password = password)
+
+        return jira
 
     def napalm_connect(self):
         """Method for napalm connections. Returns the connection parameters

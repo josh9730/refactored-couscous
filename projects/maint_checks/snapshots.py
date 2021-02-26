@@ -2,8 +2,6 @@
     argparse to run against one device or one circuit
     attach to ticket automatically
     multiple HPR in same XR agg for circuits?
-    keep optics checks on device junos?
-    adv. counts for Device?
 
     --- XR HPR REQUIRES PORT
 
@@ -18,8 +16,6 @@
             static xr
             static junos
             list of routes in yaml
-
-            nexus switchport
 """
 
 

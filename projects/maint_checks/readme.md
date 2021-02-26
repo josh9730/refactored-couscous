@@ -3,9 +3,37 @@
 The Snapshots program is designed to automate pre- and post-maintenance checks for Junos & IOS-XR devices. NO Python knowledge is required, and only a YAML file is needed for definitions.
 
 Currently, two 'modes' are supported, as follows:
+1. Device Checks
+  1. Uses PyEZ (Junos) or ncclient/napalm (IOSXR)
+  2. Grabs the following from the device:
+    - Software version
+    - Power (Junos only)
+    - IS-IS Neighbors
+    - PIM Neigbors
+    - MSDP Neighbors
+    - Interface stats
+    - BGP Neighbors & Accepted Prefixes
+  3. Outputs as a JSON file, for readability and diffs
+2. Circuit Checks
+  1. Supports iBGP, eBGP, and Static connections
+  2. Uses PyEZ (Junos) or ncclient/napalm (IOSXR)
+  3. Gets the following:
+    1. BGP:
+      - Recieved Routes & Path Attributes *after* ingress policies:
+        - Next-Hop
+        - Local Preference
+        - AS Path
+        - MED
+        - Community list
+      - Advertised, Accepted Counts
+      - Checks if Default Advertised
+    2. Interface stats
+      - Including optics PMs (Junos only)
+    3. IS-IS Adjacency
 
-- Device Checks: Retrieves data for a device-specific maintenance
-  - Output example (abbreviated):
+### Example Outputs
+
+#### Device Checks
 ```json
 {
   "LAX-AGG10": {
@@ -59,14 +87,30 @@ Currently, two 'modes' are supported, as follows:
           }
         }
       },
+...
 ```
-- Circuit Checks: Retrieves data for a circuit-specific maintenance
-  - Output example (abbreviated):
+#### Circuit Checks
 ```json
-  },
+{
   "LAX-AGG10": {
     "oxnr-pub-lib-1": {
       "Service": "ibgp",
+      "Interface": {
+        "et-6/1/0.211": {
+          "Description": "[dc:infra][dc:lib] 1G to oxnr-pub-lib-1 Gi0/0/0 CLR7961",
+          "Output Rate": "314040 bps",
+          "Input Rate": "66544 bps",
+          "Stats": "Logical Interface",
+          "Optics": "Logical Interface"
+        }
+      },
+      "IS-IS": {
+        "et-6/1/0.211": {
+          "State": "Up",
+          "IPv4 Metric": "9999",
+          "IPv6 Metric": "9999"
+        }
+      },
       "IPv4 BGP Data": {
         "IPv4 Neighbor": "137.164.2.156",
         "IPv4 Adv. Count": "Full DC IPv4 Table",
@@ -84,6 +128,7 @@ Currently, two 'modes' are supported, as follows:
               "2152:65535"
             ]
           },
+...
 ```
 
 # How to use the Snapshots program
@@ -100,10 +145,11 @@ Currently, two 'modes' are supported, as follows:
 ## Run program
 
 - Use `python3 snapshots.py {{ MFA USERNAME }}`. See help also with `python3 snapshots.py -h`.
-- Optionally, a YAML file containing the MFA Username may be provided so you do not have to enter the username each run.
+- Optionally, a YAML file containing the MFA Username may be provided so you do not have to enter the username each run:
   - Create a file named `usernames.yml` with the mfa username like so:
     - `mfa: {{ MFA USERNAME }}`
   - The `snapshots.py` file will need to be edited to have the full path to the file. Search for a line containing `usernames.yml`, and edit this directory string to match the directory of your local file.
+  - If applicable, be sure to add the `.yml` file to your `.gitignore`.
 
 ## Usage
 
@@ -129,8 +175,10 @@ circuit:
   lax-agg10|junos:
     oxnr-pub-lib-1:
       service: ibgp
+      port: et-6/1/0.211
     lb-csu-2:
       service: ibgp
+      port: et-6/5/0
       ipv4_neighbor: 137.164.0.4
       ipv6_neighbor: 2607:f380::118:9a40:41
 ```
@@ -144,17 +192,28 @@ Note that as this is YAML, the indentation is important!
 6. `circuit`: See below for more details. This details what circuits to run Circuit Checks on. Intention is to ONLY need info available from the circuit record.
 
 #### Circuit Checks structure:
-- The first line is the agg router. This needs to be in the same format as in Device Checks: `device_name|device_type` where device type is either `junos` or `iosxr`.
-- Line 2 is the `name`. The name ONLY used for iBGP and must be the hostname. For eBGP, the circuit name is fine (not actually used).
-- The third line is the `service`. This can be either `ibgp` or `ebgp` and primarily determines how the program finds the Neighbor IPs.
-- Next is the `port` lines. The port is required, and should be written in the same format as the port appears in `show run`, ie `TenGigE` and not `Te`, etc.
-  - The program 'guesses' the neighbor IPs from either the port (eBGP) or the hostname (iBGP).
-  - eBGP guesser assumes that the neighbor addresses are +1 from the port address (IPv4) or +16 (for IPv6).
-- The `ipv4_neighbor` & `ipv6_neighbor` lines are used in case the neighbor IPs do not follow the standard above.
+```yaml
+circuit:
+  lax-agg10|junos:
+    lb-csu-2:
+      service: ibgp
+      port: et-6/5/0
+      ipv4_neighbor: 137.164.0.4
+      ipv6_neighbor: 2607:f380::118:9a40:41
+```
+
+| YAML | Description |
+| `circuit` | Starts the block for Circuit Checks |
+| `lax-agg10|junos` | Device name & type concactenation |
+| `lb-csu-2` | - For iBGP, the **hostname** is required (for DNS lookup to get iBGP peering IP). For eBGP/Static, any name is fine (ie CLR Name) |
+| `service` | iBGP/eBGP/static |
+| `port` | Port facing the customer, physical or subinterface |
+| `ipv4_neighbor`|`ipv6_neighbor` | **NOT** required. This is in case the IP assignments do not follow the standards |
 
 ### Running the program
 
-IOS-XR at 6.3.3 has some issues with the supported YANG models for RPCs, notably HPR and optics are not checkable for Circuit BGP Checks and MSDP and a few others are not checkable for Device. You may see NAPALM connections when these are needed (causing additional OTP resets).
+IOS-XR at 6.3.3 has some issues with the supported YANG models, notably HPR and optics are not checkable for Circuit BGP Checks and MSDP and a few others are not checkable for Device. You may see NAPALM connections when these are needed (causing additional OTP resets).
+
 The program will print out an output to the terminal window showing the status:
 
 ```
@@ -163,26 +222,36 @@ The program will print out an output to the terminal window showing the status:
 (1/2)
 RIV-AGG8: {
         CLR-7620: {
-                1) Getting Neighbor IPs
-                2) Getting BGP Routes
+                1) Neighbor IPs
+                2) BGP Routes
+                3) Interface
+                4) IS-IS
         }
 }
 
---- Resetting OTP (28 sec) ---
+--- Resetting OTP (27 sec) ---
 
 (2/2)
 LAX-AGG10: {
         OXNR-PUB-LIB-1: {
-                1) Getting Neighbor IPs
-                2) Getting BGP Routes
+                1) Neighbor IPs
+                2) BGP Routes
+                3) Interface
+                4) IS-IS
         }
-        CYP-CC-3: {
-                1) Getting Neighbor IPs
-                2) Getting BGP Routes
+        BUMT-LIB-1: {
+                1) Neighbor IPs
+                        * WARNING: No AAAA record for bumt-lib-1.
+                        Enter manually if v6 Peering exists and re-run.
+                2) BGP Routes
+                3) Interface
+                4) IS-IS
         }
-        CLR-7073: {
-                1) Getting Neighbor IPs
-                2) Getting BGP Routes
+        CLR7608: {
+                1) Neighbor IPs
+                2) BGP Routes
+                3) Interface
+                4) IS-IS
         }
 }
 
@@ -190,3 +259,5 @@ LAX-AGG10: {
 ```
 
 Once the program completes, if `do_diff` is **True**, a 'diffs' section will be printed at the end.
+
+### Diffs
