@@ -1,6 +1,8 @@
 # What is Snapshots
 
-The Snapshots program is designed to automate pre- and post-maintenance checks for Junos & IOS-XR devices. Currently, two 'modes' are supported, as follows:
+The Snapshots program is designed to automate pre- and post-maintenance checks for Junos & IOS-XR devices. NO Python knowledge is required, and only a YAML file is needed for definitions.
+
+Currently, two 'modes' are supported, as follows:
 
 - Device Checks: Retrieves data for a device-specific maintenance
   - Output example (abbreviated)
@@ -86,25 +88,29 @@ The Snapshots program is designed to automate pre- and post-maintenance checks f
 
 # How to use the Snapshots program
 
-NOTE: Because this uses MFA, transitions between devices will require an OTP reset (30 seconds).
+**NOTE**: Because this uses MFA, transitions between devices will require an OTP reset (30 seconds).
 
 ## Setup
 
 - Clone repository
 - Requires python 3.6+
-- pip install -r requirements.txt
-- Requires MFA login with keyring: See documentation.
+- `pip install -r requirements.txt`
+- Requires MFA login with keyring. See documentation for setup.
 
 ## Run program
 
-Use `python3 snapshots.py {{ MFA USERNAME }}`. See help also with `python3 snapshots.py -h`.
+- Use `python3 snapshots.py {{ MFA USERNAME }}`. See help also with `python3 snapshots.py -h`.
+- Optionally, a YAML file containing the MFA Username may be provided so you do not have to enter the username each run.
+  - Create a file named `usernames.yml` with the mfa username like so:
+    - `mfa: {{ MFA USERNAME }}`
+  - The `snapshots.py` file will need to be edited to have the full path to the file. Search for a line containing `usernames.yml`, and edit this directory string to match the directory of your local file.
 
 ## Usage
 
 ### YAML
 
 The 'data.yaml' file contains the instructions for the snapshots program. This contains the variables that you want to run the Checks on. Example below:
-```
+```yaml
 ---
 do_diff: false
 pre_file_path: 'output_pre.json'
@@ -137,14 +143,14 @@ Note that as this is YAML, the indentation is important!
 5. `device`: List of devices to run Device Checks on. Format is 'device_name|device_type' where device type is either 'junos' or 'iosxr'
 6. `circuit`: See below for more details. This details what circuits to run Circuit Checks on. Intention is to ONLY need info available from the circuit record.
 
-Circuit Checks structure:
-- The first line is the agg router. This needs to be in the same format as the device: 'device_name|device_type' where device type is either 'junos' or 'iosxr'.
-- Line 2 is the 'name'. The name ONLY used for iBGP and must be the hostname. For eBGP, the circuit name is fine (not actually used).
-- The third line is the 'service'. This can be either 'ibgp' or 'ebgp' and primarily determines how the program finds the Neighbor IPs.
-- Next is the 'port' lines. The port is required, and should be written in the same format as the port appears in 'show run', ie 'TenGigE' and not 'Te', etc.
+#### Circuit Checks structure:
+- The first line is the agg router. This needs to be in the same format as in Device Checks: `device_name|device_type` where device type is either `junos` or `iosxr`.
+- Line 2 is the `name`. The name ONLY used for iBGP and must be the hostname. For eBGP, the circuit name is fine (not actually used).
+- The third line is the `service`. This can be either `ibgp` or `ebgp` and primarily determines how the program finds the Neighbor IPs.
+- Next is the `port` lines. The port is required, and should be written in the same format as the port appears in `show run`, ie `TenGigE` and not `Te`, etc.
   - The program 'guesses' the neighbor IPs from either the port (eBGP) or the hostname (iBGP).
   - eBGP guesser assumes that the neighbor addresses are +1 from the port address (IPv4) or +16 (for IPv6).
-- The 'ipv4_neighbor' & 'ipv6_neighbor' lines are used in case the neighbor IPs do not follow the standard above.
+- The `ipv4_neighbor` & `ipv6_neighbor` lines are used in case the neighbor IPs do not follow the standard above.
 
 ### Running the program
 
