@@ -88,7 +88,6 @@ Currently, two 'modes' are supported, as follows:
           }
         }
       },
-...
 ```
 #### Circuit Checks
 ```json
@@ -210,12 +209,12 @@ circuit:
 | YAML | Description |
 | --- | --- |
 | `circuit` | Starts the block for Circuit Checks |
-| `lax-agg10|junos` | Device name & type concactenation |
+| `lax-agg10\|junos` | Device name & type concactenation |
 | `lb-csu-2` | - For iBGP, the **hostname** is required (for DNS lookup to get iBGP peering IP). For eBGP/Static, any name is fine (ie CLR Name) |
 | `service` | iBGP/eBGP/static |
 | `port` | Port facing the customer, physical or subinterface |
-| `ipv4_neighbor`|`ipv6_neighbor` | **NOT** required. This is in case the IP assignments do not follow the standards |
-| `ipv4_routes`|`ipv6_routes` | In list form, required for static |
+| `ipv4_neighbor`, `ipv6_neighbor` | **NOT** required. This is in case the IP assignments do not follow the standards |
+| `ipv4_routes`, `ipv6_routes` | In list form, required for static |
 
 ### Running the program
 
