@@ -43,7 +43,7 @@ class CreateMOPs:
             self.create_cd()
 
     def test_vars(self):
-        """Make sure variables are set in YAML."""
+        """Make sure variables are set in YAML"""
 
         if not self.mop_file['page_title']:
             print('\n\tEnter Title\n')
