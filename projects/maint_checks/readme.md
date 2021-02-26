@@ -5,8 +5,8 @@ The Snapshots program is designed to automate pre- and post-maintenance checks f
 Currently, two 'modes' are supported, as follows:
 
 - Device Checks: Retrieves data for a device-specific maintenance
-  - Output example (abbreviated)
-```
+  - Output example (abbreviated):
+```json
 {
   "LAX-AGG10": {
     "Software": "19.3R2.9",
@@ -61,8 +61,8 @@ Currently, two 'modes' are supported, as follows:
       },
 ```
 - Circuit Checks: Retrieves data for a circuit-specific maintenance
-  - Output example (abbreviated)
-```
+  - Output example (abbreviated):
+```json
   },
   "LAX-AGG10": {
     "oxnr-pub-lib-1": {
