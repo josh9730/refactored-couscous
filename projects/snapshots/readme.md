@@ -321,7 +321,7 @@ Note that the diffs will output a change if something trivial such as traffic ra
 
 If desired, the program can push the outputs to a Jira ticket (specified in `data.yaml`) by using the `-j` switch, ie `python3 snapshots.py -j`. The output files will be pushed as an attachment.
 
-###
+### YAML Reset
 
 'Reset' for `data.yaml`:
 
