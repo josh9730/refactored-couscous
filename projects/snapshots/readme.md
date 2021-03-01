@@ -145,7 +145,7 @@ Currently, two 'modes' are supported, as follows:
 
 ## Run program
 
-- Use `python3 snapshots.py {{ MFA USERNAME }}`. See help also with `python3 snapshots.py -h`.
+- Use `python3 snapshots.py -u {{ MFA USERNAME }}`. See help also with `python3 snapshots.py -h`.
 - Optionally, a YAML file containing the MFA Username may be provided so you do not have to enter the username each run:
   - Create a file named `usernames.yml` with the mfa username like so:
     - `mfa: {{ MFA USERNAME }}`
