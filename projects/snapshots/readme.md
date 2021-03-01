@@ -157,10 +157,11 @@ Currently, two 'modes' are supported, as follows:
 
 ### YAML
 
-The `data.yaml` file contains the instructions for the snapshots program. This contains the variables that you want to run the Checks on. Example below:
+The `data.yaml` file contains the instructions for the snapshots program. This contains the variables that you want to run the Checks on. The YAML file has quite a few examples already in there, with some commented out. You should be able to setup the program and run immediately. You can delete & add to the file as you see fit, based on what you want to run checks on. At the bottom of the readme, there is a blank 'reset' file you can use if you wish.
 
 Note that as this is YAML, the indentation is important!
 
+Example below:
 ```yaml
 ---
 ticket: NOC-600000
@@ -319,3 +320,17 @@ Note that the diffs will output a change if something trivial such as traffic ra
 ### Jira
 
 If desired, the program can push the outputs to a Jira ticket (specified in `data.yaml`) by using the `-j` switch, ie `python3 snapshots.py -j`. The output files will be pushed as an attachment.
+
+###
+
+'Reset' for `data.yaml`:
+
+```yaml
+---
+ticket:
+pre_file_path: 'output_pre.json'
+post_file_path: 'output_post.json'
+check_type:
+device:
+circuit:
+```
