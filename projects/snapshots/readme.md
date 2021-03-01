@@ -7,7 +7,7 @@ Optionally, diffs (pre- vs post-) and automatically pushing the .json outputs to
 Currently, two 'modes' are supported, as follows:
 1. Device Checks
   1. Uses PyEZ (Junos) or ncclient/napalm (IOSXR)
-  1. Grabs the following from the device:
+  2. Grabs the following from the device:
     - Software version
     - Power (Junos only)
     - IS-IS Neighbors
@@ -15,11 +15,11 @@ Currently, two 'modes' are supported, as follows:
     - MSDP Neighbors
     - Interface stats
     - BGP Neighbors & Accepted Prefixes
-  1. Outputs as a JSON file, for readability and diffs
-1. Circuit Checks
+  3. Outputs as a JSON file, for readability and diffs
+2. Circuit Checks
   1. Supports iBGP, eBGP, and Static connections
-  1. Uses PyEZ (Junos) or ncclient/napalm (IOSXR)
-  1. Gets the following (eBGP, iBGP):
+  2. Uses PyEZ (Junos) or ncclient/napalm (IOSXR)
+  3. Gets the following (eBGP, iBGP):
     1. BGP:
       - Recieved Routes & Path Attributes *after* ingress policies:
         - Next-Hop
@@ -29,10 +29,10 @@ Currently, two 'modes' are supported, as follows:
         - Community list
       - Advertised, Accepted Counts
       - Checks if Default Advertised
-    1. Interface stats
+    2. Interface stats
       - Including optics PMs (Junos only)
-    1. IS-IS Adjacency
-  1. If static, only the Recieved Routes & Path Attributes are checked.
+    3. IS-IS Adjacency
+  4. If static, only the Recieved Routes & Path Attributes are checked.
 
 ### Example Outputs
 
