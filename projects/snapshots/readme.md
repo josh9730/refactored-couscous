@@ -2,10 +2,12 @@
 
 The Snapshots program is designed to automate pre- and post-maintenance checks for Junos & IOS-XR devices. NO Python knowledge is required, and only a YAML file is needed for definitions.
 
+Optionally, diffs (pre- vs post-) and automatically pushing the .json outputs to a specified ticket are supported. See help for details.
+
 Currently, two 'modes' are supported, as follows:
 1. Device Checks
   1. Uses PyEZ (Junos) or ncclient/napalm (IOSXR)
-  2. Grabs the following from the device:
+  1. Grabs the following from the device:
     - Software version
     - Power (Junos only)
     - IS-IS Neighbors
@@ -13,11 +15,11 @@ Currently, two 'modes' are supported, as follows:
     - MSDP Neighbors
     - Interface stats
     - BGP Neighbors & Accepted Prefixes
-  3. Outputs as a JSON file, for readability and diffs
-2. Circuit Checks
+  1. Outputs as a JSON file, for readability and diffs
+1. Circuit Checks
   1. Supports iBGP, eBGP, and Static connections
-  2. Uses PyEZ (Junos) or ncclient/napalm (IOSXR)
-  3. Gets the following (eBGP, iBGP):
+  1. Uses PyEZ (Junos) or ncclient/napalm (IOSXR)
+  1. Gets the following (eBGP, iBGP):
     1. BGP:
       - Recieved Routes & Path Attributes *after* ingress policies:
         - Next-Hop
@@ -27,10 +29,10 @@ Currently, two 'modes' are supported, as follows:
         - Community list
       - Advertised, Accepted Counts
       - Checks if Default Advertised
-    2. Interface stats
+    1. Interface stats
       - Including optics PMs (Junos only)
-    3. IS-IS Adjacency
-  4. If static, only the Recieved Routes & Path Attributes are checked.
+    1. IS-IS Adjacency
+  1. If static, only the Recieved Routes & Path Attributes are checked.
 
 ### Example Outputs
 
@@ -139,7 +141,7 @@ Currently, two 'modes' are supported, as follows:
 - Clone repository
 - Requires python 3.6+
 - `pip install -r requirements.txt`
-- Requires MFA login with keyring. See documentation for setup.
+- Requires kerying for MFA and CAS (only needed if you want to push to Jira). See documentation for setup.
 
 ## Run program
 
@@ -149,15 +151,19 @@ Currently, two 'modes' are supported, as follows:
     - `mfa: {{ MFA USERNAME }}`
   - The `snapshots.py` file will need to be edited to have the full path to the file. Search for a line containing `usernames.yml`, and edit this directory string to match the directory of your local file.
   - If applicable, be sure to add the `.yml` file to your `.gitignore`.
+- Diffs and Jira push can also be selected through the switches (`-d` and `-j` respectively)
 
 ## Usage
 
 ### YAML
 
 The 'data.yaml' file contains the instructions for the snapshots program. This contains the variables that you want to run the Checks on. Example below:
+
+Note that as this is YAML, the indentation is important!
+
 ```yaml
 ---
-do_diff: false
+ticket: NOC-600000
 pre_file_path: 'output_pre.json'
 post_file_path: 'output_post.json'
 check_type: circuit
@@ -186,14 +192,15 @@ circuit:
       ipv4_routes:
         - 209.129.86.0/23
 ```
-Note that as this is YAML, the indentation is important!
 
-1. `do_diff`: true/false depending on if you want a diff at the end (ie pre- vs post-maintenance).
+1. `ticket`: Full ticket number of the maintenance ticket, for pushing outputs to Jira as an attachment.
 2. `pre_file_path`: The name of pre-maintenance file (either the name of the file to write pre- output to, or the name for diffs to reference).
 3. `post_file_path`: Name of the post- file (both the pre_ and post_ file locations default to the same directory as the program).
 4. `check_type`: `device` for Device Checks, or `circuit` for Circuit Checks.
 5. `device`: List of devices to run Device Checks on. Format is `device_name|device_type` where device type is either `junos` or `iosxr`.
 6. `circuit`: See below for more details. This details what circuits to run Circuit Checks on. Intention is to ONLY need info available from the circuit record.
+
+By default, the output file will be `output_pre.json`, which will be used (and overwritten) if diffs are NOT selected. If diffs are requested, the default output file is `output_post.json` and the diffs will be written to `diffs.json`.
 
 #### Circuit Checks structure:
 ```yaml
@@ -212,7 +219,7 @@ circuit:
 | `lax-agg10\|junos` | Device name & type concactenation |
 | `lb-csu-2` | - For iBGP, the **hostname** is required (for DNS lookup to get iBGP peering IP). For eBGP/Static, any name is fine (ie CLR Name) |
 | `service` | iBGP/eBGP/static |
-| `port` | Port facing the customer, physical or subinterface |
+| `port` | Port facing the customer, physical or subinterface - required for iBGP/eBGP |
 | `ipv4_neighbor`, `ipv6_neighbor` | **NOT** required. This is in case the IP assignments do not follow the standards |
 | `ipv4_routes`, `ipv6_routes` | In list form, required for static |
 
@@ -267,3 +274,48 @@ LAX-AGG10: {
 Once the program completes, if `do_diff` is **True**, a 'diffs' section will be printed at the end.
 
 ### Diffs
+
+Diffs can be requested by the `-d` option, ie `python3 snapshots.py -d`. This assumes a pre-maintenance file exists, and is specified in the `data.yaml` file. Diffs will be output to `diffs.json` as well as printed to the terminal.
+
+If any values have changed, the json file will show the path, and a `list` of the changes. The first value is the original, and the second is the new value (in the post-maintenance file).
+
+Note that the diffs will output a change if something trivial such as traffic rate changes and will not give you any direction as to 'why', so it is up to you to determine if the diffs are relevant or not.
+
+```json
+{
+  "LAX-AGG10": {
+    "oxnr-pub-lib-1": {
+      "Interface": {
+        "et-6/1/0.211": {
+          "Output Rate": [
+            "108632 bps",
+            "125960 bps"
+          ],
+          "Input Rate": [
+            "339336 bps",
+            "276784 bps"
+          ]
+        }
+      }
+    },
+    "bumt-lib-1": {
+      "Interface": {
+        "et-6/1/0.309": {
+          "Output Rate": [
+            "4888 bps",
+            "71160 bps"
+          ],
+          "Input Rate": [
+            "4776 bps",
+            "15464 bps"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+### Jira
+
+If desired, the program can push the outputs to a Jira ticket (specified in `data.yaml`) by using the `-j` switch, ie `python3 snapshots.py -j`. The output files will be pushed as an attachment.

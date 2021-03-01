@@ -1,12 +1,12 @@
 ---
-do_diff: false
+ticket: NOC-600100
 pre_file_path: 'output_pre.json'
 post_file_path: 'output_post.json'
-check_type: circuit
+check_type: device
 device:
   # - svl-agg10|junos
   - lax-agg10|junos
-  # - riv-agg8|iosxr
+  - riv-agg8|iosxr
 circuit:
   # riv-agg8|iosxr:
   #   CLR-7620:
@@ -15,11 +15,6 @@ circuit:
   #   CLR-7621:
   #     service: ebgp #hpr
   #     port: HundredGigE0/0/0/2.341
-  # oak-agg8|iosxr: #netconf not enabled?
-  #   CLR-17525:
-  #     service: ebgp
-  #     ipv4_neighbor: 137.164.26.123
-  #     ipv6_neighbor: 2607:f380:1::108:9a41:a7b1
   # tri-agg2|iosxr:
   #   CLR1118:
   #     service: ebgp
@@ -27,6 +22,7 @@ circuit:
   # sac-agg4|iosxr:
   #   CLR2118:
   #     service: ebgp
+  #     port: TenGigE0/7/0/15
   #     ipv4_neighbor: 137.164.24.130
   #     ipv6_neighbor: 2607:f380:1::118:9a41:8821
   # frg-agg4|iosxr:
@@ -39,41 +35,39 @@ circuit:
   #   col-coe-2:
   #     service: ibgp
   #     port: TenGigE0/3/0/18
-  # svl-agg8|iosxr:
-  #   merritt-cc-3:
-  #     service: ibgp
-  # lax-agg10|junos:
-  #   oxnr-pub-lib-1:
-  #     service: ibgp
-  #     port: et-6/1/0.211
-  #   bumt-lib-1:
-  #     service: ibgp
-  #     port: et-6/1/0.309
-  #   CLR7608:
-  #     service: ebgp #hpr
-  #     port: et-7/1/1.343
-  #   lb-csu-2:
-  #     service: ibgp
-  #     port: et-6/5/0
-  #     ipv4_neighbor: 137.164.0.4
-  #     ipv6_neighbor: 2607:f380::118:9a40:41
-  #   cyp-cc-3:
-  #     service: ibgp
-  #   CLR-7073:
-  #     service: ebgp
-  #     port: 'et-7/1/0.285'
-  lax-agg8|iosxr:
-    CLR-6304:
+  lax-agg10|junos:
+    CLR2690:
       service: static
       ipv4_routes:
-        - 209.129.86.0/23
-    CLR7245:
+        - 205.154.223.0/24
+    oxnr-pub-lib-1:
+      service: ibgp
+      port: et-6/1/0.211
+    bumt-lib-1:
+      service: ibgp
+      port: et-6/1/0.309
+    CLR7608:
+      service: ebgp #hpr
+      port: et-7/1/1.343
+    lb-csu-2:
+      service: ibgp
+      port: et-6/5/0
+      ipv4_neighbor: 137.164.0.4
+      ipv6_neighbor: 2607:f380::118:9a40:41
+    cyp-cc-3:
+      service: ibgp
+      port: et-7/1/0.202
+    CLR-7073:
       service: ebgp
-      port: 'TenGigE0/0/0/19/1.245'
-    # rh-cc-2:
-    #   service: ibgp
-  # cor-agg8|junos:
-  #   CLR16527:
+      port: 'et-7/1/0.285'
+  # lax-agg8|iosxr:
+  #   CLR-6304:
   #     service: static
-  #     asn: '64544'
-  #     port: 'xe-0/0/0:0.101'
+  #     ipv4_routes:
+  #       - 209.129.86.0/23
+  #   CLR7245:
+  #     service: ebgp
+  #     port: 'TenGigE0/0/0/19/1.245'
+  #   rh-cc-2:
+  #     service: ibgp
+  #     port: Te0/0/0/24/0

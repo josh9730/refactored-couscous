@@ -24,12 +24,13 @@ class Login:
         self.first_factor = keyring.get_password("mfa", username)
         self.otp = pyotp.TOTP(keyring.get_password("otp", username))
 
-    def jira_login(self, password):
+    def jira_login(self):
         """Connects to Jira. Requires CAS password"""
 
+        password = keyring.get_password("cas", self.username)
         jira = Jira(
             url = 'https://servicedesk.cenic.org',
-            username = self.username.rstrip('mfa'),
+            username = self.username,
             password = password)
 
         return jira

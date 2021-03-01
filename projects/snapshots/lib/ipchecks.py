@@ -1,6 +1,6 @@
-from parse import ParseData
+from .parse import ParseData
+from . import filters
 from ipaddress import ip_address, IPv4Address, IPv6Address
-import filters
 import subprocess
 import sys
 

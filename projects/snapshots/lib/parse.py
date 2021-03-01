@@ -1,8 +1,8 @@
+from . import filters
 from collections import defaultdict
 from lxml import etree
 import xml.dom.minidom
 import xmltodict
-import filters
 import re
 import textfsm
 import tempfile

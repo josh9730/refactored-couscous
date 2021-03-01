@@ -1,20 +1,21 @@
-"""
-PENDING
-    argparse to run against one device or one circuit
-    attach to ticket automatically
-    diffs
+""" Version 3.0
+
+Performs pre-maintenance checks, specifically on agg routers.
+If diffs selected, the pre-maintenance file will be diffed and deviations shown.
 """
 
-
-from checks import CircuitChecks, DeviceChecks
+from lib.checks import CircuitChecks, DeviceChecks
+from lib.login import Login
 import yaml
 import json
 import argparse
 import time
+import jsondiff
 from pprint import pprint
 
 parser = argparse.ArgumentParser(description='Run snapshots for devices and circuits')
 parser.add_argument('-u', '--username', metavar='username', help='MFA username')
+parser.add_argument('-j', '--jira', help='Upload output files to ticket, requires CAS account in Keyring', action='store_true')
 parser.add_argument('-d', '--diffs', help='Run diffs, implies an output_pre.json file exists', action='store_true')
 args = parser.parse_args()
 
@@ -49,11 +50,20 @@ def start_checks(username, input_dict, check_type):
 
     return output
 
+def jira_upload(username, ticket, file):
+
+    jira = Login(username.rstrip('mfa'), '', '').jira_login()
+    print(f'Uploading {file} to {ticket}')
+    jira.add_attachment(ticket, file)
+
 def main():
     """Initialize checks type. Per-Device or Per-Circuit."""
 
     with open('data.yaml') as file:
         data = yaml.full_load(file)
+
+    pre = data['pre_file_path']
+    post = data['post_file_path']
 
     if args.username:
         username = args.username
@@ -66,9 +76,48 @@ def main():
 
     final_output = start_checks(username, input_dict, check_type)
 
-    file = open('output.json', 'w')
-    json.dump(final_output, file, indent=2)
-    file.close()
+    if args.diffs:
+        file = open('output_post.json', 'w')
+        json.dump(final_output, file, indent=2)
+        file.close()
+
+        print(f'\nSnapshots completed. Check {post} for output!\n')
+
+        with open(pre, 'r') as pre_file:
+            pre = json.load(pre_file)
+        with open(post, 'r') as post_file:
+            post = json.load(post_file)
+
+        diff_dict = {}
+        diffs = jsondiff.diff(pre, post,  syntax='symmetric')
+        diff_dict.update(diffs)
+
+        pprint(diff_dict)
+
+        file = open('diffs.json', 'w')
+        json.dump(diff_dict, file, indent=2)
+        file.close()
+
+        if args.jira:
+            jira_upload(username, data['ticket'], 'output_post.json')
+            jira_upload(username, data['ticket'], 'diffs.json')
+
+        print('\nCheck diffs.json for diffs (if any). Diffs also printed below:\n\n')
+        print('-' * 10, 'DIFFS', '-' * 10, '\n')
+
+        pprint(diff_dict)
+
+        print('\n', '-' * 10, 'END DIFFS', '-' * 10, '\n')
+
+    else:
+        file = open('output_pre.json', 'w')
+        json.dump(final_output, file, indent=2)
+        file.close()
+
+        if args.jira:
+            jira_upload(username, data['ticket'], 'output_pre.json')
+
+        print(f'\nSnapshots completed. Check {pre} for output!\n')
 
 if __name__ == '__main__':
     main()

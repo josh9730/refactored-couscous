@@ -1,7 +1,7 @@
-from parse import ParseData
-from login import Login
+from .parse import ParseData
+from .login import Login
+from . import filters
 import time
-import filters
 import textfsm
 import tempfile
 
@@ -13,7 +13,7 @@ class NapalmXR:
         self.device_name = device_name
         self.addresses = addresses
 
-        print(f'\t\t\t* HPR requires NAPALM connection(s), resetting OTP...')
+        print(f'\t\t\t* IOS-XR HPR requires NAPALM connection(s), resetting OTP...')
         if elapsed_time < 30:
             print(f'\t\t\t\t... {int(30 - elapsed_time)} sec')
             time.sleep(30 - elapsed_time)

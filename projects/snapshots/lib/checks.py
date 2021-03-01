@@ -1,8 +1,8 @@
-from parse import ParseData, etree_to_dict
-from login import Login
-from ipchecks import GetNeighborIPs, get_agg_v4
-from napalm_xr import NapalmXR
-import filters
+from .parse import ParseData, etree_to_dict
+from .login import Login
+from .ipchecks import GetNeighborIPs, get_agg_v4
+from .napalm_xr import NapalmXR
+from . import filters
 import time
 import sys
 
@@ -75,10 +75,13 @@ class CircuitChecks(Device):
             # main method calls
             if self.circuits_dict[self.circuit]['service'] == 'static':
 
-                try:
-                    print(f'\t\t1) IPv4 Static')
-                    ipv4_static = self.get_circuit_static('inet.0', self.circuits_dict[self.circuit]['ipv4_routes'])
-                except: ipv4_static = 'None'
+                # try:
+                #     print(f'\t\t1) IPv4 Static')
+                #     ipv4_static = self.get_circuit_static('inet.0', self.circuits_dict[self.circuit]['ipv4_routes'])
+                # except: ipv4_static = 'None'
+
+                print(f'\t\t1) IPv4 Static')
+                ipv4_static = self.get_circuit_static('inet.0', self.circuits_dict[self.circuit]['ipv4_routes'])
 
                 try:
                     print(f'\t\t2) IPv6 Static')
@@ -308,7 +311,7 @@ class CircuitChecks(Device):
 
         return rx_routes, adv_count, rx_count, default
 
-    def rx_routes_junos(self, routes_list, table, address, connection_static=''):
+    def rx_routes_junos(self, routes_list, table, address, connection_static='', static=False):
 
         junos_parse = ParseData(self.device_type)
         if connection_static != '':
@@ -318,7 +321,10 @@ class CircuitChecks(Device):
 
         rx_routes = {}
         for route in routes_list:
-            route_data = connection.rpc.get_route_information(destination=route, table=table, exact=True, detail=True, source_gateway=address)
+            if static:
+                route_data = connection.rpc.get_route_information(destination=route, table=table, exact=True, detail=True, protocol='bgp')
+            else:
+                route_data = connection.rpc.get_route_information(destination=route, table=table, exact=True, detail=True, protocol='bgp', source_gateway=address)
             rx_routes.update(junos_parse.parse_circuit_bgp_junos(route_data))
 
         return rx_routes
@@ -353,9 +359,12 @@ class CircuitChecks(Device):
 
             connection = Login(self.username, 'lax-agg10', 'junos').pyez_connect()
             connection.open()
-        else: connection = self.connection
 
-        rx_routes = self.rx_routes_junos(routes_list, table, address, connection_static=connection)
+        else:
+            connection = self.connection
+            switch = False
+
+        rx_routes = self.rx_routes_junos(routes_list, table, address, connection_static=connection, static=True)
 
         self.start_time = time.time()
         if switch:
@@ -363,7 +372,6 @@ class CircuitChecks(Device):
             self.device_type = 'iosxr'
 
         return rx_routes
-
 
 
 class DeviceChecks(Device):

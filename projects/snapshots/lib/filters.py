@@ -1,3 +1,4 @@
+"""RPC and TextFSM filters for IOS-XR."""
 bgp_routes_filter = """
 <filter>
   <oc-bgp xmlns="http://cisco.com/ns/yang/Cisco-IOS-XR-ipv4-bgp-oc-oper">
