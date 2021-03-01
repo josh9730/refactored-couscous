@@ -141,7 +141,7 @@ Currently, two 'modes' are supported, as follows:
 - Clone repository
 - Requires python 3.6+
 - `pip install -r requirements.txt`
-- Requires kerying for MFA and CAS (only needed if you want to push to Jira). See documentation for setup.
+- Requires keyring for MFA and CAS (only needed if you want to push to Jira). See documentation for setup.
 
 ## Run program
 
@@ -157,7 +157,7 @@ Currently, two 'modes' are supported, as follows:
 
 ### YAML
 
-The 'data.yaml' file contains the instructions for the snapshots program. This contains the variables that you want to run the Checks on. Example below:
+The `data.yaml` file contains the instructions for the snapshots program. This contains the variables that you want to run the Checks on. Example below:
 
 Note that as this is YAML, the indentation is important!
 
@@ -271,7 +271,7 @@ LAX-AGG10: {
  ---------- END CIRCUIT CHECKS ----------
 ```
 
-Once the program completes, if `do_diff` is **True**, a 'diffs' section will be printed at the end.
+Once the program completes, if diffs are requested, a 'diffs' section will be printed at the end as well as a `diffs.json`.
 
 ### Diffs
 
