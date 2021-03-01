@@ -140,7 +140,7 @@ Currently, two 'modes' are supported, as follows:
 
 - Clone repository
 - Requires python 3.6+
-- `pip install -r requirements.txt`
+- `pip3 install -r requirements.txt`
 - Requires keyring for MFA and CAS (only needed if you want to push to Jira). See documentation for setup.
 
 ## Run program
