@@ -20,8 +20,8 @@ class CalendarStuff:
         SCOPES = ['https://www.googleapis.com/auth/calendar.events']
 
         creds = None
-        if os.path.exists('/Users/jdickman/Git/refactored-couscous/projects/jira/token.pickle'):
-            with open('/Users/jdickman/Git/refactored-couscous/projects/jira/token.pickle', 'rb') as token:
+        if os.path.exists('/Users/jdickman/Git/refactored-couscous/projects/atl_cal/token.pickle'):
+            with open('/Users/jdickman/Git/refactored-couscous/projects/atl_cal/token.pickle', 'rb') as token:
                 creds = pickle.load(token)
 
         if not creds or not creds.valid:
@@ -29,10 +29,10 @@ class CalendarStuff:
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    '/Users/jdickman/Git/refactored-couscous/projects/jira/credentials.json', SCOPES)
+                    '/Users/jdickman/Git/refactored-couscous/projects/atl_cal/credentials.json', SCOPES)
                 creds = flow.run_local_server(port=0)
 
-            with open('/Users/jdickman/Git/refactored-couscous/projects/jira/token.pickle', 'wb') as token:
+            with open('/Users/jdickman/Git/refactored-couscous/projects/atl_cal/token.pickle', 'wb') as token:
                 pickle.dump(creds, token)
 
         self.service = build('calendar', 'v3', credentials=creds)
@@ -166,6 +166,14 @@ class CalendarStuff:
             worksheet.update(f'C{firstRow}:H', cal_data)
 
     def create_event(self, start_time, end_time, day, title):
+        """Creates Internal Calendar Event
+
+        Args:
+            start_time (str): start time (military)
+            end_time (str): end time (military)
+            day (str): day (can be 'today')
+            title (str): title for the event
+        """
 
         if day == 'today':
             start_day = date.today()

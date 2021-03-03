@@ -9,8 +9,8 @@ import argparse
 import pickle
 
 #pylint: disable=import-error
-sys.path.append('/Users/jdickman/Git/refactored-couscous/projects/jira')
-from atl_main import Logins
+sys.path.append('/Users/jdickman/Git/refactored-couscous/projects/atl_cal')
+from atl_main import JiraStuff, ConfluenceStuff
 from cal_main import CalendarStuff
 
 
@@ -23,8 +23,8 @@ class CreateMOPs:
             usernames = yaml.full_load(file)
         username = usernames['cas']
 
-        self.jira = Logins(username).jira_login()
-        self.confluence = Logins(username).conf_login()
+        self.jira = JiraStuff(username)
+        self.confluence = ConfluenceStuff(username)
 
     def main(self, args):
         """Open YAML, launch child methods
@@ -96,7 +96,7 @@ class CreateMOPs:
         """Create/Update Confluence page based on Title and parent page ID."""
 
         print(f'\tPushing to Confluence page: {self.page_title}\n')
-        self.confluence.update_or_create(self.parent_page_id, self.page_title, self.page_body, representation='wiki')
+        self.confluence.page_update_wiki_format(self.parent_page_id, self.page_title, self.page_body)
 
     def update_jira(self):
         """Create Jira links to Confluence page if YAML 'link' entry is true."""
@@ -104,16 +104,13 @@ class CreateMOPs:
         if self.mop_file['link']:
 
             print(f'\tAdding link to {self.ticket}')
-
-            link_title = self.page_title.replace(" ", "+")
-            page_url = f'https://documentation.cenic.org/display/Core/{link_title}'
-            self.jira.create_or_update_issue_remote_links(self.ticket, page_url, self.page_title, relationship='mentioned in')
+            self.jira.update_jira_link(self.ticket, self.page_title)
 
     def create_calendar_event(self):
         """Create Internal Change event for CD."""
 
-        start_time = self.mop_file['cd']['start_time']
-        end_time = self.mop_file['cd']['end_time']
+        start_time = str(self.mop_file['cd']['start_time'])
+        end_time = str(self.mop_file['cd']['end_time'])
         day = self.mop_file['cd']['start_day']
         title = self.mop_file['ticket'] + ': ' + self.mop_file['page_title']
 
@@ -128,7 +125,7 @@ class CreateMOPs:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate MOP and push to Confluence/Jira')
-    parser.add_argument('mop_type', metavar='mop_type', choices=['mop', 'cd'], help='Type of document to create')
+    parser.add_argument('mop_type', metavar='mop_type', choices=['mop', 'cd'], help='Type of document to create. Allowed values are \'mop\' and \'cd\'')
     args = parser.parse_args()
 
     CreateMOPs().main(args)

@@ -1,19 +1,33 @@
 ---
-  ticket: NOC-641153
-  page_title: CLR16344 MTU Change
+  ticket: NOC-643226
+  page_title: CMS VLAN Reclaim
   parent_page_id: 8885131
-  link: false
+  link: true
   summary:
-    - Replace UCLA optic for CLR-16371
-    - Trace fibers & cross connect
+    - Reclaim CMS vlans
 
-  cd:
-    start_time: 0900
-    end_time: 0930
+  cd: # times must be string
+    start_time: 1345
+    end_time: 1400
     start_day: today
     changes:
       - |-
-        test
+        lax-agg8-sw-1
+        int e1/45
+        sw tr vlan remove 219
+        no vlan id 219
+
+        lax-agg10-sw-1
+        int Eth1/49/1
+        sw tr vlan remove 219
+        int e1/54
+        sw tr vlan remove 219
+        no vlan id 219
+
+        svl-agg8-sw-4
+        int e1/47
+        sw tr vlan remove 375
+        no vlan id 375
 
   level:
     - 0

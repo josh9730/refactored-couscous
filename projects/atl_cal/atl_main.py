@@ -29,11 +29,10 @@ class Logins:
         return confluence
 
 
-class AtlassianStuff(Logins):
+class JiraStuff(Logins):
 
-    def __init__(self, username, sheet_key):
+    def __init__(self, username, sheet_key=''):
        self.jira = Logins(username).jira_login()
-       self.confluence = Logins(username).conf_login()
        self.sheet_key = sheet_key
 
     def outages(self, jql_request):
@@ -125,8 +124,7 @@ class AtlassianStuff(Logins):
                 self.jira.update_issue_field(i, field_end)
 
     def update_circuit(self, bucket, hours):
-        """Update circuit deployment bucket based on # of active circuits
-        """
+        """Update circuit deployment bucket based on # of active circuits"""
 
         gc = gspread.oauth()
         sh = gc.open('Core Tickets')
@@ -156,3 +154,32 @@ class AtlassianStuff(Logins):
             self.jira.update_issue_field(ticket, field_start)
             self.jira.update_issue_field(ticket, field_end)
             self.jira.update_issue_field(ticket, orig_est)
+
+    def update_jira_link(self, ticket, page_title):
+        """Updates links in Jira ticket (adding link via API to confluence is unidirectional)
+
+        Args:
+            ticket (str): full ticket # (NOC-123456)
+            page_title (str): Title (with spaces), ie 'LAX-AGG10 SR Maintnenace`
+        """
+
+        link_title = page_title.replace(" ", "+")
+        page_url = f'https://documentation.cenic.org/display/Core/{link_title}'
+        self.jira.create_or_update_issue_remote_links(ticket, page_url, page_title, relationship='mentioned in')
+
+
+class ConfluenceStuff(Logins):
+
+    def __init__(self, username):
+        self.confluence = Logins(username).conf_login()
+
+    def page_update_wiki_format(self, parent_id, page_title, page_body):
+        """Update or Create Confluence page
+
+        Args:
+            parent_id (str): Page ID number of the parent page (where the page will be created if needed)
+            page_title (str): Title of page
+            page_body (str): Body of page (in 'wiki' format)
+        """
+
+        self.confluence.update_or_create(parent_id, page_title, page_body, representation='wiki')

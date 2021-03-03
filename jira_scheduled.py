@@ -1,26 +1,26 @@
 """Weekly and daily automated runs, used by LaunchControl. Argparse to manually launch a script.
 """
 
-from atl_main import AtlassianStuff
-from cal_main import CalendarStuff
 import argparse
 import datetime
 import yaml
+import sys
 
-with open('/Users/jdickman/Git/refactored-couscous/projects/jira/data.yml') as file:
+#pylint: disable=import-error
+sys.path.append('/Users/jdickman/Git/refactored-couscous/projects/atl_cal')
+from atl_main import JiraStuff
+from cal_main import CalendarStuff
+
+
+with open('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
     data = yaml.full_load(file)
 
 parser = argparse.ArgumentParser(description='Manually run scheduled Jira tasks.')
-parser.add_argument("-b", "--buckets", help="Run bucket update script",
-                        action="store_true")
-parser.add_argument("-o", "--outages", help="Run outage pull script",
-                        action="store_true")
-parser.add_argument("-c", "--gcal", help="Run calendar events script",
-                        action="store_true")
-parser.add_argument("-t", "--tickets", help="Run Core tickets pull script",
-                        action="store_true")
-parser.add_argument("-r", "--open_rh", help="Run open RH pull script",
-                        action="store_true")
+parser.add_argument("-b", "--buckets", help="Run bucket update script", action="store_true")
+parser.add_argument("-o", "--outages", help="Run outage pull script", action="store_true")
+parser.add_argument("-c", "--gcal", help="Run calendar events script", action="store_true")
+parser.add_argument("-t", "--tickets", help="Run Core tickets pull script", action="store_true")
+parser.add_argument("-r", "--open_rh", help="Run open RH pull script", action="store_true")
 args = parser.parse_args()
 
 def buckets(atl_stuff):
@@ -50,25 +50,17 @@ def open_rh(atl_stuff):
 
 def main(args):
 
-    username = data['username']
+    username = data['cas']
     sheet_key = data['sheet_key']
 
-    atl_stuff = AtlassianStuff(username, sheet_key)
+    atl_stuff = JiraStuff(username, sheet_key=sheet_key)
     cal_stuff = CalendarStuff(username=username)
 
-    username = data['username']
-    sheet_key = data['sheet_key']
-
-    if args.buckets:
-        buckets(atl_stuff)
-    elif args.outages:
-        outages(atl_stuff)
-    elif args.gcal:
-        gcal_pull(cal_stuff)
-    elif args.tickets:
-        ticket_pull(atl_stuff)
-    elif args.open_rh:
-        open_rh(atl_stuff)
+    if args.buckets: buckets(atl_stuff)
+    elif args.outages: outages(atl_stuff)
+    elif args.gcal: gcal_pull(cal_stuff)
+    elif args.tickets: ticket_pull(atl_stuff)
+    elif args.open_rh: open_rh(atl_stuff)
 
     else:
 
