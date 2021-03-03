@@ -1,7 +1,0 @@
-pexpect==4.8.0
-netmiko==3.1.0
-Jinja2==2.10.3
-pyotp==2.3.0
-PyYAML==5.3
-keyring==21.2.0
-yasha==4.3
