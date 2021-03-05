@@ -62,17 +62,22 @@ def main(args):
     atl_stuff = JiraStuff(username, sheet_key=sheet_key)
     cal_stuff = CalendarStuff(username=username)
 
-    if args.buckets: buckets(atl_stuff)
-    elif args.outages: outages(atl_stuff)
-    elif args.gcal: gcal_pull(cal_stuff)
-    elif args.tickets: ticket_pull(atl_stuff)
-    elif args.open_rh: open_rh(atl_stuff)
-    elif args.circuits: circuits(atl_stuff)
+    if args.buckets:
+        buckets(atl_stuff)
+    elif args.outages:
+        outages(atl_stuff)
+    elif args.gcal:
+        gcal_pull(cal_stuff)
+    elif args.tickets:
+        ticket_pull(atl_stuff)
+    elif args.open_rh:
+        open_rh(atl_stuff)
+    elif args.circuits:
+        circuits(atl_stuff)
 
     else:
 
         day = datetime.datetime.now().strftime("%a")
-
         if day == 'Mon':
             buckets(atl_stuff)
             outages(atl_stuff)

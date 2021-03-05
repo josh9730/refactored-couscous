@@ -86,7 +86,9 @@ class CircuitChecks(Device):
                 try:
                     print(f'\t\t2) IPv6 Static')
                     ipv6_static = self.get_circuit_static('inet6.0', self.circuits_dict[self.circuit]['ipv6_routes'])
-                except: ipv6_static = 'None'
+
+                except:
+                    ipv6_static = 'None'
 
                 output_dict = {
                     self.circuit: {
@@ -97,8 +99,9 @@ class CircuitChecks(Device):
                 }
 
             else:
+                try:
+                    self.port = self.circuits_dict[self.circuit]['port']
 
-                try: self.port = self.circuits_dict[self.circuit]['port']
                 except:
                     print('\n\n\tPlease enter a valid port and re-run.\n\n')
                     sys.exit(1)
@@ -158,17 +161,24 @@ class CircuitChecks(Device):
             self.check_hpr_xr()
             self.get_circuit_bgp_xr()
 
-        elif self.device_type == 'junos': self.get_circuit_bgp_junos()
+        elif self.device_type == 'junos':
+            self.get_circuit_bgp_junos()
 
     def get_circuit_iface(self):
 
-        if self.device_type == 'iosxr': self.get_circuit_iface_xr()
-        elif self.device_type == 'junos': self.get_circuit_iface_junos()
+        if self.device_type == 'iosxr':
+            self.get_circuit_iface_xr()
+
+        elif self.device_type == 'junos':
+            self.get_circuit_iface_junos()
 
     def get_circuit_isis(self):
 
-        if self.device_type == 'iosxr': self.get_circuit_isis_xr()
-        elif self.device_type == 'junos': self.get_circuit_isis_junos()
+        if self.device_type == 'iosxr':
+            self.get_circuit_isis_xr()
+
+        elif self.device_type == 'junos':
+            self.get_circuit_isis_junos()
 
     def adv_counts(self, adv_counts):
         """Convert adv_count int to string for diffs - adv. counts fluctuate.
@@ -185,23 +195,29 @@ class CircuitChecks(Device):
 
             # HPR Full Table ~ 20,000 / 20,000
             elif self.vrf == 'hpr':
+
                 if adv_count > 20000:
                     if index == 0: self.ipv4_adv_count = 'Full HPR IPv4 Table'
                     elif index == 1: self.ipv6_adv_count = 'Full HPR IPv6 Table'
+
                 elif adv_count > 0:
                     if index == 0: self.ipv4_adv_count = adv_count
                     elif index == 1: self.ipv6_adv_count = adv_count
+
                 elif adv_count == 0:
                     if index == 0: self.ipv4_adv_count = 'No Adv. Routes'
                     elif index == 1: self.ipv6_adv_count = 'No Adv. Routes'
 
             # DC Full Table ~ 800,000 / 100,000
             elif self.vrf == 'default' or 'master':
+
                 if adv_count > 800000 and index == 0: self.ipv4_adv_count = 'Full DC IPv4 Table'
                 elif adv_count > 100000 and index == 1: self.ipv6_adv_count = 'Full DC IPv6 Table'
+
                 elif adv_count > 0:
                     if index == 0: self.ipv4_adv_count = adv_count
                     elif index == 1: self.ipv6_adv_count = adv_count
+
                 elif adv_count == 0:
                     if index == 0: self.ipv4_adv_count = 'No Adv. Routes'
                     elif index == 1: self.ipv6_adv_count = 'No Adv. Routes'
@@ -230,15 +246,21 @@ class CircuitChecks(Device):
         """Check HPR, if not HPR pass addresses to get checks data"""
 
         if self.vrf == 'hpr':
+
             elapsed_time = int(time.time() - self.start_time)
             self.ipv4_circuit_data,  self.ipv6_circuit_data, self.start_time, = NapalmXR(elapsed_time, self.username, self.device_name, addresses=self.addresses).get_circuit_hpr()
 
         else:
-            if self.addresses[0]: self.ipv4_circuit_data = self.circuit_bgp_xr(self.addresses[0])
-            else: self.ipv4_circuit_data = [ 'No Peering', None, 'No Peering', 'No Peering']
 
-            if self.addresses[1]: self.ipv6_circuit_data = self.circuit_bgp_xr(self.addresses[1])
-            else: self.ipv6_circuit_data = [ 'No Peering', None, 'No Peering', 'No Peering']
+            if self.addresses[0]:
+                self.ipv4_circuit_data = self.circuit_bgp_xr(self.addresses[0])
+            else:
+                self.ipv4_circuit_data = [ 'No Peering', None, 'No Peering', 'No Peering']
+
+            if self.addresses[1]:
+                self.ipv6_circuit_data = self.circuit_bgp_xr(self.addresses[1])
+            else:
+                self.ipv6_circuit_data = [ 'No Peering', None, 'No Peering', 'No Peering']
 
     def circuit_bgp_xr(self, address):
         """Run twice per circuit, once for v4 and once for v6"""
@@ -280,11 +302,15 @@ class CircuitChecks(Device):
     def get_circuit_bgp_junos(self):
         """Pass addresses to get checks data"""
 
-        if self.addresses[0]: self.ipv4_circuit_data = self.circuit_bgp_junos(self.addresses[0])
-        else: self.ipv4_circuit_data = [ 'No Peering', None, 'No Peering', 'No Peering']
+        if self.addresses[0]:
+            self.ipv4_circuit_data = self.circuit_bgp_junos(self.addresses[0])
+        else:
+            self.ipv4_circuit_data = [ 'No Peering', None, 'No Peering', 'No Peering']
 
-        if self.addresses[1]: self.ipv6_circuit_data = self.circuit_bgp_junos(self.addresses[1])
-        else: self.ipv6_circuit_data = [ 'No Peering', None, 'No Peering', 'No Peering']
+        if self.addresses[1]:
+            self.ipv6_circuit_data = self.circuit_bgp_junos(self.addresses[1])
+        else:
+            self.ipv6_circuit_data = [ 'No Peering', None, 'No Peering', 'No Peering']
 
     def circuit_bgp_junos(self, address):
         """Run twice per circuit, once for v4 and once for v6"""
@@ -297,6 +323,7 @@ class CircuitChecks(Device):
             default = '0.0.0.0/0'
             if self.vrf == 'master': table = 'inet.0'
             elif self.vrf == 'hpr': table = 'hpr.inet.0'
+
         else:
             default = '::/0'
             if self.vrf == 'master': table = 'inet6.0'
@@ -314,13 +341,13 @@ class CircuitChecks(Device):
     def rx_routes_junos(self, routes_list, table, address, connection_static='', static=False):
 
         junos_parse = ParseData(self.device_type)
-        if connection_static != '':
-            connection = connection_static
 
+        if connection_static != '': connection = connection_static
         else: connection = self.connection
 
         rx_routes = {}
         for route in routes_list:
+
             if static:
                 route_data = connection.rpc.get_route_information(destination=route, table=table, exact=True, detail=True, protocol='bgp')
             else:
@@ -395,7 +422,6 @@ class DeviceChecks(Device):
         """
 
         if self.device_type == 'junos':
-
             output_dict_list = self.get_device_junos()
 
         elif self.device_type == 'iosxr':

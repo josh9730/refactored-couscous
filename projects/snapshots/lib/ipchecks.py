@@ -82,13 +82,16 @@ class GetNeighborIPs(IPChecks):
             ipv4_nei = str(output,'utf-8').split('\n')[0].split()[3] # split string and select only the IPv4 address
             try:
                 self.circuit['ipv6_neighbor'] = str(output,'utf-8').split('\n')[1].split()[4] # split string and select only the IPv6 address
+
             except:
                 ipv6_nei = None
                 if not self.circuit['ipv6_neighbor']:
                     print(f'\t\t\t* WARNING: No AAAA record for {self.hostname}.\n\t\t\tEnter manually if v6 Peering exists and re-run.')
 
-            if not self.circuit['ipv4_neighbor']: self.circuit['ipv4_neighbor'] = ipv4_nei
-            if not self.circuit['ipv6_neighbor']: self.circuit['ipv6_neighbor'] = ipv6_nei
+            if not self.circuit['ipv4_neighbor']:
+                self.circuit['ipv4_neighbor'] = ipv4_nei
+            if not self.circuit['ipv6_neighbor']:
+                self.circuit['ipv6_neighbor'] = ipv6_nei
 
     def get_ebgp_static_ips(self, device_type, connection):
         """Uses napalm to get assume neighbor IP from port configs. Typical standard is +1/+16 for peer.
@@ -117,5 +120,7 @@ class GetNeighborIPs(IPChecks):
                 ipv4 = xr_parse.parse_circuit_arp_xr(arp)
                 ipv6 = xr_parse.parse_circuit_nd_xr(nd)
 
-            if not self.circuit['ipv4_neighbor']: self.circuit['ipv4_neighbor'] = ipv4
-            if not self.circuit['ipv6_neighbor']: self.circuit['ipv6_neighbor'] = ipv6
+            if not self.circuit['ipv4_neighbor']:
+                self.circuit['ipv4_neighbor'] = ipv4
+            if not self.circuit['ipv6_neighbor']:
+                self.circuit['ipv6_neighbor'] = ipv6

@@ -23,15 +23,19 @@ class LoginInteract:
         if args.enable:
             print(f'\nConnecting to {self.hostname} with SSH/Enable...\n')
             self.enable_login()
+
         elif args.telnet:
             print(f'\nConnecting to {self.hostname} with Telnet/MFA...\n')
             self.telnet_login()
+
         elif args.telnet_enable:
             print(f'\nConnecting to {self.hostname} with Telnet/Enable...\n')
             self.telnet_enable()
+
         elif args.cas:
             print(f'\nConnecting to {self.hostname} with SSH/CAS...\n')
             self.cas_login()
+
         else:
             print(f'\nConnecting to {self.hostname} with SSH/MFA...\n')
             self.ssh_login()
