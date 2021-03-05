@@ -178,7 +178,7 @@ class CalendarStuff:
         if day == 'today':
             start_day = date.today()
         else:
-            print('enter valid day')
+            start_day = date.fromisoformat(str(day))
 
         start_hour = int(start_time[0:2])
         start_min = int(start_time[2:4])

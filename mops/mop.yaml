@@ -1,33 +1,316 @@
 ---
-  ticket: NOC-643226
-  page_title: CMS VLAN Reclaim
-  parent_page_id: 8885131
-  link: true
+  ticket: COR-1303
+  page_title: Tustin VPN Configs
+  parent_page_id: 9653629
+  link: false
   summary:
-    - Reclaim CMS vlans
+    - Configure Enterprise IPVPN setup at Tustin
 
-  cd: # times must be string
-    start_time: 1345
-    end_time: 1400
-    start_day: today
+  cd: # times must be string, start_day must be either 'today' or in YYYY-MM-DD format
+    start_time: 1800
+    end_time: 2000
+    start_day: 2021-03-05
+    calendar: false
     changes:
       - |-
-        lax-agg8-sw-1
-        int e1/45
-        sw tr vlan remove 219
-        no vlan id 219
+        TUS-AGG8-SW-1:
+          vlan id 2040
+          !
+          interface e1/12
+            switchport trunk allowed vlan add 2040
+          !
+          interface e1/49/1
+            switchport trunk allowed vlan add 2040
+          !
 
-        lax-agg10-sw-1
-        int Eth1/49/1
-        sw tr vlan remove 219
-        int e1/54
-        sw tr vlan remove 219
-        no vlan id 219
+        LAM-GW-1:
+          vrf definition ent
+            rd auto
+            address-family ipv4
+            exit-address-family
+          !
+          vlan 2040
+          !
+          interface lo1
+            vrf forwarding ent
+            ip address 10.0.139.0 255.255.255.255
+          !
+          interface vlan 2040
+            vrf forwarding ent
+            description [ent:wan] tus-agg8 peering
+            ip address 10.0.200.2 255.255.255.252
+          !
+          interface Te5/0/1
+            switchport trunk allowed vlan add 2040
+          !
+          router bgp 64748
+            address-family ipv4 vrf ent
+              aggregate-address 10.0.0.0 255.255.0.0 summary-only
+              redistribute connected
+              neighbor ent-ipvpn peer-group
+              neighbor ent-ipvpn remote-as 2152
+              neighbor ent-ipvpn local-as 64618 no-prepend replace-as
+              neighbor 10.0.200.1 peer-group ent-ipvpn
+              neighbor 10.0.200.1 activate
+              neighbor 10.0.200.1 description tus-agg8
+          !
 
-        svl-agg8-sw-4
-        int e1/47
-        sw tr vlan remove 375
-        no vlan id 375
+        TUS-CENIC-SW-1:
+          feature ospf
+          !
+          vrf context ent
+          !
+          route-map bgp-aggregate permit 10
+            set community 64496:1000
+          route-map permit-all permit 10
+          !
+          router ospf ent
+            vrf ent
+              router-id 10.13.139.0
+              auto-cost reference-bandwidth 1000 Mbps
+          !
+          vlan 2030-2031,2040-2042,2044
+          !
+          interface vlan2040
+            no shutdown
+            description [ent:wan] tus-fw-2b peering
+            vrf member ent
+            ip address 10.13.200.1/30
+            ip router ospf ent area 0.0.0.0
+          !
+          interface Vlan2042
+            no shutdown
+            description [ent:wan] tus-agg8 peering
+            vrf member ent
+            ip address 10.13.200.10/30
+            ip ospf passive-interface
+            ip router ospf ent area 0.0.0.0
+          !
+          interface Vlan2044
+            no shutdown
+            description [ent:wan] tus-cenic-sw-2 peering
+            vrf member ent
+            ip address 10.13.200.17/30
+            ip ospf network point-to-point
+            ip router ospf ent area 0.0.0.0
+          !
+          interface po1
+            description to tus-cenic-sw-2 Po1
+            switchport trunk allowed vlan add 2030-2031,2040-2041,2044
+          !
+          interface e1/33
+            description to tus-fw-1 eth1/13-outside
+            switchport trunk allowed vlan add 2030-2031,2040-2041
+          !
+          interface e1/37
+            description to tus-agg8 Te0/1/0/18/3
+            switchport trunk allowed vlan add 2030,2042
+          !
+          interface lo1
+            vrf member ent
+            ip address 10.13.139.0/32
+            ip router ispf ent area 0.0.0.0
+          !
+          router bgp 64618
+            vrf ent
+              address-family ipv4 unicast
+                redistribute direct route-map permit-all
+                redistribute ospf ent route-map permit-all
+                aggregte-address 10.13.0.0/16 summary-only attribute-map bgp-aggregate
+              neighbor 10.13.139.1
+                description tus-cenic-sw-1
+                remote-as 64618
+                update-source lo1
+                address-family ipv4 unicast
+                  next-hop-self
+              neighbor 10.13.200.2
+                description tus-fw-2a
+                remote-as 64618
+                address-family ipv4 unicast
+                  next-hop-self
+              neighbor 10.13.200.9
+                remote-as 2152
+                description tus-agg8
+                address-family ipv4 unicast
+                  default-originate
+          !
+
+        TUS-CENIC-SW-2:
+          feature ospf
+          !
+          vrf context ent
+          !
+          route-map bgp-aggregate permit 10
+            set community 64496:1000
+          route-map permit-all permit 10
+          !
+          router ospf ent
+            vrf ent
+              auto-cost reference-bandwidth 1000 Mbps
+          !
+          vlan 2030-2031,2040-2041,2043-2044
+          !
+          interface vlan 2041
+            no shutdown
+            description [ent:wan] tus-fw-2a peering
+            vrf member ent
+            ip address 10.13.200.5/30
+            ip ospf cost 10
+            ip router ospf ent area 0.0.0.0
+          !
+          interface vlan 2043
+            no shutdown
+            description [ent:wan] tus-agg8 peering
+            vrf member ent
+            ip address 10.13.200.14/30
+            ip ospf passive-interface
+            ip router ospf ent area 0.0.0.0
+          !
+          interface vlan 2044
+            no shutdown
+            description [ent:wan] tus-cenic-sw-1 peering
+            vrf member ent
+            ip address 10.13.200.18/30
+            ip ospf network point-to-point
+            ip router ospf ent area 0.0.0.0
+          !
+          interface po1
+            description to tus-cenic-sw-2 Po1
+            switchport trunk allowed vlan add 2030-2031,2040-2041,2044
+          !
+          interface e1/41
+            description tus-fw-2a Ethernet1/13
+            switchport trunk allowed vlan add 2030-2031,2040-2041
+          !
+          interface e1/42
+            description to tus-agg8 Te0/0/0/28/3
+            switchport trunk allowed vlan add 2031, 2043
+          !
+          interface lo1
+            vrf member ent
+            ip address 10.13.139.1/32
+            ip router ospf ent area 0.0.0.0
+          !
+          router bgp 64618
+            vrf ent
+              address-family ipv4 unicast
+                redistribute direct route-map permit-all
+                redistribute ospf ent route-map permit-all
+                aggregate-address 10.13.0.0/16 summary-only attribute-map bgp-aggregate
+                default-information originate
+              neighbor 10.13.139.0
+                description tus-cenic-sw-1
+                remote-as 64618
+                update-source loopback1
+                address-family ipv4 unicast
+                  next-hop-self
+              neighbor 10.13.200.6
+                description tus-fw-2a
+                remote-as 64618
+                address-family ipv4 unicast
+                  next-hop-self
+              neighbor 10.13.200.13
+                description tus-agg8
+                remote-as 2152
+                address-family ipv4 unicast
+          !
+
+        TUS-AGG8:
+          vrf ent
+            address-family ipv4 unicast
+            import route-target
+              2152:1000
+            !
+            export route-target
+              2152:1000
+          !
+          route-policy pass
+            pass
+          !
+          route-policy bgp-import-localpref
+            if community matches-any (2152:90) then
+              set local-preference 90
+              pass
+            endif
+            if community matches-any (2152:80) then
+              set local-preference 80
+              pass
+            endif
+            if community matches-any (2152:70) then
+              set local-preference 70
+              pass
+            endif
+            else
+              pass
+          end-policy
+          !
+          interface te0/1/0/18/3.2030
+            vrf ent
+            description [ent:ipvpn] tus-fw-2a peering
+            ipv4 address 207.233.106.1/30
+            encapsulation dot1q 2030
+          !
+          interface te0/1/0/18/3.2042
+            vrf ent
+            description [ent:wan] tus-cenic-sw-1 peering
+            ipv4 address 10.13.200.9/30
+            encapsulation dot1q 2042
+          !
+          interface te0/0/0/28/3.2031
+            vrf ent
+            description [ent:ipvpn] tus-fw-2b peering
+            ipv4 address 207.233.106.5/30
+            encapsulation dot1q 2031
+          !
+          interface te0/0/0/28/3.2043
+            vrf ent
+            description [ent:wan] tus-cenic-sw-2 peering
+            ipv4 address 10.13.200.13/30
+            encapsulation dot1q 2043
+          !
+          interface 0/0/0/0/0.2040
+            vrf ent
+            description [ent:wan] lam-gw-1 peering
+            ipv4 address 10.0.200.1/30
+          !
+          router bgp 2152
+            neighbor-group tus-fw-2
+              remote-as 65412
+              address-family ipv4 unicast
+                send-community-ebgp
+                send-extended-community-ebgp
+                route-policy default-only out
+                route-policy bgp-import-localpref in
+            neighbor 207.233.106.2
+              description tus-fw-2a
+              use-neighbor-group tus-fw-2
+            neighbor 207.233.106.6
+              description tus-fw-2b
+              use-neighbor-group tus-fw-2
+            !
+            vrf ent
+              rd auto
+              address-family ipv4 unicast
+                maximum-paths ebgp 2
+              neighbor-group ent-ipvpn
+                remote-as 64618
+                address-family ipv4 unicast
+                  send-community-ebgp
+                  send-extended-community-ebgp
+                  route-policy pass in
+                  route-policy pass out
+              neighbor 10.13.200.10
+                use-neighbor-group ent-ipvpn
+                description tus-cenic-sw-1
+              neighbor 10.13.200.14
+                use-neighbor-group ent-ipvpn
+                description tus-cenic-sw-2
+              neighbor 10.0.200.2
+                use-neighbor-group ent-ipvpn
+                description lam-gw-1
+
+
+###
 
   level:
     - 0

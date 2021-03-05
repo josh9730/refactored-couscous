@@ -1,9 +1,11 @@
 from atlassian import Jira, Confluence
 from gspread_pandas import Spread
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import pandas as pd
 import keyring
 import gspread
+import time
+import json
 
 
 class Logins:
@@ -97,6 +99,80 @@ class JiraStuff(Logins):
                 gsheet.df_to_sheet(df[FoI], index=False, sheet=name, replace=False, start=f'{k}1')
 
             j += 5 # increment for cell
+
+    def circuits(self, jql_request):
+        """Retrieve all tickets with a Milestone in M4 - M9, push to sheet, and update how long the ticket has been in that milestone.
+
+        circuits_raw: sheet to push unstructured data from Jira to
+        Circuits: filtered sheet, retrieve ordered list of tickets from
+        circuits.json: DF stored as json, ticket number to Milestone & Date
+
+            1. Get JQL and push to sheet
+            2. open circuits.json, create (from sheet) lists of tickets and milestones
+            3. Iterate over list of tickets
+            4. Push Milestone date and days in milestone to sheet
+            5. Overwrite circuits.json (in case new circuits are added or dates change)
+
+        """
+
+        today = date.today()
+        gc = gspread.oauth()
+        sh = gc.open('Core Tickets')
+
+        name = 'circuits_raw'
+        gsheet = Spread(self.sheet_key, name)
+
+        results = self.jira.jql(jql_request)
+        df = pd.json_normalize(results['issues'])
+        FoI = ['fields.assignee.name','fields.customfield_10209.value','key', 'fields.summary','fields.updated']
+        gsheet.df_to_sheet(df[FoI], index=False, sheet=name, replace=True)
+
+        worksheet = sh.worksheet('Circuits')
+        tickets_list = worksheet.col_values(3)[1:]
+        milestones_list = worksheet.col_values(5)[1:]
+
+        circuits_df = pd.read_json('/Users/jdickman/Git/refactored-couscous/projects/atl_cal/circuits.json')
+
+        days_list = []
+        milestones_date = []
+        for index, ticket in enumerate(tickets_list):
+
+            try:
+                # if ticket exists in DF
+                if circuits_df.at[ticket, 'Current Milestone'] == milestones_list[index]:
+
+                    # if milestone has NOT been updated
+                    ticket_date = circuits_df.at[ticket, 'Date Updated']
+                    date_iso =  date.fromisoformat(str(ticket_date))
+                    num_days = str(today - date_iso).split(' ')[0]
+                    if num_days == '0:00:00': num_days = '0'
+
+                else:
+                    # if milestone has been updated
+                    circuits_df.at[ticket, 'Current Milestone'] = milestones_list[index]
+                    circuits_df.at[ticket, 'Date Updated'] = today
+                    num_days = '0'
+                    ticket_date = str(today)
+
+            except:
+                # if ticket not in DF
+                circuits_df.at[ticket] = [milestones_list[index], str(today)]
+                num_days = '0'
+                ticket_date = str(today)
+
+            days_list.append(num_days)
+            milestones_date.append(ticket_date)
+
+        circuits_df.to_json('/Users/jdickman/Git/refactored-couscous/projects/atl_cal/circuits.json', indent=2)
+
+        # Create DF to push to Circuits sheet
+        data_tuples = list(zip(milestones_date, days_list))
+        col = ['Date Updated', 'Days in Milestone']
+        upload_df = pd.DataFrame(data_tuples, columns=col)
+
+        name = 'Circuits'
+        gsheet = Spread(self.sheet_key, name)
+        gsheet.df_to_sheet(upload_df, index=False, sheet=name, start='F1')
 
     def update_rotating_bucket(self, bucket, hours):
         """Update rotation buckets (shipping and EngRv)

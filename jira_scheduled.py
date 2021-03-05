@@ -18,9 +18,10 @@ with open('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
 parser = argparse.ArgumentParser(description='Manually run scheduled Jira tasks.')
 parser.add_argument("-b", "--buckets", help="Run bucket update script", action="store_true")
 parser.add_argument("-o", "--outages", help="Run outage pull script", action="store_true")
-parser.add_argument("-c", "--gcal", help="Run calendar events script", action="store_true")
+parser.add_argument("-cal", "--gcal", help="Run calendar events script", action="store_true")
 parser.add_argument("-t", "--tickets", help="Run Core tickets pull script", action="store_true")
-parser.add_argument("-r", "--open_rh", help="Run open RH pull script", action="store_true")
+parser.add_argument("-r", "--open_rh", help="Run Open RH pull script", action="store_true")
+parser.add_argument("-c", "--circuits", help="Pull all open Circuits tickets", action="store_true")
 args = parser.parse_args()
 
 def buckets(atl_stuff):
@@ -48,6 +49,11 @@ def open_rh(atl_stuff):
     jql_rh = 'labels = "RH" and status not in (Resolved, Deleted, Done)'
     atl_stuff.open_rh(jql_rh)
 
+def circuits(atl_stuff):
+    # Update circuit milestone tracker
+    jql_circuits = 'Milestone is not EMPTY and Milestone not in ("M1-Eng Mgr assign resource to deployment issue", "M2-Order and Deliver Hardware")  and assignee in (jdickman, myunus, nlo, eho, tsanda) and status not in (Resolved, Deleted, Merged)'
+    atl_stuff.circuits(jql_circuits)
+
 def main(args):
 
     username = data['cas']
@@ -61,6 +67,7 @@ def main(args):
     elif args.gcal: gcal_pull(cal_stuff)
     elif args.tickets: ticket_pull(atl_stuff)
     elif args.open_rh: open_rh(atl_stuff)
+    elif args.circuits: circuits(atl_stuff)
 
     else:
 
@@ -74,6 +81,7 @@ def main(args):
         else:
             ticket_pull(atl_stuff)
             open_rh(atl_stuff)
+            circuits(atl_stuff)
 
 
 if __name__ == '__main__':

@@ -109,13 +109,15 @@ class CreateMOPs:
     def create_calendar_event(self):
         """Create Internal Change event for CD."""
 
-        start_time = str(self.mop_file['cd']['start_time'])
-        end_time = str(self.mop_file['cd']['end_time'])
-        day = self.mop_file['cd']['start_day']
-        title = self.mop_file['ticket'] + ': ' + self.mop_file['page_title']
+        if self.mop_file['cd']['calendar']:
 
-        print(f'\tCreating Internal Change entry:\n\n\t\tDay: {day}\n\t\tStart: {start_time}\n\t\tEnd: {end_time}\n')
-        CalendarStuff().create_event(start_time, end_time, day, title)
+            start_time = str(self.mop_file['cd']['start_time'])
+            end_time = str(self.mop_file['cd']['end_time'])
+            day = self.mop_file['cd']['start_day']
+            title = self.mop_file['ticket'] + ': ' + self.mop_file['page_title']
+
+            print(f'\tCreating Internal Change entry:\n\n\t\tDay: {day}\n\t\tStart: {start_time}\n\t\tEnd: {end_time}\n')
+            CalendarStuff().create_event(start_time, end_time, day, title)
 
     def move_yaml(self):
         """Copy YAML to repo"""
