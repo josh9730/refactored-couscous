@@ -127,6 +127,8 @@ class JiraStuff(Logins):
         FoI = ['fields.assignee.name','fields.customfield_10209.value','key', 'fields.summary','fields.updated']
         gsheet.df_to_sheet(df[FoI], index=False, sheet=name, replace=True)
 
+        time.sleep(2)
+
         worksheet = sh.worksheet('Circuits')
         tickets_list = worksheet.col_values(3)[1:]
         milestones_list = worksheet.col_values(5)[1:]
