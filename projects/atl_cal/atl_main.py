@@ -115,26 +115,39 @@ class JiraStuff(Logins):
 
         """
 
-        today = date.today()
-        gc = gspread.oauth()
-        sh = gc.open('Core Tickets')
-
-        name = 'circuits_raw'
-        gsheet = Spread(self.sheet_key, name)
-
+        # get jql and create DF
         results = self.jira.jql(jql_request)
         df = pd.json_normalize(results['issues'])
         FoI = ['fields.assignee.name','fields.customfield_10209.value','key', 'fields.summary','fields.updated']
+        df['fields.updated'] = df['fields.updated'].str.slice(start=0, stop=10) # get date field from isoformat
+
+        # push to gsheet
+        name = 'circuits_raw'
+        gsheet = Spread(self.sheet_key, name)
         gsheet.df_to_sheet(df[FoI], index=False, sheet=name, replace=True)
 
-        time.sleep(2)
+        time.sleep(2) # delay for query to run
 
+        # get current tickets & milestones from gsheet
+        gc = gspread.oauth()
+        sh = gc.open('Core Tickets')
         worksheet = sh.worksheet('Circuits')
-        tickets_list = worksheet.col_values(3)[1:]
+        tickets_list = worksheet.col_values(1)[1:]
         milestones_list = worksheet.col_values(5)[1:]
 
+        # Clear previous entries
+        previous_tickets = worksheet.col_values(6)[1:]
+        length = len(previous_tickets)
+        clear_list = []
+        for _ in range(length):
+            clear_list.append(['', ''])
+        worksheet.update(f'F2:G{length+1}', clear_list)
+
+        # read from 'database'
         circuits_df = pd.read_json('/Users/jdickman/Git/refactored-couscous/projects/atl_cal/circuits.json')
 
+        # lopp to create milestone updated date and days in milestone lists
+        today = date.today()
         days_list = []
         milestones_date = []
         for index, ticket in enumerate(tickets_list):
@@ -165,13 +178,15 @@ class JiraStuff(Logins):
             days_list.append(num_days)
             milestones_date.append(ticket_date)
 
+        # push to 'database'
         circuits_df.to_json('/Users/jdickman/Git/refactored-couscous/projects/atl_cal/circuits.json', indent=2)
 
-        # Create DF to push to Circuits sheet
+        # Create DF
         data_tuples = list(zip(milestones_date, days_list))
         col = ['Date Updated', 'Days in Milestone']
         upload_df = pd.DataFrame(data_tuples, columns=col)
 
+        # push to gsheet
         name = 'Circuits'
         gsheet = Spread(self.sheet_key, name)
         gsheet.df_to_sheet(upload_df, index=False, sheet=name, start='F1')
