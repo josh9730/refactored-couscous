@@ -51,7 +51,7 @@ Uses the `mop-gen.j2` template. MOP specific items below:
         - `cmd-rh`, `cmd-noc`, `cmd-core`: Instructions for RH, NOC, CORE, with a 'no-format' box
             - The first item is the 'title'
             - The second is a multiline string (start with `|-`)
-        - `jumper`: Jumper formatting inside a 'no-format' box
+        - `jumper`: Jumper formatting inside a 'no-format' box (note you could just use `cmd-rh` if you want to 'free-form' the jumper)
             - Each item in list is 'one jumper', example:
                 ```
                 - acage: # Enter A Cage #
