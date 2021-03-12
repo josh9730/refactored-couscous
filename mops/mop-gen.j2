@@ -146,39 +146,42 @@ h2. Section {{ loop.index }} - {{ section }}
 {% for header, step in i.items() %}
 {% if header == 'rh' %}
 # *&#91;RH]* {{ step }}
-{% elif header == 'noc' %}
-# *&#91;NOC]* {{ step }}
-{% elif header == 'core' %}
-# *&#91;CORE]* {{ step }}
-{% elif header == 'jumper' %}
-{{ jumpers(step) }}
-{% elif header == 'cmd' %}
-# *&#91;NOC]* {{ step[0] }}:
-{noformat:nopanel=true}
-{{ step[1] }}
-
-{noformat}
-{% elif header == 'cmd-core' %}
-# *&#91;CORE]* {{ step[0] }}:
-{noformat:nopanel=true}
-{{ step[1] }}
-
-{noformat}
 {% elif header == 'cmd-rh' %}
 # *&#91;RH]* {{ step[0] }}:
 {noformat:nopanel=true}
 {{ step[1] }}
 
 {noformat}
-{% elif header == 'expand' %}
+{% elif header == 'noc' %}
+# *&#91;NOC]* {{ step }}
+{% elif header == 'jumper' %}
+{{ jumpers(step) }}
+{% elif header == 'cmd-noc' %}
 # *&#91;NOC]* {{ step[0] }}:
-{expand}
-{{ step[1] }}
 {noformat:nopanel=true}
-{{ step[2] }}
+{{ step[1] }}
 
 {noformat}
-{expand}
+{% elif header == 'expand-noc' %}
+# *&#91;NOC]* {{ step[0] }}:
+{code:title={{ step[1]|upper }}|linenumbers=true|language=text|collapse=true}
+{{ step[2] }}
+
+{code}
+{% elif header == 'core' %}
+# *&#91;CORE]* {{ step }}
+{% elif header == 'cmd-core' %}
+# *&#91;CORE]* {{ step[0] }}:
+{noformat:nopanel=true}
+{{ step[1] }}
+
+{noformat}
+{% elif header == 'expand-core' %}
+# *&#91;CORE]* {{ step[0] }}:
+{code:title={{ step[1]|upper }}|linenumbers=true|language=text|collapse=true}
+{{ step[2] }}
+
+{code}
 
 {% endif %}
 {% endfor %}

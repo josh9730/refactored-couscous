@@ -122,7 +122,7 @@ class CreateMOPs:
     def move_yaml(self):
         """Copy YAML to repo"""
 
-        shutil.copy('/Users/jdickman/Git/refactored-couscous/mop.yaml', f'/Users/jdickman/Git/1 - Docs/MOPs/YAML/{self.page_title}.yaml')
+        shutil.copy(self.mop_file['mop_directory'], self.mop_file['mop_repo'] +  self.page_title + '.yaml')
 
 
 if __name__ == '__main__':

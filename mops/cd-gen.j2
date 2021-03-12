@@ -6,7 +6,9 @@ h2. SUMMARY
 {% endfor %}
 
 h2. CHANGES
-{noformat:nopanel=true}
-{{ cd['changes'][0] }}
+{% for i in cd['changes'] %}
+{code:title={{ (i|dictsort)[0][0]|upper }}|linenumbers=true|language=text|collapse=true}
+{{ (i|dictsort)[0][1][0] }}
 
-{noformat}
+{code}
+{% endfor %}
