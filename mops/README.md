@@ -52,7 +52,8 @@ Uses the `mop-gen.j2` template. MOP specific items below:
             - The first item is the 'title'
             - The second is a multiline string (start with `|-`)
         - `jumper`: Jumper formatting inside a 'no-format' box
-            - Each item in list is 'one jumper':
+            - Each item in list is 'one jumper', example:
+                ```
                 - acage: # Enter A Cage #
                   arack: # Enter A Rack #
                   adevice: # Enter A Device
@@ -68,6 +69,7 @@ Uses the `mop-gen.j2` template. MOP specific items below:
                   zport: # Enter Z Port
                   zcable: # Enter Z cable type, info
                   zterm: # Yes, No if terminate
+                ```
         - `expand-noc`, `expand-core`: Instructions for NOC, Core inside a collapsable `code block`. Useful for long configs. Do not use for RH-specific instructions as they will not see items inside a collapsed box.
             - Same format as `cmd-` but with a collapsable box instead
 
