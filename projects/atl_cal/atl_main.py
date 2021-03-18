@@ -83,9 +83,9 @@ class JiraStuff(Logins):
 
             results = self.jira.jql(jql_request.format(engineer = i), limit=500, fields=['assignee','key','summary','customfield_10209','updated'])
             df = pd.json_normalize(results['issues'])
-            k = chr(j) # convert integer to ascii (uppercase letter)
+            k = chr(j)
 
-            if i != 'sbellamine':# Sana has no milestones
+            if i != 'sbellamine': # Sana has no milestones
 
                 FoI = ['fields.assignee.name','key', 'fields.summary','fields.customfield_10209.value','fields.updated']
                 if j == 65:
@@ -205,8 +205,8 @@ class JiraStuff(Logins):
             self.jira.update_issue_field(i, orig_est)
 
             if start_date == last_week:
-                # Rotates the previous week's bucket to end of rotation
 
+                # Rotates the previous week's bucket to end of rotation
                 new_start = (datetime.today() + timedelta(weeks=(len(bucket)-1))).strftime('%Y-%m-%d')
                 new_end = (datetime.today() + timedelta(weeks=(len(bucket)-1), days=5)).strftime('%Y-%m-%d')
 
@@ -223,7 +223,7 @@ class JiraStuff(Logins):
         sh = gc.open('Core Tickets')
         worksheet = sh.worksheet('Tables')
 
-        # Get # of active circuits, eng_list must match yaml (order in yaml)
+        # Get # of active circuits, eng_list must match yaml order
         engineer = [
             worksheet.get('C2')[0][0],
             worksheet.get('C3')[0][0],

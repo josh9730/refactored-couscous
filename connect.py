@@ -91,7 +91,7 @@ class LoginInteract:
         cas_account = GetLP().get_lp('cas')
 
         child = pexpect.spawn(f'/bin/bash -c "ssh {self.username[:-3]}@{self.hostname} | ct"')
-        child.expect('Password:')
+        child.expect('assword:')
         child.sendline(cas_account[1])
         child.interact()
 

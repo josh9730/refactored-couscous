@@ -9,7 +9,7 @@ Contains the following:
 
 ## MOP Directory
 
-Contains various MOP and Change document scripts:
+Contains various MOP and Change document scripts. See directory readme for more details.
 
 1. `mop.py`: Main program, uses jinja2 and Atlassian APIs to push to Confluence, Jira. Can also create a GCal event.
 2. `cd-gen.j2` and `mop-gen.j2`: Jinja2 to generate CDs and MOPs.

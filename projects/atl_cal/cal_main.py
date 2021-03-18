@@ -188,6 +188,7 @@ class CalendarStuff:
         start_iso = datetime(start_day.year, start_day.month, start_day.day, start_hour, start_min).isoformat()
         end_iso = datetime(start_day.year, start_day.month, start_day.day, end_hour, end_min).isoformat()
 
+        # create calendar dict to create event
         body = {
             'summary': title,
             'start': {
