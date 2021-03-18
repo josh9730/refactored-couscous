@@ -91,11 +91,15 @@ class CreateMOPs:
         #pylint: disable=no-member
         self.create_calendar_event()
         self.update_jira()
+        self.move_yaml()
 
     def update_confluence(self):
         """Create/Update Confluence page based on Title and parent page ID."""
 
         print(f'\tPushing to Confluence page: {self.page_title}\n')
+        f = open("test.txt", "w")
+        f.write(self.page_body)
+        f.close()
         self.confluence.page_update_wiki_format(self.parent_page_id, self.page_title, self.page_body)
 
     def update_jira(self):
@@ -122,6 +126,7 @@ class CreateMOPs:
     def move_yaml(self):
         """Copy YAML to repo"""
 
+        print(self.mop_file['mop_repo'] +  self.page_title + '.yaml')
         shutil.copy(self.mop_file['mop_directory'], self.mop_file['mop_repo'] +  self.page_title + '.yaml')
 
 

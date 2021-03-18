@@ -36,7 +36,6 @@ Jumper #{{ count.value }}:
         {% else %}
         Terminate: Yes
         {% endif %}
-
     Z Location:
         {% if j.zcage %}
         Cage: {{ j.zcage }}
@@ -64,7 +63,9 @@ Jumper #{{ count.value }}:
         {% else %}
         Terminate: Yes
         {% endif %}
-{% endfor %}{noformat:nopanel=true}{% endmacro -%}
+{% endfor %}
+
+{noformat}{% endmacro -%}
 
 {jira:key={{ ticket }}}
 
@@ -182,6 +183,8 @@ h2. Section {{ loop.index }} - {{ section }}
 {{ step[2] }}
 
 {code}
+{% elif header == 'note' %}
+** *NOTE:* {{ step }}
 
 {% endif %}
 {% endfor %}

@@ -6,9 +6,9 @@ Program to create, format, and push MOPs and Change Docs to Confluence & GCal. T
 
 The python script uses jinja templates to format the MOP input from the `mop.yaml` file. Pushes to Confluence automatically.
 
-## YAML Keys for Both
+## YAML Keys for Both MOP & Change Document
 
-1. `'ticket`: Ticket number related to the change. Should be full ticket, ie `COR-123` not just `123`.
+1. `ticket`: Ticket number related to the change. Should be full ticket, ie `COR-123` not just `123`.
 2. `page_title`: Title of the MOP/CD Confluence page
 3. `parent_page_id`: ID number of the *parent* Confluence page. You can get this by going to the parent page, clicking the ellipses and navigating to 'Page Information'. The ID will be the at the end of the URL. Example: https://documentation.cenic.org/pages/viewinfo.action?pageId=9653629 - the ID is 9653629.
 4. `mop_directory`: This is the folder in which `mop.yaml` lives. This is used for the copy feature, see below.
@@ -54,6 +54,7 @@ Uses the `mop-gen.j2` template. MOP specific items below:
         - `jumper`: Jumper formatting inside a 'no-format' box (note you could just use `cmd-rh` if you want to 'free-form' the jumper)
             - Each item in list is 'one jumper', example:
                 ```
+                - {{ INSTRUCTIONS FOR JUMPER RUNS }}
                 - acage: # Enter A Cage #
                   arack: # Enter A Rack #
                   adevice: # Enter A Device

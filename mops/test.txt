@@ -1,0 +1,100 @@
+{jira:key=NOC-}
+
+h1. === NOC Section ===
+
+h3. SUMMARY
+* Shutdown 100G between lax-agg6 and lax-agg8
+
+h3. CHANGE LEVEL
+Level 2
+
+h3. REMOTE HANDS REQUIRED
+LA2
+
+h3. EXECUTION:
+IS
+
+h3. REMOTE HANDS APPROVAL
+N/A
+
+h3. CLRs IMPACTED
+* CLR6996
+
+h3. ESCALATION
+Internet Services
+
+h3. PARTIAL ROLLBACK
+No
+
+h3. ROLLBACK STEPS:
+Rollback is reverse of MOP
+
+
+h1. === MOP START ===
+
+
+h4. Please call 714-220-3494 before starting and reference NOC-
+
+h2. Section 1 - Migrate CLR6996
+# *&#91;RH]* Retrieve CPAK-100G-SR4 from lax-agg6 Hu0/2/0/4 and QSFP28-SR4-100G from lax-agg8 Hu0/1/0/2 (ports are shutdown).
+# *&#91;RH]* Insert the QSFP28-SR4-100G into lax-agg10 port et-7/4/1
+# *&#91;RH]* Trace the jumper from LOSA1CA51T Shelf 3 Slot 2, and note the far end port. This is not documented in the CLR.
+# *&#91;RH]* Remove the jumper and optic from the 100G-CK-C card for CLR6996 in LOSA1CA51T Shelf 3 Slot 2.
+# *&#91;RH]* Move the 100G-CK-C card from LOSA1CA51T Shelf 3 Slot 2 -> LOSA1CA52T Shelf 1 Slot 14
+# *&#91;RH]* Insert the CPAK-100G-SR4 into the 100G-CK-C card.
+# *&#91;RH]* Run the following jumpers:
+{noformat:nopanel=true}
+Jumper #1:
+    A Location:
+        Cage: 310
+        Rack: 257
+        Device: LOSA1CA52T
+        Port: Shelf 1 Slot 14 Port 1 (CPAK)
+        Jumper: 10m MPO-12
+        Terminate: Yes
+    Z Location:
+        Cage: 310
+        Rack: 195
+        Device: CP:0303:1023270
+        Port: 20 Front (Equinix cross connect to Cage 180 in back)
+        Terminate: Yes
+
+Jumper #2:
+    A Location:
+        Cage: 310
+        Rack: 257
+        Device: LOSA1CA52T
+        Port: Shelf 1 Slot 14 Port 2 (trunk)
+        Jumper: 10m LC-LC SMF (verify with trace)
+        Terminate: Yes
+    Z Location:
+        Cage: 310
+        Rack: From fiber trace step
+        Device: From fiber trace step
+        Port: From fiber trace step
+        Terminate: Yes
+
+Jumper #3:
+    A Location:
+        Cage: 180
+        Rack: 69
+        Device: CP:0105:1023381
+        Port: 19 Front
+        Jumper: 3m MPO-12
+        Terminate: Yes
+    Z Location:
+        Cage: 180
+        Rack: 68
+        Device: lax-agg10
+        Port: et-7/4/1
+        Terminate: Yes
+
+{noformat}
+# *&#91;RH]* Place ports IS, and verify link comes up. Card has been pre-configured. IS to configure lax-agg10 et-7/4/1.
+
+h2. Cleanup
+# *&#91;RH]* Dispose of any remaining packaging materials in the racks.
+# *&#91;RH]* Remove and dispose of any and all un-terminated jumpers.
+# *&#91;RH]* Provide billable time.
+
+h1. === MOP END ===
