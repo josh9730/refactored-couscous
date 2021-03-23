@@ -117,14 +117,10 @@ h3. ROLLBACK STEPS:
 {% if pm %}
 h3. === PRE-MAINTENANCE ===
 {noformat:nopanel=true}
-{% for device,commands in pm.items() %}
-{% if not loop.first%}
+{% for i in pm %}
+{{ i }}
+{% endfor %}
 
-{% endif %}
-{{ device }}:
-{% for command in commands %}
-    {{ command }}
-{% endfor %}{% endfor %}
 {noformat}
 {% endif %}
 

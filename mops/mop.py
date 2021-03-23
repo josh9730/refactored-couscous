@@ -9,38 +9,29 @@ import argparse
 import pickle
 
 #pylint: disable=import-error
-sys.path.append('/Users/jdickman/Git/refactored-couscous/projects/atl_cal')
+sys.path.append('../projects/atl_cal')
 from atl_main import JiraStuff, ConfluenceStuff
 from cal_main import CalendarStuff
 
 
 class CreateMOPs:
 
-    def __init__(self):
+    def __init__(self, args):
         """Create MOP/CD pages, link to Jira and create Calendar event (if applicable)."""
 
-        with open('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
-            usernames = yaml.full_load(file)
-        username = usernames['cas']
+        with open("mop.yaml") as file:
+            self.mop_file = yaml.full_load(file)
 
+        if args.username:
+            username = args.username
+        else:
+            with open(self.mop_file['username_file_path']) as file2:
+                usernames = yaml.full_load(file2)
+            username = usernames['cas']
+
+        self.args = args
         self.jira = JiraStuff(username)
         self.confluence = ConfluenceStuff(username)
-
-    def main(self, args):
-        """Open YAML, launch child methods
-
-        Args:
-            args (str): either 'mop' or 'cd'
-        """
-
-        with open("mop.yaml") as file2:
-            self.mop_file = yaml.full_load(file2)
-
-        if args.mop_type == 'mop':
-            self.create_mop()
-
-        elif args.mop_type == 'cd':
-            self.create_cd()
 
     def test_vars(self):
         """Make sure variables are set in YAML"""
@@ -71,7 +62,7 @@ class CreateMOPs:
         self.page_body = template.render(self.mop_file)
 
         self.test_vars()
-        print(f'\n\tCreating MOP:\n\n\t\tTitle: {self.page_title}\n\t\tTicket: {self.ticket}\n\t\tJira Link: {self.mop_file["link"]}\n')
+        print(f'\n\tCreating MOP:\n\n\t\tTitle: {self.page_title}\n\t\tTicket: {self.ticket}\n\t\tJira Link: {self.args.link}\n')
 
         self.update_confluence()
         self.update_jira()
@@ -105,7 +96,7 @@ class CreateMOPs:
     def update_jira(self):
         """Create Jira links to Confluence page if YAML 'link' entry is true."""
 
-        if self.mop_file['link']:
+        if self.args.link:
 
             print(f'\tAdding link to {self.ticket}')
             self.jira.update_jira_link(self.ticket, self.page_title)
@@ -126,13 +117,21 @@ class CreateMOPs:
     def move_yaml(self):
         """Copy YAML to repo"""
 
-        print(self.mop_file['mop_repo'] +  self.page_title + '.yaml')
+        print(f'\tMoving YAML to storage: {self.mop_file["mop_repo"]}')
         shutil.copy(self.mop_file['mop_directory'], self.mop_file['mop_repo'] +  self.page_title + '.yaml')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate MOP and push to Confluence/Jira')
     parser.add_argument('mop_type', metavar='mop_type', choices=['mop', 'cd'], help='Type of document to create. Allowed values are \'mop\' and \'cd\'')
+    parser.add_argument('-u', '--username', metavar='username', help='CAS username')
+    parser.add_argument("-l", "--link", help="Create Jira Link", action="store_true")
     args = parser.parse_args()
 
-    CreateMOPs().main(args)
+    mops = CreateMOPs(args)
+
+    if args.mop_type == 'mop':
+        mops.create_mop()
+
+    elif args.mop_type == 'cd':
+        mops.create_cd()

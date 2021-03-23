@@ -1,27 +1,28 @@
-{jira:key=NOC-}
+{jira:key=NOC-633101}
 
 h1. === NOC Section ===
 
 h3. SUMMARY
-* Shutdown 100G between lax-agg6 and lax-agg8
+* Cut over UCB service from CLR-8040 to CLR-16569
 
 h3. CHANGE LEVEL
 Level 2
 
 h3. REMOTE HANDS REQUIRED
-LA2
+UCB
 
 h3. EXECUTION:
-IS
+NOC
 
 h3. REMOTE HANDS APPROVAL
-N/A
+NOC-610977
 
 h3. CLRs IMPACTED
-* CLR6996
+* CLR-8040
+* CLR-16569
 
 h3. ESCALATION
-Internet Services
+Deploying Engineer
 
 h3. PARTIAL ROLLBACK
 No
@@ -33,64 +34,63 @@ Rollback is reverse of MOP
 h1. === MOP START ===
 
 
-h4. Please call 714-220-3494 before starting and reference NOC-
+h4. Please call 714-220-3494 before starting and reference NOC-633101
 
-h2. Section 1 - Migrate CLR6996
-# *&#91;RH]* Retrieve CPAK-100G-SR4 from lax-agg6 Hu0/2/0/4 and QSFP28-SR4-100G from lax-agg8 Hu0/1/0/2 (ports are shutdown).
-# *&#91;RH]* Insert the QSFP28-SR4-100G into lax-agg10 port et-7/4/1
-# *&#91;RH]* Trace the jumper from LOSA1CA51T Shelf 3 Slot 2, and note the far end port. This is not documented in the CLR.
-# *&#91;RH]* Remove the jumper and optic from the 100G-CK-C card for CLR6996 in LOSA1CA51T Shelf 3 Slot 2.
-# *&#91;RH]* Move the 100G-CK-C card from LOSA1CA51T Shelf 3 Slot 2 -> LOSA1CA52T Shelf 1 Slot 14
-# *&#91;RH]* Insert the CPAK-100G-SR4 into the 100G-CK-C card.
-# *&#91;RH]* Run the following jumpers:
+h2. Section 1 - Turn up CLR-16569
+# *&#91;NOC]* Turn up new physical circuit by putting below interfaces into IS:
 {noformat:nopanel=true}
-Jumper #1:
-    A Location:
-        Cage: 310
-        Rack: 257
-        Device: LOSA1CA52T
-        Port: Shelf 1 Slot 14 Port 1 (CPAK)
-        Jumper: 10m MPO-12
-        Terminate: Yes
-    Z Location:
-        Cage: 310
-        Rack: 195
-        Device: CP:0303:1023270
-        Port: 20 Front (Equinix cross connect to Cage 180 in back)
-        Terminate: Yes
-
-Jumper #2:
-    A Location:
-        Cage: 310
-        Rack: 257
-        Device: LOSA1CA52T
-        Port: Shelf 1 Slot 14 Port 2 (trunk)
-        Jumper: 10m LC-LC SMF (verify with trace)
-        Terminate: Yes
-    Z Location:
-        Cage: 310
-        Rack: From fiber trace step
-        Device: From fiber trace step
-        Port: From fiber trace step
-        Terminate: Yes
-
-Jumper #3:
-    A Location:
-        Cage: 180
-        Rack: 69
-        Device: CP:0105:1023381
-        Port: 19 Front
-        Jumper: 3m MPO-12
-        Terminate: Yes
-    Z Location:
-        Cage: 180
-        Rack: 68
-        Device: lax-agg10
-        Port: et-7/4/1
-        Terminate: Yes
+UCB1CA80TA1 Slot 7 MR-MXP -> Provisioning -> Line -> Select IS
+EMVL1CA80TA1 Slot 5 MR-MXP -> Provisioning -> Line -> Select IS
 
 {noformat}
-# *&#91;RH]* Place ports IS, and verify link comes up. Card has been pre-configured. IS to configure lax-agg10 et-7/4/1.
+# *&#91;NOC]* Turn up router intefaces, ensure IP connectivity with UCB interface:
+{noformat:nopanel=true}
+oak-agg8
+conf
+int HundredGigE0/1/0/17
+no shut
+show comm ch d
+commit
+
+{noformat}
+# *&#91;NOC]* Turn up new BGP peering, provide BGP password to UCB. Check received routes against pre-maintenance:
+{noformat:nopanel=true}
+conf
+router bgp 2152 neighbor 137.164.3.27
+no shut
+router bgp 2152 neighbor 2607:f380::118:9a40:31b1
+no shut
+show comm ch d
+commit
+end
+show bgp neighbor 137.164.3.27 routes
+
+{noformat}
+
+h2. Section 2 - Shut down CLR-8040
+# *&#91;NOC]* Shut down old BGP peering and interfaces:
+{noformat:nopanel=true}
+conf
+router bgp 2152 neighbor 137.164.50.31
+shut
+bgp 2152 neigh 2607:f380:1::118:9a43:21f1
+shut
+interface TenGigE0/0/0/18/0
+shut
+interface TenGigE0/0/0/18/1
+shut
+int BE11
+shut
+show comm ch d
+commit
+
+{noformat}
+
+h2. Section 3 - Verification
+# *&#91;NOC]* Ensure routing is working for the advertised subnets
+
+h2. Section 4 - Post-maintenance
+# *&#91;NOC]* Start ops readiness for CLR-16569
 
 h2. Cleanup
 # *&#91;RH]* Dispose of any remaining packaging materials in the racks.
