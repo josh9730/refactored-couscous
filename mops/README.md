@@ -102,6 +102,11 @@ Uses the `mop-gen.j2` template. MOP specific items below:
                 ```
         - `expand-noc`, `expand-core`: Instructions for NOC, Core inside a collapsable `code block`. Useful for long configs. Do not use for RH-specific instructions as they will not see items inside a collapsed box.
             - Same format as `cmd-` but with a collapsable box instead
+        - `note`: Adds a bulleted section below the previous line. Example:
+          ```yaml
+          - rh: Do a thing
+          - note: Don't forget about this other thing
+          ```
 
 #### Examples
 
@@ -140,19 +145,11 @@ Uses the `mop-gen.j2` template. MOP specific items below:
           - |-
               cor-dis-sw-1
               cor-agg3
-              cor-agg-sw-1
-              cor-agg4
-              cor-agg2
-              NLR 15808
       - cmd-noc:
         - Do these configs
         - |-
-            oak-agg8
-            conf
-            int HundredGigE0/1/0/17
-            no shut
-            show comm ch d
-            commit
+            oak-agg8:
+              show interface description
       - jumper:
         - Run the following jumpers
         - acage: 310
@@ -179,17 +176,8 @@ Uses the `mop-gen.j2` template. MOP specific items below:
           riv-agg8:
             address-family ipv4 unicast
             address-family ipv4 multicast
-            address-family ipv6 unicast
-            address-family ipv4 multicast
-            address-family vpnv4 unicast
-            address-family vpnv4 multicast
-            address-family vpnv6 unicast
-            address-family vpnv6 multicast
-            address-family ipv4 mvpn
-            address-family ipv6 mvpn
-            address-family ipv4 rt-filter
-            address-family l2vpn evpn
       - noc: Verify services
+      - note: Don't forget about things
       - rh: Provide billable time.
 ```
 

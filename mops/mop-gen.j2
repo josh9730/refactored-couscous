@@ -1,5 +1,19 @@
 {% set count = namespace(value=1) -%}
 
+{% macro expand(header, steps_list) %}
+# *&#91;{{ header }}]* {{ steps_list[0] }}:
+{code:title=CLICK TO EXPAND|linenumbers=true|language=text|collapse=true}
+{{ steps_list[1] }}
+
+{code}{% endmacro -%}
+
+{% macro cmd(header, steps_list) %}
+# *&#91;{{ header }}]* {{ steps_list[0] }}:
+{noformat:nopanel=true}
+{{ steps_list[1] }}
+
+{noformat}{% endmacro -%}
+
 {% macro jumpers(step) -%}
 # *&#91;RH]* {{ step[0] }}:
 {noformat:nopanel=true}
@@ -12,56 +26,38 @@ Jumper #{{ count.value }}:
     A Location:
         {% if j.acage %}
         Cage: {{ j.acage }}
-        {% endif %}
-        {% if j.arack %}
+        {% endif %}{% if j.arack %}
         Rack: {{ j.arack }}
-        {% endif %}
-        {% if j.adevice %}
+        {% endif %}{% if j.adevice %}
         Device: {{ j.adevice }}
-        {% endif %}
-        {% if j.acid %}
+        {% endif %}{% if j.acid %}
         CID: {{ j.acid }}
-        {% endif %}
-        {% if j.aport %}
+        {% endif %}{% if j.aport %}
         Port: {{ j.aport }}
-        {% endif %}
-        {% if j.acable %}
+        {% endif %}{% if j.acable %}
         Jumper: {{ j.acable}}
-        {% endif %}
-        {% if j.label %}
+        {% endif %}{% if j.label %}
         Label: {{ j.label }}
         {% endif %}
-        {% if j.aterm == 'No' %}
-        Terminate: No
-        {% else %}
-        Terminate: Yes
+        Terminate: {% if j.aterm == 'No' %}No{% else %}Yes
         {% endif %}
     Z Location:
         {% if j.zcage %}
         Cage: {{ j.zcage }}
-        {% endif %}
-        {% if j.zrack %}
+        {% endif %}{% if j.zrack %}
         Rack: {{ j.zrack }}
-        {% endif %}
-        {% if j.zdevice %}
+        {% endif %}{% if j.zdevice %}
         Device: {{ j.zdevice }}
-        {% endif %}
-        {% if j.zcid %}
+        {% endif %}{% if j.zcid %}
         CID: {{ j.zcid }}
-        {% endif %}
-        {% if j.zport %}
+        {% endif %}{% if j.zport %}
         Port: {{ j.zport }}
-        {% endif %}
-        {% if j.zcable %}
+        {% endif %}{% if j.zcable %}
         Jumper: {{ j.zcable }}
-        {% endif %}
-        {% if j.label %}
+        {% endif %}{% if j.label %}
         Label: {{ j.label }}
         {% endif %}
-        {% if j.zterm == 'No' %}
-        Terminate: No
-        {% else %}
-        Terminate: Yes
+        Terminate: {% if j.aterm == 'No' %}No{% else %}Yes
         {% endif %}
 {% endfor %}
 
@@ -144,44 +140,24 @@ h2. Section {{ loop.index }} - {{ section }}
 {% if header == 'rh' %}
 # *&#91;RH]* {{ step }}
 {% elif header == 'cmd-rh' %}
-# *&#91;RH]* {{ step[0] }}:
-{noformat:nopanel=true}
-{{ step[1] }}
-
-{noformat}
+{{ cmd('RH', step) }}
 {% elif header == 'noc' %}
 # *&#91;NOC]* {{ step }}
 {% elif header == 'jumper' %}
 {{ jumpers(step) }}
 {% elif header == 'cmd-noc' %}
-# *&#91;NOC]* {{ step[0] }}:
-{noformat:nopanel=true}
-{{ step[1] }}
-
-{noformat}
+{{ cmd('NOC', step) }}
 {% elif header == 'expand-noc' %}
-# *&#91;NOC]* {{ step[0] }}:
-{code:title={{ step[1]|upper }}|linenumbers=true|language=text|collapse=true}
-{{ step[2] }}
-
-{code}
+{{ expand('NOC', step) }}
 {% elif header == 'core' %}
 # *&#91;CORE]* {{ step }}
 {% elif header == 'cmd-core' %}
 # *&#91;CORE]* {{ step[0] }}:
-{noformat:nopanel=true}
-{{ step[1] }}
-
-{noformat}
+{{ cmd('CORE', step) }}
 {% elif header == 'expand-core' %}
-# *&#91;CORE]* {{ step[0] }}:
-{code:title={{ step[1]|upper }}|linenumbers=true|language=text|collapse=true}
-{{ step[2] }}
-
-{code}
+{{ expand('CORE', step) }}
 {% elif header == 'note' %}
 ** *NOTE:* {{ step }}
-
 {% endif %}
 {% endfor %}
 {% endfor %}
