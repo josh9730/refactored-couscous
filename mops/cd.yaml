@@ -1,0 +1,128 @@
+---
+username_file_path: /Users/jdickman/Git/refactored-couscous/usernames.yml
+mop_repo: '/Users/jdickman/Git/1 - Docs/MOPs/YAML/'
+
+ticket: COR-1369
+page_title: L2 Guest Wifi Services
+parent_page_id: 9653629
+summary:
+ - Configure L2 services for LaM Guest Wifi
+# times must be string, start_day must be either 'today' or in YYYY-MM-DD format
+start_time: 1700
+end_time: 1900
+start_day: today
+calendar: false
+changes:
+  - lam-gw-1:
+    - |-
+      vlan 602
+      !
+      interface Te5/0/1
+        switchport trunk allowed vlan add 602
+      !
+      interface vlan 602
+        vrf forwarding ent
+        description L2 to tus-fw-2
+      !
+  - tus-agg8-sw-1:
+    - |-
+      vlan id 602
+      !
+      int e1/12
+        switchport trunk allowed vlan add 602
+      !
+      int e1/49/1
+        switchport trunk allowed vlan add 602
+  - tus-agg8:
+    - |-
+      interface te0/0/0/0/0.602 l2transport
+        encap dot1q 602
+        description LXC LaM Guest Wifi - lam-gw-1
+      !
+      interface te0/1/0/18/3.602 l2transport
+        encap dot1q 602
+        description LXC LaM Guest WiFi - tus-cenic-sw-1
+      !
+      interface te0/0/0/28/3.603 l2transport
+        encap dot1q 603
+        description ENT ELINE LaM Guest Wifi - lam-gw-2
+      !
+      l2vpn
+        xconnect group ent-guest-wifi
+          p2p lam-gw-1--tus-cenic-sw-1
+            interface te0/0/0/0/0.602
+            interface te0/0/0/18/3.602
+        xconnect group ent-eline-guestwifi
+          p2p tus-agg8--lax-agg10
+           interface te0/0/0/28/3.603
+           neighbor evpn evi 603 target 1 source 2
+      !
+      evpn
+       evi 603
+        bgp
+         route-target import 2152:1001
+         route-target export 2152:1001
+        !
+        control-word-disable
+      !
+  - tus-cenic-sw-1:
+    - |-
+      vlan 602
+      !
+      interface e1/37
+        switchport trunk allowed vlan add 602
+      !
+      interface e1/33
+        switchport trunk allowed vlan add 602
+      !
+  - lam-gw-2:
+    - |-
+      vlan 603
+      !
+      vrf definition ent
+        rd auto
+        address-family ipv4
+        exit-address-family
+      !
+      interface vlan 603
+        vrf forwarding ent
+        description L2 to forwarding to tus-fw-2
+      !
+      interface Te5/0/1
+        switchport trunk allowed vlan add 603
+      !
+  - lax-agg-sw-4:
+    - |-
+      vlan 603
+      !
+      interface e1/14
+        switchport trunk allowed vlan add 603
+      !
+      interface e1/54
+        description [an:l2agg][an:core] 100G ASI to lax-agg10 et-6/1/2 CLR-16320
+        switchport trunk allowed vlan add 603
+      !
+  - lax-agg10:
+    - |-
+      [edit interfaces et-6/1/2]
+      +    unit 603 {
+      +        encapsulation vlan-ccc;
+      +        vlan-id 603;
+      +    }
+      [edit routing-instances]
+      +   ent-eline-guestwifi {
+      +       instance-type evpn-vpws;
+      +       protocols {
+      +           evpn {
+      +               interface et-6/1/2.603 {
+      +                   vpws-service-id {
+      +                       local 1;
+      +                       remote 2;
+      +                   }
+      +               }
+      +           }
+      +       }
+      +       interface et-6/1/2.603;
+      +       route-distinguisher 137.164.16.6:0;
+      +       vrf-target target:2152:1001;
+      +   }

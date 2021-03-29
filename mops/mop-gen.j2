@@ -115,8 +115,8 @@ h3. === PRE-MAINTENANCE ===
 {noformat:nopanel=true}
 {% for i in pm %}
 {{ i }}
-{% endfor %}
 
+{% endfor %}
 {noformat}
 {% endif %}
 
@@ -130,8 +130,9 @@ h4. SHIPPING
 - Fedex #{{ tracking }}
 
 {% endfor %}{% endfor %}{% endif %}
-
+{% if rh[0] %}
 h4. Please call 714-220-3494 before starting and reference {{ ticket }}
+{% endif %}
 
 {% for section, step_dict in sections.items() %}
 h2. Section {{ loop.index }} - {{ section }}

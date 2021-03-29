@@ -1,61 +1,57 @@
 ---
 username_file_path: /Users/jdickman/Git/refactored-couscous/usernames.yml
-mop_directory: '/Users/jdickman/Git/refactored-couscous/mops/mop.yaml'
 mop_repo: '/Users/jdickman/Git/1 - Docs/MOPs/YAML/'
 
-ticket: COR-1303
-page_title: Testing
-parent_page_id: 9659366
+ticket: NOC-645167
+page_title: Inland Code Upgrades - 10.302 WSON Activation
+parent_page_id: 8906572
 summary:
- - Cut over UCB service from CLR-8040 to CLR-16569
+ - Upgrade Route 51 nodes to 10.302 WSON
 level:
- - 2
+ - 1
 rh:
- - UCB
+ - 
 exec:
  - NOC
 approval:
- - NOC-610977
+ - 
 impact:
- - CLR-8040
- - CLR-16569
+ - None
 escalation:
  - 'Deploying Engineer'
 p_rollback:
  - 'No'
 rollback:
- - Rollback is reverse of MOP
+ - Code upgrades switch Active & Protect versions. If needed, 'Revert' to the old code version to rollback.
 pm:
+  - |-
+    Alarms / Conditions for the Route:
+      Network View -> Alarms -> Export
+      Network View -> Conditions -> Export
+      Upload to ticket
+  - |-
+    All Facilities per Node
+      Node View -> Maintenance -> All Facilities
+      Click File -> Export
+      Upload to ticket
+  - |-
+    Backup database per Node
+      Node View -> Maintenance -> Database -> Backup
+      Upload to ticket
+
 shipping:
 sections:
- 'Turn up CLR-16569':
-    - cmd-noc:
-      - Turn up new physical circuit by putting below interfaces into IS
-      - |-
-          UCB1CA80TA1 Slot 7 MR-MXP -> Provisioning -> Line -> Select IS
-          EMVL1CA80TA1 Slot 5 MR-MXP -> Provisioning -> Line -> Select IS
-    - expand-core:
-      - do some stuff
-      - |-
-        - commands
-    - jumper:
-      - Run the following jumpers
-      - acage: 310
-        arack: 0401
-        adevice: LOSA1CA52T
-        aport: Shelf 1 Slot 14 Port 1 (CPAK)
-        acable: 10m MPO-12
-        zcage: 310
-        zrack: 0303
-        zdevice: CP:0303:1023270
-        zport: 20 Front (Equinix cross connect to Cage 180 in back)
-    - noc: do things
-    - note: remember things
+ 'Upgrade Code':
+    - noc: Multiple windows are reserved for upgrading the route.
+    - noc: Login to CTC and navigate to the Network View -> Maintenance -> Software
+    - noc: Select each node and click 'activate', one by one, to upgrade.
+    - noc: After each node finishes upgrading, verify no alarms and move on to the next node (upgrade one node at a time).
+    - noc: Check All Facilities per node and Alarms/Conditions for the Network and compare to pre-maintenance.
 
 
-# must handle ':' inside string
 
-# Reset
+
+    # Reset
   # ticket: 
   # page_title: 
   # parent_page_id: 

@@ -1,77 +1,126 @@
-{jira:key=COR-1303}
+{jira:key=COR-1369}
 
-h1. === NOC Section ===
+h2. SUMMARY
+* Configure L2 services for LaM Guest Wifi
 
-h3. SUMMARY
-* Cut over UCB service from CLR-8040 to CLR-16569
-
-h3. CHANGE LEVEL
-Level 2
-
-h3. REMOTE HANDS REQUIRED
-UCB
-
-h3. EXECUTION:
-NOC
-
-h3. REMOTE HANDS APPROVAL
-NOC-610977
-
-h3. CLRs IMPACTED
-* CLR-8040
-* CLR-16569
-
-h3. ESCALATION
-Deploying Engineer
-
-h3. PARTIAL ROLLBACK
-No
-
-h3. ROLLBACK STEPS:
-Rollback is reverse of MOP
-
-
-h1. === MOP START ===
-
-
-h4. Please call 714-220-3494 before starting and reference COR-1303
-
-h2. Section 1 - Turn up CLR-16569
-# *&#91;NOC]* Turn up new physical circuit by putting below interfaces into IS:
-{noformat:nopanel=true}
-UCB1CA80TA1 Slot 7 MR-MXP -> Provisioning -> Line -> Select IS
-EMVL1CA80TA1 Slot 5 MR-MXP -> Provisioning -> Line -> Select IS
-
-{noformat}
-# *&#91;CORE]* do some stuff:
-{code:title=CLICK TO EXPAND|linenumbers=true|language=text|collapse=true}
-- commands
+h2. CHANGES
+{code:title=LAM-GW-1|linenumbers=true|language=text|collapse=true}
+vlan 602
+!
+interface Te5/0/1
+  switchport trunk allowed vlan add 602
+!
+interface vlan 602
+  vrf forwarding ent
+  description L2 to tus-fw-2
+!
 
 {code}
-# *&#91;RH]* Run the following jumpers:
-{noformat:nopanel=true}
-Jumper #1:
-    A Location:
-        Cage: 310
-        Rack: 257
-        Device: LOSA1CA52T
-        Port: Shelf 1 Slot 14 Port 1 (CPAK)
-        Jumper: 10m MPO-12
-        Terminate: Yes
-    Z Location:
-        Cage: 310
-        Rack: 195
-        Device: CP:0303:1023270
-        Port: 20 Front (Equinix cross connect to Cage 180 in back)
-        Terminate: Yes
+{code:title=TUS-AGG8-SW-1|linenumbers=true|language=text|collapse=true}
+vlan id 602
+!
+int e1/12
+  switchport trunk allowed vlan add 602
+!
+int e1/49/1
+  switchport trunk allowed vlan add 602
 
-{noformat}
-# *&#91;NOC]* do things
-** *NOTE:* remember things
+{code}
+{code:title=TUS-AGG8|linenumbers=true|language=text|collapse=true}
+interface te0/0/0/0/0.602 l2transport
+  encap dot1q 602
+  description LXC LaM Guest Wifi - lam-gw-1
+!
+interface te0/1/0/18/3.602 l2transport
+  encap dot1q 602
+  description LXC LaM Guest WiFi - tus-cenic-sw-1
+!
+interface te0/0/0/28/3.603 l2transport
+  encap dot1q 603
+  description ENT ELINE LaM Guest Wifi - lam-gw-2
+!
+l2vpn
+  xconnect group ent-guest-wifi
+    p2p lam-gw-1--tus-cenic-sw-1
+      interface te0/0/0/0/0.602
+      interface te0/0/0/18/3.602
+  xconnect group ent-eline-guestwifi
+    p2p tus-agg8--lax-agg10
+     interface te0/0/0/28/3.603
+     neighbor evpn evi 603 target 1 source 2
+!
+evpn
+ evi 603
+  bgp
+   route-target import 2152:1001
+   route-target export 2152:1001
+  !
+  control-word-disable
+!
 
-h2. Cleanup
-# *&#91;RH]* Dispose of any remaining packaging materials in the racks.
-# *&#91;RH]* Remove and dispose of any and all un-terminated jumpers.
-# *&#91;RH]* Provide billable time.
+{code}
+{code:title=TUS-CENIC-SW-1|linenumbers=true|language=text|collapse=true}
+vlan 602
+!
+interface e1/37
+  switchport trunk allowed vlan add 602
+!
+interface e1/33
+  switchport trunk allowed vlan add 602
+!
 
-h1. === MOP END ===
+{code}
+{code:title=LAM-GW-2|linenumbers=true|language=text|collapse=true}
+vlan 603
+!
+vrf definition ent
+  rd auto
+  address-family ipv4
+  exit-address-family
+!
+interface vlan 603
+  vrf forwarding ent
+  description L2 to forwarding to tus-fw-2
+!
+interface Te5/0/1
+  switchport trunk allowed vlan add 603
+!
+
+{code}
+{code:title=LAX-AGG-SW-4|linenumbers=true|language=text|collapse=true}
+vlan 603
+!
+interface e1/14
+  switchport trunk allowed vlan add 603
+!
+interface e1/54
+  description [an:l2agg][an:core] 100G ASI to lax-agg10 et-6/1/2 CLR-16320
+  switchport trunk allowed vlan add 603
+!
+
+{code}
+{code:title=LAX-AGG10|linenumbers=true|language=text|collapse=true}
+[edit interfaces et-6/1/2]
++    unit 603 {
++        encapsulation vlan-ccc;
++        vlan-id 603;
++    }
+[edit routing-instances]
++   ent-eline-guestwifi {
++       instance-type evpn-vpws;
++       protocols {
++           evpn {
++               interface et-6/1/2.603 {
++                   vpws-service-id {
++                       local 1;
++                       remote 2;
++                   }
++               }
++           }
++       }
++       interface et-6/1/2.603;
++       route-distinguisher 137.164.16.6:0;
++       vrf-target target:2152:1001;
++   }
+
+{code}
