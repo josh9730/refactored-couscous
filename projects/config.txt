@@ -1,0 +1,122 @@
+ipv4 access-list deny-all
+ 10 deny ipv4 any any
+!
+route-policy pass-all
+  pass
+end-policy
+!
+route-policy bgp-import-ipvpn
+  apply bgp-import-locpref
+  pass
+end-policy
+!
+route-policy rpf-mldp-default
+  set core-tree mldp-default
+end-policy
+!
+route-policy bgp-import-locpref
+  if community matches-any (2152:90) then
+    set local-preference 90
+  endif
+  if community matches-any (2152:80) then
+    set local-preference 80
+  endif
+  if community matches-any (2152:70) then
+    set local-preference 70
+  endif
+end-policy
+!
+mpls traffic-eng
+!
+mpls ldp
+ mldp
+  address-family ipv4
+  !
+ !
+ address-family ipv4
+  label
+   local
+    allocate for deny-all
+   !
+  !
+ !
+ interface be30.2315
+ !
+ interface be22.2306
+ !
+ interface be26.2311
+ !
+ interface be2
+ !
+ !
+ interface be24.2308
+ !
+!
+router isis 2152
+ address-family ipv4 unicast
+  mpls traffic-eng router-id Loopback0
+  segment-routing mpls
+ address-family ipv6 unicast
+  segment-routing mpls
+ interface Loopback0
+  address-family ipv4 unicast
+   prefix-sid index 2 explicit-null
+  address-family ipv6 unicast
+   prefix-sid index 3 explicit-null
+ !
+ interface be30.2315
+  address-family ipv4 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+ interface be22.2306
+  address-family ipv4 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+ interface be26.2311
+  address-family ipv4 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+ interface be2
+  address-family ipv4 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+ interface te0/0/0/1/0
+  address-family ipv4 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+ interface be24.2308
+  address-family ipv4 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+ !
+!

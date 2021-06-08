@@ -3,7 +3,8 @@ from lastpass import Vault
 import keyring
 import re
 import argparse
-
+import yaml
+import os
 
 class GetLP:
 
@@ -20,8 +21,12 @@ class GetLP:
 
     def __init__(self):
 
-        self.username = 'jdickman@cenic.org'
-        self.first_factor = keyring.get_password("lp_pass", 'jdickman')
+        script_dir = os.path.dirname(__file__)
+        with open(os.path.join(script_dir, 'usernames.yml')) as file:
+            username = yaml.full_load(file)['cas']
+
+        self.username = f'{username}@cenic.org'
+        self.first_factor = keyring.get_password("lp_pass", username)
         otp_secret = keyring.get_password("lp", self.username)
         self.otp = pyotp.TOTP(otp_secret)
 

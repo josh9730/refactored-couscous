@@ -111,14 +111,14 @@ h3. ROLLBACK STEPS:
 {% endif %}
 
 {% if pm %}
-h3. === PRE-MAINTENANCE ===
+h3. PRE-MAINTENANCE
 {noformat:nopanel=true}
-{% for i in pm %}
+{%- for i in pm %}
 {{ i }}
 
 {% endfor %}
 {noformat}
-{% endif %}
+{% endif -%}
 
 h1. === MOP START ===
 
@@ -137,7 +137,7 @@ h4. Please call 714-220-3494 before starting and reference {{ ticket }}
 {% for section, step_dict in sections.items() %}
 h2. Section {{ loop.index }} - {{ section }}
 {% for i in step_dict %}
-{% for header, step in i.items() %}
+{%- for header, step in i.items() -%}
 {% if header == 'rh' %}
 # *&#91;RH]* {{ step }}
 {% elif header == 'cmd-rh' %}
@@ -153,7 +153,6 @@ h2. Section {{ loop.index }} - {{ section }}
 {% elif header == 'core' %}
 # *&#91;CORE]* {{ step }}
 {% elif header == 'cmd-core' %}
-# *&#91;CORE]* {{ step[0] }}:
 {{ cmd('CORE', step) }}
 {% elif header == 'expand-core' %}
 {{ expand('CORE', step) }}
@@ -166,9 +165,13 @@ h2. Section {{ loop.index }} - {{ section }}
 {% endfor %}
 {% if rh[0] %}
 h2. Cleanup
-# *&#91;RH]* Dispose of any remaining packaging materials in the racks.
-# *&#91;RH]* Remove and dispose of any and all un-terminated jumpers.
-# *&#91;RH]* Provide billable time.
+# *&#91;RH]* Remove and dispose of any jumpers that were disconnected as a result of the maintenance.
+#* Do not remove any inter-cage cross connects.
+# *&#91;RH]* Dispose of any empty boxes or other packaging materials leftover.
+# *&#91;NOC , CORE]* Open Post-Maintenance child ticket using the template [HERE|https://documentation.cenic.org/display/Operations/Post+Maintenance+Checklist]
+#* If NOC is involved in the maintenance, NOC will open Post-Maintenance ticket
+#* If NOC is NOT involved in the maintenance, Core will open Post-Maintenance ticket
+#* Core is responsible for updating CLRs & port tags for Core Executed changes
 {% endif %}
 
 h1. === MOP END ===

@@ -5,14 +5,16 @@ import argparse
 import datetime
 import yaml
 import sys
+import os
+
+script_dir = os.path.dirname(__file__)
+sys.path.append(os.path.join(script_dir, 'projects/atl_cal'))
 
 #pylint: disable=import-error
-sys.path.append('/Users/jdickman/Git/refactored-couscous/projects/atl_cal')
 from atl_main import JiraStuff
 from cal_main import CalendarStuff
 
-
-with open('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
+with open(os.path.join(script_dir, 'usernames.yml')) as file:
     data = yaml.full_load(file)
 
 parser = argparse.ArgumentParser(description='Manually run scheduled Jira tasks.')

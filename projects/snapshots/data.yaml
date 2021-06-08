@@ -1,12 +1,26 @@
 ---
-ticket: NOC-600100
+ticket: NOC-647244
 pre_file_path: 'output_pre.json'
 post_file_path: 'output_post.json'
 check_type: device
 device:
-  # - svl-agg10|junos
+  - lax-agg8|iosxr
   - lax-agg10|junos
   - riv-agg8|iosxr
+  # - svl-agg8|iosxr
+  - svl-agg10|junos
+  - tus-agg8|iosxr
+  - sdg-agg4|iosxr
+  - sfo-agg4|iosxr
+  - slo-agg4|iosxr
+  - sol-agg4|junos
+  - pdc-agg1|junos
+  - bak-agg6|junos
+  - fre-agg4|iosxr
+  - frg-agg4|iosxr
+  - sac-agg4|iosxr
+  - cor-agg8|junos
+  - tri-agg2|iosxr
 circuit:
   # riv-agg8|iosxr:
   #   CLR-7620:

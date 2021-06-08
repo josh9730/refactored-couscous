@@ -47,7 +47,10 @@ def main(args):
     hex_c = v4_hex[5:len(v4_hex)]
 
     # convert mask v4 -> v6
-    final_mask = str(mask + 92)
+    if mask == 32:
+        final_mask = '128'
+    else:
+        final_mask = str(mask + 92)
 
     # create IPv6 string
     joined_ip = f"2607:F380:000{int_ext}:0:0:01{network}{hex_a}:{hex_b}:{hex_c}1"

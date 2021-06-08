@@ -1,0 +1,88 @@
+
+{code:title={{ hostname.upper() }}|linenumbers=true|language=text|collapse=true}
+
+--- LOAD MERGE
+
+ipv4 access-list deny-all
+ 10 deny ipv4 any any
+!
+route-policy pass-all
+  pass
+end-policy
+!
+route-policy bgp-import-ipvpn
+  apply bgp-import-locpref
+  pass
+end-policy
+!
+route-policy rpf-mldp-default
+  set core-tree mldp-default
+end-policy
+!
+route-policy bgp-import-locpref
+  if community matches-any (2152:90) then
+    set local-preference 90
+  endif
+  if community matches-any (2152:80) then
+    set local-preference 80
+  endif
+  if community matches-any (2152:70) then
+    set local-preference 70
+  endif
+end-policy
+!
+mpls traffic-eng
+!
+mpls ldp
+ mldp
+  address-family ipv4
+  !
+ !
+ address-family ipv4
+  label
+   local
+    allocate for deny-all
+   !
+  !
+ !
+{% for i in interfaces %}
+ interface {{ i.split('|')[0] }}
+ !
+{% endfor %}
+!
+router isis 2152
+ address-family ipv4 unicast
+  mpls traffic-eng router-id Loopback0
+  segment-routing mpls
+ address-family ipv6 unicast
+  segment-routing mpls
+ interface Loopback0
+  address-family ipv4 unicast
+   prefix-sid index {{ v4_index }} explicit-null
+  address-family ipv6 unicast
+   prefix-sid index {{ v4_index + 1 }} explicit-null
+ !
+{% for i in interfaces %}
+ interface {{ i.split('|')[0] }}
+  address-family ipv4 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+  address-family ipv6 unicast
+   fast-reroute per-prefix
+   fast-reroute per-prefix ti-lfa
+  !
+{% endfor %}
+ !
+!
+
+--- VERIFICATION
+
+{% for i in interfaces %}
+show mpls interfaces {{ i.split('|')[0] }} detail
+{% endfor %}
+show isis instance 2152 protocol | in SRGB
+show isis instance 2152 segment-routing label table
+show isis instance 2152 database verbose {{ hostname }} | in "Index|Segment"
+
+{code}

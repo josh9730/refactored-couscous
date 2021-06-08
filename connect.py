@@ -4,6 +4,7 @@ import keyring
 import argparse
 import time
 import yaml
+import os
 from lp import GetLP
 
 
@@ -11,7 +12,8 @@ class LoginInteract:
 
     def __init__(self, args=None):
 
-        with open('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
+        script_dir = os.path.dirname(__file__)
+        with open(os.path.join(script_dir, 'usernames.yml')) as file:
             usernames = yaml.full_load(file)
         self.username = usernames['mfa']
 

@@ -2,11 +2,11 @@
 username_file_path: /Users/jdickman/Git/refactored-couscous/usernames.yml
 mop_repo: '/Users/jdickman/Git/1 - Docs/MOPs/YAML/'
 
-ticket: NOC-645167
-page_title: Inland Code Upgrades - 10.302 WSON Activation
+ticket: NOC-650096
+page_title: Inland Code Upgrades - 10.611 WSON Activation
 parent_page_id: 8906572
 summary:
- - Upgrade Route 51 nodes to 10.302 WSON
+ - Upgrade Route 51 nodes to 10.611 WSON
 level:
  - 1
 rh:
@@ -47,47 +47,3 @@ sections:
     - noc: Select each node and click 'activate', one by one, to upgrade.
     - noc: After each node finishes upgrading, verify no alarms and move on to the next node (upgrade one node at a time).
     - noc: Check All Facilities per node and Alarms/Conditions for the Network and compare to pre-maintenance.
-
-
-
-
-    # Reset
-  # ticket: 
-  # page_title: 
-  # parent_page_id: 
-  # link: false
-  # summary:
-  #   - 
-
-  # cd:
-  #   start_time:
-  #   end_time: 
-  #   start_day: today
-  #   cd:
-  #     - |-
-  #       TEST
-
-  # level:
-  #   - 
-  # rh:
-  #   - 
-  # exec:
-  #   - 
-  # approval:
-  #   - 
-  # impact:
-  #   - 
-  # escalation:
-  #   - 'Deploying Engineer'
-  # p_rollback:
-  #   - 'No'
-  # rollback:
-  #   - Rollback is reverse of MOP
-  # pm:
-
-  # shipping:
-
-  # sections:
-
-
-

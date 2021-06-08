@@ -89,9 +89,6 @@ class CreateMOPs:
         """Create/Update Confluence page based on Title and parent page ID."""
 
         print(f'\tPushing to Confluence page: {self.page_title}\n')
-        f = open("test.txt", "w")
-        f.write(self.page_body)
-        f.close()
         self.confluence.page_update_wiki_format(self.parent_page_id, self.page_title, self.page_body)
 
     def update_jira(self):

@@ -1,10 +1,12 @@
 import paramiko
 import yaml
+import os
 from lp import GetLP
 
 def main():
 
-    with open('/Users/jdickman/Git/refactored-couscous/usernames.yml') as file:
+    script_dir = os.path.dirname(__file__)
+    with open(os.path.join(script_dir, 'usernames.yml')) as file:
         usernames = yaml.full_load(file)
 
     username = usernames['cas']

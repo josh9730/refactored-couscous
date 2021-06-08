@@ -6,6 +6,7 @@ import xmltodict
 import re
 import textfsm
 import tempfile
+from collections import OrderedDict
 
 
 def etree_to_dict(etree_data):
@@ -596,7 +597,7 @@ class ParseData:
 
         id_name_dict = {}
         full_path = data['rpc-reply']['data']['isis']['instances']['instance']
-        if type(full_path) == dict:
+        if isinstance(full_path, dict):
 
             for neighbor in full_path['host-names']['host-name']:
                 id_name_list  = list(neighbor.values())

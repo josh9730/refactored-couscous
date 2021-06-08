@@ -1,126 +1,13 @@
 {jira:key=COR-1369}
 
 h2. SUMMARY
-* Configure L2 services for LaM Guest Wifi
+* Update lax-agg10 RD
 
 h2. CHANGES
-{code:title=LAM-GW-1|linenumbers=true|language=text|collapse=true}
-vlan 602
-!
-interface Te5/0/1
-  switchport trunk allowed vlan add 602
-!
-interface vlan 602
-  vrf forwarding ent
-  description L2 to tus-fw-2
-!
-
-{code}
-{code:title=TUS-AGG8-SW-1|linenumbers=true|language=text|collapse=true}
-vlan id 602
-!
-int e1/12
-  switchport trunk allowed vlan add 602
-!
-int e1/49/1
-  switchport trunk allowed vlan add 602
-
-{code}
-{code:title=TUS-AGG8|linenumbers=true|language=text|collapse=true}
-interface te0/0/0/0/0.602 l2transport
-  encap dot1q 602
-  description LXC LaM Guest Wifi - lam-gw-1
-!
-interface te0/1/0/18/3.602 l2transport
-  encap dot1q 602
-  description LXC LaM Guest WiFi - tus-cenic-sw-1
-!
-interface te0/0/0/28/3.603 l2transport
-  encap dot1q 603
-  description ENT ELINE LaM Guest Wifi - lam-gw-2
-!
-l2vpn
-  xconnect group ent-guest-wifi
-    p2p lam-gw-1--tus-cenic-sw-1
-      interface te0/0/0/0/0.602
-      interface te0/0/0/18/3.602
-  xconnect group ent-eline-guestwifi
-    p2p tus-agg8--lax-agg10
-     interface te0/0/0/28/3.603
-     neighbor evpn evi 603 target 1 source 2
-!
-evpn
- evi 603
-  bgp
-   route-target import 2152:1001
-   route-target export 2152:1001
-  !
-  control-word-disable
-!
-
-{code}
-{code:title=TUS-CENIC-SW-1|linenumbers=true|language=text|collapse=true}
-vlan 602
-!
-interface e1/37
-  switchport trunk allowed vlan add 602
-!
-interface e1/33
-  switchport trunk allowed vlan add 602
-!
-
-{code}
-{code:title=LAM-GW-2|linenumbers=true|language=text|collapse=true}
-vlan 603
-!
-vrf definition ent
-  rd auto
-  address-family ipv4
-  exit-address-family
-!
-interface vlan 603
-  vrf forwarding ent
-  description L2 to forwarding to tus-fw-2
-!
-interface Te5/0/1
-  switchport trunk allowed vlan add 603
-!
-
-{code}
-{code:title=LAX-AGG-SW-4|linenumbers=true|language=text|collapse=true}
-vlan 603
-!
-interface e1/14
-  switchport trunk allowed vlan add 603
-!
-interface e1/54
-  description [an:l2agg][an:core] 100G ASI to lax-agg10 et-6/1/2 CLR-16320
-  switchport trunk allowed vlan add 603
-!
-
-{code}
 {code:title=LAX-AGG10|linenumbers=true|language=text|collapse=true}
-[edit interfaces et-6/1/2]
-+    unit 603 {
-+        encapsulation vlan-ccc;
-+        vlan-id 603;
-+    }
-[edit routing-instances]
-+   ent-eline-guestwifi {
-+       instance-type evpn-vpws;
-+       protocols {
-+           evpn {
-+               interface et-6/1/2.603 {
-+                   vpws-service-id {
-+                       local 1;
-+                       remote 2;
-+                   }
-+               }
-+           }
-+       }
-+       interface et-6/1/2.603;
-+       route-distinguisher 137.164.16.6:0;
-+       vrf-target target:2152:1001;
-+   }
+[edit routing-instances ent-eline-guestwifi]
+-    route-distinguisher 137.164.16.6:1;
+[edit routing-options]
++  route-distinguisher-id 137.164.16.6;
 
 {code}

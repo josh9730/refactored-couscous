@@ -133,15 +133,15 @@ class JiraStuff(Logins):
         sh = gc.open('Core Tickets')
         worksheet = sh.worksheet('Circuits')
         tickets_list = worksheet.col_values(1)[1:]
-        milestones_list = worksheet.col_values(5)[1:]
+        milestones_list = worksheet.col_values(6)[1:]
 
         # Clear previous entries
-        previous_tickets = worksheet.col_values(6)[1:]
+        previous_tickets = worksheet.col_values(7)[1:]
         length = len(previous_tickets)
         clear_list = []
         for _ in range(length):
             clear_list.append(['', ''])
-        worksheet.update(f'F2:G{length+1}', clear_list)
+        worksheet.update(f'G2:H{length+1}', clear_list)
 
         # read from 'database'
         circuits_df = pd.read_json('/Users/jdickman/Git/refactored-couscous/projects/atl_cal/circuits.json')
@@ -160,6 +160,7 @@ class JiraStuff(Logins):
                     ticket_date = circuits_df.at[ticket, 'Date Updated']
                     date_iso =  date.fromisoformat(str(ticket_date))
                     num_days = str(today - date_iso).split(' ')[0]
+
                     if num_days == '0:00:00': num_days = '0'
 
                 else:
@@ -183,13 +184,13 @@ class JiraStuff(Logins):
 
         # Create DF
         data_tuples = list(zip(milestones_date, days_list))
-        col = ['Date Updated', 'Days in Milestone']
+        col = ['Milestone Date', 'Days in Milestone']
         upload_df = pd.DataFrame(data_tuples, columns=col)
 
         # push to gsheet
         name = 'Circuits'
         gsheet = Spread(self.sheet_key, name)
-        gsheet.df_to_sheet(upload_df, index=False, sheet=name, start='F1')
+        gsheet.df_to_sheet(upload_df, index=False, sheet=name, start='G1')
 
     def update_rotating_bucket(self, bucket, hours):
         """Update rotation buckets (shipping and EngRv)

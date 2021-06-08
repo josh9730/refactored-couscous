@@ -11,6 +11,7 @@ import json
 import argparse
 import time
 import jsondiff
+import os
 from pprint import pprint
 
 parser = argparse.ArgumentParser(description='Run snapshots for devices and circuits')
@@ -41,8 +42,8 @@ def start_checks(username, input_dict, check_type):
         print('}')
         elapsed_time = time.time() - start_time
         if int(elapsed_time) < 30 and index != len(input_dict):
-            print(f'\n--- Resetting OTP ({int(30 - elapsed_time)} sec) ---')
-            time.sleep(30 - elapsed_time)
+            print(f'\n--- Resetting OTP ({int(40 - elapsed_time)} sec) ---')
+            time.sleep(40 - elapsed_time)
 
         output[device_name.upper()] = checks_output
 
