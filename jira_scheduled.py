@@ -43,7 +43,7 @@ def gcal_pull(cal_stuff):
 
 def ticket_pull(atl_stuff):
     # Update Core tickets
-    jql_tickets = 'assignee={engineer} and status not in (Resolved, Deleted, Done)'
+    jql_tickets = 'assignee={engineer} and status not in (Resolved, Deleted, Done, Merged)'
     atl_stuff.core_tickets(data['engineer'], jql_tickets)
 
 def open_rh(atl_stuff):

@@ -2,11 +2,11 @@
 username_file_path: /Users/jdickman/Git/refactored-couscous/usernames.yml
 mop_repo: '/Users/jdickman/Git/1 - Docs/MOPs/YAML/'
 
-ticket: NOC-650096
-page_title: Inland Code Upgrades - 10.611 WSON Activation
-parent_page_id: 8906572
+ticket: NOC-651085
+page_title: Marin COE Migration
+parent_page_id: 8884129
 summary:
- - Upgrade Route 51 nodes to 10.611 WSON
+ - Migrate Marin COE to new CPE
 level:
  - 1
 rh:
@@ -22,28 +22,66 @@ escalation:
 p_rollback:
  - 'No'
 rollback:
- - Code upgrades switch Active & Protect versions. If needed, 'Revert' to the old code version to rollback.
+ -
 pm:
   - |-
-    Alarms / Conditions for the Route:
-      Network View -> Alarms -> Export
-      Network View -> Conditions -> Export
-      Upload to ticket
-  - |-
-    All Facilities per Node
-      Node View -> Maintenance -> All Facilities
-      Click File -> Export
-      Upload to ticket
-  - |-
-    Backup database per Node
-      Node View -> Maintenance -> Database -> Backup
-      Upload to ticket
+    marin-coe-1:
+      show bgp neighbor 137.164.13.122 advertised-routes
+      show bgp neighbor 137.164.13.122 routes
+      show bgp neighbor 137.164.16.35 advertised-routes
+      show arp te0/0/2/2
 
 shipping:
 sections:
- 'Upgrade Code':
-    - noc: Multiple windows are reserved for upgrading the route.
-    - noc: Login to CTC and navigate to the Network View -> Maintenance -> Software
-    - noc: Select each node and click 'activate', one by one, to upgrade.
-    - noc: After each node finishes upgrading, verify no alarms and move on to the next node (upgrade one node at a time).
-    - noc: Check All Facilities per node and Alarms/Conditions for the Network and compare to pre-maintenance.
+ 'Migrate LAN Handoff':
+    - cmd-noc:
+      - Shutdown the following on marin-coe-1
+      - |-
+        router bgp 2152 neighbor 137.164.13.122 shutdown
+        interface te0/0/2/2 shutdown
+    - cmd-rh:
+      - Migrate the following
+      - |-
+        From: marin-coe-1 te0/0/2/2
+        To: marin-coe-2 xe-0/1/3
+    - cmd-noc:
+      - Configure devices as follows
+      - |-
+        marin-coe-2:
+        	activate interfaces xe-0/1/3
+        	activate protocols bgp group ebgp
+        	set protocols isis interface xe-0/1/0.0 level 2 metric 9999 ipv6-unicast-metric 9999
+        	set protocols isis interface xe-0/1/2.0 level 2 metric 9999 ipv6-unicast-metric 9999
+          activate protocols isis interface xe-0/1/5.0
+          activate protocols isis interface xe-0/1/6.0
+
+        oak-agg8:
+        	router isis interface Te0/0/0/11/0 address-family ipv4 unicast metric 9999
+        	router isis interface Te0/0/0/11/0 address-family ipv6 unicast metric 9999
+        	router isis interface Te0/0/0/11/1 address-family ipv4 unicast metric 9999
+        	router isis interface Te0/0/0/11/1 address-family ipv6 unicast metric 9999
+        	router isis interface Te0/0/0/25/3 address-family ipv4 unicast metric 99999
+        	router isis interface Te0/0/0/25/3 address-family ipv6 unicast metric 99999
+
+        marin-coe-1:
+        	router isis interface Te0/0/2/3 address-family ipv4 unicast metric 99999
+        	router isis interface Te0/0/2/3 address-family ipv6 unicast metric 99999
+          router isis interface Te0/0/2/1 address-family ipv4 unicast metric 99999
+        	router isis interface Te0/0/2/1 address-family ipv6 unicast metric 99999
+
+        sf-coe-2:
+          set protocols isis interface xe-0/1/2.0 level 2 metric 99999 ipv6-unicast-metric 99999
+          activate protocols isis interface xe-0/1/5.0
+          activate protocols isis interface xe-0/1/6.0
+    - cmd-noc:
+      - Verify that xe-0/1/3 and the BGP peering to 137.164.13.122 come up. Check routes with pre-maintenance
+      - |-
+        marin-coe-2:
+        	show route received-protocol bgp 137.164.13.122
+        	show route advertising-protocol bgp 137.164.13.122
+
+        oak-agg8:
+        	show bgp neighbor 137.164.2.45 routes
+          show bgp neighbor 137.164.2.45 advertised-routes
+    - noc: Open decom tickets for marin-coe-1, CLR6669/7669 and the 10G circuit between marin-coe-1 and sf-coe-2 xe-0/1/2 (no CLR)
+    - noc: Update documentation and diagrams for marin-coe-2 & sf-coe-2.

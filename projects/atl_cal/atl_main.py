@@ -261,6 +261,10 @@ class JiraStuff(Logins):
         page_url = f'https://documentation.cenic.org/display/Core/{link_title}'
         self.jira.create_or_update_issue_remote_links(ticket, page_url, page_title, relationship='mentioned in')
 
+    def create_issue(self, cust_fields):
+        
+        self.jira.issue_create(fields=cust_fields)
+
 
 class ConfluenceStuff(Logins):
 
