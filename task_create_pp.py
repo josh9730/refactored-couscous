@@ -60,6 +60,7 @@ def main():
 
     story_name = jira.issue_field_value(args.story_ticket, 'summary')
 
+    # create tasks
     for i, j in tasks.items():
         fields = {
             'summary': story_name + ' - {task_name}'.format(task_name=i),
@@ -69,9 +70,11 @@ def main():
         }
         jira.issue_create(fields=fields)
 
+    # find tickets recently created, expect 6
     jql_request = 'project = "CENIC Core Projects"  and creator = jdickman and created >=  -1m'
     issues = jira.jql(jql_request, limit=6, fields=['key'])
 
+    # for each new ticket, link to Story
     for i in range(6):
         links = {
             'type': {'name': 'DependsOn' },
