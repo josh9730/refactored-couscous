@@ -1,6 +1,7 @@
 '''
 Input ticket number of Story to be assigned.
 Creates the 6 ticket buckets and links them to the Story. Includes the description for Design.
+Adds 'CoreMgd' label and Epic Link to Design Task.
 '''
 
 from atlassian import Jira
@@ -17,6 +18,8 @@ from atl_main import Logins
 parser = argparse.ArgumentParser(description='Create tickets for Story per Planning Process')
 parser.add_argument('story_ticket', metavar='story_ticket',
                     help='Story ticket number, e.g. COR-1234')
+parser.add_argument('epic_ticket', metavar='epic_ticket',
+                    help='Epic ticket number, e.g. COR-1234')
 args = parser.parse_args()
 
 with open(os.path.join(script_dir, 'usernames.yml')) as file:
@@ -71,7 +74,7 @@ def main():
         jira.issue_create(fields=fields)
 
     # find tickets recently created, expect 6
-    jql_request = 'project = "CENIC Core Projects"  and creator = jdickman and created >=  -1m'
+    jql_request = 'project = "CENIC Core Projects"  and creator = jdickman and created >=  -1m order by created ASC'
     issues = jira.jql(jql_request, limit=6, fields=['key'])
 
     # for each new ticket, link to Story
@@ -82,6 +85,12 @@ def main():
             'outwardIssue': {'key': issues['issues'][i]['key']},
         }
         jira.create_issue_link(data=links)
+        if i == 0:
+            jira.issue_update(issues['issues'][i]['key'], {
+                'labels': [ 'CoreMgd' ],
+                'customfield_10401': args.epic_ticket
+            })
+
 
 if __name__ == '__main__':
     main()

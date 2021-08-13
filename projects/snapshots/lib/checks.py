@@ -99,12 +99,13 @@ class CircuitChecks(Device):
                 }
 
             else:
-                try:
-                    self.port = self.circuits_dict[self.circuit]['port']
+                if self.circuits_dict[self.circuit]['service'] == 'ebgp':
+                    try:
+                        self.port = self.circuits_dict[self.circuit]['port']
 
-                except:
-                    print('\n\n\tPlease enter a valid port and re-run.\n\n')
-                    sys.exit(1)
+                    except:
+                        print('\n\n\tPlease enter a valid port and re-run.\n\n')
+                        sys.exit(1)
 
                 # get IPs unless defined manually
                 print(f'\t\t1) Neighbor IPs')

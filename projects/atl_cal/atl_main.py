@@ -85,7 +85,7 @@ class JiraStuff(Logins):
             df = pd.json_normalize(results['issues'])
             k = chr(j)
 
-            if i != 'sbellamine': # Sana has no milestones
+            try:
 
                 FoI = ['fields.assignee.name','key', 'fields.summary','fields.customfield_10209.value','fields.updated']
                 if j == 65:
@@ -93,7 +93,7 @@ class JiraStuff(Logins):
                 else:
                     gsheet.df_to_sheet(df[FoI], index=False, sheet=name, replace=False, start=f'{k}1')
 
-            else:
+            except:
 
                 FoI = ['fields.assignee.name','key', 'fields.summary', 'fields.updated']
                 gsheet.df_to_sheet(df[FoI], index=False, sheet=name, replace=False, start=f'{k}1')
@@ -262,7 +262,7 @@ class JiraStuff(Logins):
         self.jira.create_or_update_issue_remote_links(ticket, page_url, page_title, relationship='mentioned in')
 
     def create_issue(self, cust_fields):
-        
+
         self.jira.issue_create(fields=cust_fields)
 
 

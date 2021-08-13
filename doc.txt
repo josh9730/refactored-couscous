@@ -1,730 +1,167 @@
-Node SIDs and Route Targets being tracked HERE
+h1. Issues
 
-h1. MPLS Base
+1. Route target advertised to Customer by default in Junos
+2. ASN double tagged from Junos to local CE in IPVPN
+3. iBGP between IPVPN and VRF-Lite
 
-{code:title=IOS-XR|linenumbers=true|language=text|collapse=true}
-ipv4 access-list deny-all
- 10 deny ipv4 any any
-!
-route-policy pass-all
-  pass
-end-policy
-!
-route-policy bgp-import-ipvpn
-  apply bgp-import-locpref
-  pass
-end-policy
-!
-route-policy rpf-mldp-default
-  set core-tree mldp-default
-end-policy
-!
-route-policy bgp-import-locpref
-  if community matches-any (2152:90) then
-    set local-preference 90
-  endif
-  if community matches-any (2152:80) then
-    set local-preference 80
-  endif
-  if community matches-any (2152:70) then
-    set local-preference 70
-  endif
-end-policy
-!
-mpls traffic-eng
-!
-mpls ldp
- mldp
-  address-family ipv4
-  !
- !
- address-family ipv4
-  label
-   local
-    allocate for deny-all
-   !
-  !
- !
- interface {{ interface.name }}
- !
-!
-router isis 2152
- address-family ipv4 unicast
-  mpls traffic-eng router-id Loopback0
-  segment-routing mpls
- address-family ipv6 unicast
-  segment-routing mpls
- interface Loopback0
-  address-family ipv4 unicast
-   prefix-sid index {{ v4_index }} explicit-null
-  address-family ipv6 unicast
-   prefix-sid index {{ v6_index }} explicit-null
- !
- interface {{ interface.name }}
-  address-family ipv4 unicast
-   fast-reroute per-prefix
-   fast-reroute per-prefix ti-lfa
-  !
-  address-family ipv6 unicast
-   fast-reroute per-prefix
-   fast-reroute per-prefix ti-lfa
-  !
- !
-!
-router bgp 2152
-  address-family vpnv4 unicast
-  address-family vpnv6 unicast
-  address-family ipv4 rt-filter
-  address-family ipv4 mvpn
-  address-family ipv6 mvpn
-  address-family l2vpn evpn
-  address-family vpnv4 multicast
-  address-family vpnv6 multicast
-  !
-  neighbor-group cenic-dc
-    address-family vpnv4 unicast
-    address-family vpnv6 unicast
-    address-family ipv4 rt-filter
-    address-family ipv4 mvpn
-    address-family ipv6 mvpn
-    address-family l2vpn evpn
-    address-family vpnv4 multicast
-    address-family vpnv6 multicast
+eve-ng lab: https://eve-ng.lam.cenic.org/legacy/Shared/Josh/HPR%20IPVPN.unl/topology
+
+h1. Route Target
+
+- Junos advertises RT communities by default to local CE
+- Should strip all RT communities on export
+{code:title=EXAMPLE|linenumbers=true|language=text|collapse=true}
+- NOTE: cust1 is local CE to vMX
+
+cust1#show bgp 100.20.0.0/17 | in RT
+      Extended Community: RT:2152:2153
+
+community RT members target:*:*;
+policy-statement daa {
+    term t00 {
+        then {
+            community delete RT;
+            default-action accept;
+        }
+    }
+}
+
+cust1# show ip bgp 100.20.0.0/17 | in RT
+cust1#
+
 {code}
 
-{code:title=Junos|linenumbers=true|language=text|collapse=true}
-chassis {
-	network-services enhanced-ip;
-}
-interfaces {
-    {{ interface }} {
-    	unit {{ unit }} {
-    		family mpls {
-    			maximum-labels 16;
-    		}
-    	}
-    }
-}
-policy-options {
-    policy-statement bgp-import-locpref {
-        term t01 {
-            from community 64496:90;
-            then {
-                local-preference 90;
-            }
-        }
-        term t02 {
-            from community 64496:80;
-            then {
-                local-preference 80;
-            }
-        }
-        term t03 {
-            from community 64496:70;
-            then {
-                local-preference 70;
-            }
-        }
-    }
-    policy-statement label-hybrid {
-        term t01 {
-            from protocol direct;
-            then {
-                label-allocation per-table;
-                accept;
-            }
-        }
-        term t02 {
-            then {
-                label-allocation per-nexthop;
-                accept;
-            }
-        }
-    }
-    policy-statement reject-all {
-        term t01 {
-            then reject;
-        }
-    }
-}
-routing-options {
-    route-distinguisher-id {{ loopback }};
-    protect core;
-    forwarding-table {
-        chained-composite-next-hop {
-            ingress {
-                evpn;
-                l3vpn extended-space;
-            }
-        }
-    }
-}
-protocols {
-	bgp {
-	  	group infra-v4 {
-	  		rfc6514-compliant-safi129;
-	  		family inet-vpn {
-	  			unicast;
-	  			multicast;
-	  		}
-	  		family inet6-vpn {
-	  			unicast;
-	  			multicast;
-	  		}
-	  		family evpn {
-	  			signaling;
-	  		}
-	  		family inet-mvpn {
-	  			signaling;
-	  		}
-	  		family inet6-mvpn {
-	  			signaling;
-	  		}
-	  		family route-target;
-	  	  }
-	}
-    isis {
-        interface {{ interface.unit }} {
-            level 2 {
-                post-convergence-lfa {
-                    node-protection;
-                }
-            }
-        }
-        source-packet-routing {
-            srgb start-label 16000 index-range 8000;
-            node-segment {
-                ipv4-index {{ v4_index }};
-                ipv6-index {{ v6_index }};
-            }
-            explicit-null;
-        }
-        backup-spf-options {
-            use-post-convergence-lfa;
-        }
-    }
-    ldp {
-        export reject-all;
-        interface {{ interface.unit }};
-        p2mp;
-    }
-	mpls {
-		icmp-tunneling;
-		ipv6-tunneling;
-		interface {{ interface.unit }};
-	}
-}
+h1. IPVPN Double Tagged ASN
+
+- Adding {{autonomous-system ASN}} under routing-instances config will cause the ASN to be double tagged on the remote CE. No need to add this on IPVPN instances.
+- {{local-as ASN private no-prepend-global-as}} must be added to Junos IPVPN instance to prevent double-tagging ASN to remote CE (does not stack with previous bullet)
+{code:title=EXAMPLE|linenumbers=true|language=text|collapse=true}
+- NOTE: cust2 is remote CE to vMX
+
+cust2#show ip bgp | in 65501
+ *>   100.10.0.0/17    100.20.0.0                             0 2153 2153 65501 i
+ *>   100.10.0.0/16    100.20.0.0                             0 2153 2153 65501 i
+ *>   100.10.128.0/17  100.20.0.0                             0 2153 2153 65501 i
+
+[edit routing-instances {{ VRF }} protocols bgp group {{ PEER GROUP }}]
+root@r0# set local-as 2153 private no-prepend-global-as
+
+cust2#show ip bgp | in 65501
+ *>   100.10.0.0/17    100.20.0.0                             0 2153 65501 i
+ *>   100.10.0.0/16    100.20.0.0                             0 2153 65501 i
+ *>   100.10.128.0/17  100.20.0.0                             0 2153 65501 i
+
 {code}
 
-h1. EVPN ELINE
-{code:title=IOS-XR|linenumbers=true|language=text|collapse=true}
-interface {{ interface }} l2transport
-  encap dot1q {{ vlan }}
-  description {{ description }}
-!
-evpn
- evi {{ evi-id }}
-  bgp
-   route-target import 2152:{{ target }}
-   route-target export 2152:{{ target }}
-  !
-  control-word-disable
- !
-!
-l2vpn
- xconnect group {{ name }} 
-  p2p {{ name }} 
-   interface {{ interface }}
-   neighbor evpn evi {{ evi-id }} target {{ remote id }} source {{ local id }}
-   !
-  !
- !
-!
+h1. HPR--VPN Route Exchange
+
+1. Must be transparent to users on both HPR and HPR IPVPN, so routes must stay as BGP
+2. Use logical-tunnel on MX, peer iBGP between the two logical units
+3. Must set HPR side of peering as a route-reflector
+4. NHS should be set both directions
+5. HPR IPVPN side needs {{private}} option on {{local-as}} for same reasons as previous issue
+{code:title=PEERING|linenumbers=true|language=text|collapse=true}
+- HPR peering to HPR IPVPN
+
+root@r0> ...ing-instances hpr protocols bgp group hpr_vpn--peering
+type internal;
+local-address 10.1.1.129;
+family inet {
+    unicast;
+}
+export next-hop-self;
+cluster 10.1.1.129;
+peer-as 2153;
+local-as 2153 no-prepend-global-as;
+neighbor 10.1.1.128;
+
+
+- HPR IPVPN peering to HPR
+
+root@r0> ...n routing-instances hpr_vpn protocols bgp group hpr--peering
+type internal;
+local-address 10.1.1.128;
+family inet {
+    unicast;
+}
+export next-hop-self;
+peer-as 2153;
+local-as 2153 private no-prepend-global-as;
+neighbor 10.1.1.129;
+
 {code}
 
-{code:title=Junos|linenumbers=true|language=text|collapse=true}
-interfaces {
-	{{ interface }} {
-		unit {{ unit }} {
-			description "{{ description }};
-			encapsulation vlan-ccc;
-	   		vlan-id {{ vlan }};
-  		}
-	}
-}
-routing-instances {
- 	{{ name }} {
-    	instance-type vpws;
-	    protocols {
-    	    evpn {
-            	interface {{ interface.unit }} {
-              		vpws-service-id {
-                		local {{ local id }};
-	                	remote {{ remote id }};
-    	        	}
-            	}
-		    }
-        }
-    interface {{ interface.unit }};
-    vrf-target target:2152:{{ target }};
-  	}
-}
+{code:title=CE ROUTES|linenumbers=true|language=text|collapse=true}
+cust1#show ip bgp | in 2153
+ *>   10.1.1.128/31    100.10.0.0                             0 2153 i
+ s    100.10.0.0/31    100.10.0.0                             0 2153 i
+ *>   100.20.0.0/17    100.10.0.0                             0 2153 65502 i
+ *>   100.20.0.0/16    100.10.0.0                             0 2153 65502 i
+ *>   100.20.128.0/17  100.10.0.0                             0 2153 65502 i
+ *>   100.30.0.0/17    100.10.0.0                             0 2153 65503 i
+ *>   100.30.0.0/16    100.10.0.0                             0 2153 65503 i
+ *>   100.30.128.0/17  100.10.0.0                             0 2153 65503 i
+ *>   100.40.0.0/17    100.10.0.0                             0 2153 65504 i
+ *>   100.40.0.0/16    100.10.0.0                             0 2153 65504 i
+ *>   100.40.128.0/17  100.10.0.0                             0 2153 65504 i
+
+cust2#show ip bgp | in 2153
+ *>   10.1.1.128/31    100.20.0.0                             0 2153 i
+ *>   100.10.0.0/31    100.20.0.0                             0 2153 i
+ *>   100.10.0.0/17    100.20.0.0                             0 2153 65501 i
+ *>   100.10.0.0/16    100.20.0.0                             0 2153 65501 i
+ *>   100.10.128.0/17  100.20.0.0                             0 2153 65501 i
+ *>   100.30.0.0/17    100.20.0.0                             0 2153 65503 i
+ *>   100.30.0.0/16    100.20.0.0                             0 2153 65503 i
+ *>   100.30.128.0/17  100.20.0.0                             0 2153 65503 i
+ *>   100.40.0.0/17    100.20.0.0                             0 2153 65504 i
+ *>   100.40.0.0/16    100.20.0.0                             0 2153 65504 i
+ *>   100.40.128.0/17  100.20.0.0                             0 2153 65504 i
+
+cust3#show ip bgp | in 2153
+ *>   100.10.0.0/17    100.30.0.0                             0 2153 65501 i
+ *>   100.10.0.0/16    100.30.0.0                             0 2153 65501 i
+ *>   100.10.128.0/17  100.30.0.0                             0 2153 65501 i
+ *>   100.20.0.0/17    100.30.0.0                             0 2153 65502 i
+ *>   100.20.0.0/16    100.30.0.0                             0 2153 65502 i
+ *>   100.20.128.0/17  100.30.0.0                             0 2153 65502 i
+ *>   100.40.0.0/17    100.30.0.0                             0 2153 65504 i
+ *>   100.40.0.0/16    100.30.0.0                             0 2153 65504 i
+ *>   100.40.128.0/17  100.30.0.0                             0 2153 65504 i
+
+cust4#show ip bgp | in 2153
+ *>   100.10.0.0/17    100.40.0.0                             0 2153 65501 i
+ *>   100.10.0.0/16    100.40.0.0                             0 2153 65501 i
+ *>   100.10.128.0/17  100.40.0.0                             0 2153 65501 i
+ *>   100.20.0.0/17    100.40.0.0                             0 2153 65502 i
+ *>   100.20.0.0/16    100.40.0.0                             0 2153 65502 i
+ *>   100.20.128.0/17  100.40.0.0                             0 2153 65502 i
+ *>   100.30.0.0/17    100.40.0.0                             0 2153 65503 i
+ *>   100.30.0.0/16    100.40.0.0                             0 2153 65503 i
+ *>   100.30.128.0/17  100.40.0.0                             0 2153 65503 i
+
 {code}
 
+{code:title=PINGS|linenumbers=true|language=text|collapse=true}
+cust4#ping 100.30.128.0 source 100.40.128.0
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 100.30.128.0, timeout is 2 seconds:
+Packet sent with a source address of 100.40.128.0
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 2/3/9 ms
 
-h1. EVPN ELAN
+cust4#ping 100.20.128.0 source 100.40.128.0
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 100.20.128.0, timeout is 2 seconds:
+Packet sent with a source address of 100.40.128.0
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 4/4/6 ms
 
-{code:title=IOS-XR|linenumbers=true|language=text|collapse=true}
-interface {{ interface }} l2transport
-  encap dot1q {{ vlan }}
-  description {{ description }}
-!
-evpn
- evi {{ evi-id }}
-  bgp
-   route-target import 2152:{{ target }}
-   route-target export 2152:{{ target }}
-  !
-  control-word-disable
-  advertise-mac
-  !
- !
-l2vpn
- bridge group {{ name }} 
-  bridge-domain {{ name }} 
-   mac
-    limit
-     maximum 500
-     action no-flood
-    !
-   !
-   interface {{ interface }}
-    mac
-     limit
-      maximum 100
-      action no-flood
-     !
-    !
-   !
-   evi {{ evi-id }}
-   !
-  !
- !
-!
-{code}
+cust4#ping 100.10.128.0 source 100.40.128.0
+Type escape sequence to abort.
+Sending 5, 100-byte ICMP Echos to 100.10.128.0, timeout is 2 seconds:
+Packet sent with a source address of 100.40.128.0
+!!!!!
+Success rate is 100 percent (5/5), round-trip min/avg/max = 2/2/3 ms
 
-{code:title=Junos|linenumbers=true|language=text|collapse=true}
-interfaces {
-	{{ interface }} {
-		unit {{ unit }} {
-			description "{{ description }};
-			encapsulation vlan-bridge;
-	   		vlan-id {{ vlan }};
-  		}
-	}
-}
-routing-instances {
- 	{{ name }} {
-    	instance-type evpn;
-	    protocols {
-        	evpn;
-        }
-    interface {{ interface.unit }};
-    vrf-target target:2152:{{ target }};
-  	}
-}
-{code}
-
-h1. IPVPN
-
-{code:title=IOS-XR|linenumbers=true|language=text|collapse=true}
-vrf {{ name }}
- address-family ipv4 unicast
-  import route-target
-   2152:{{ target }}
-  !
-  export route-target
-   2152:{{ target }}
-  !
-  maximum prefix {{ ipv6_limit|default(100) }} {{ ipv6_limit|default(100) }}
- !
- address-family ipv6 unicast
-  import route-target
-   2152:{{ target }}
-  !
-  export route-target
-   2152:{{ target }}
-  !
-  maximum prefix {{ ipv6_limit|default(100) }} {{ ipv6_limit|default(100) }}
- !
-interface {{ interface.name }}
- vrf {{ name }}
-!
-router bgp 2152
- neighbor-group {{ name }}-v4
-  address-family ipv4 unicast
-   route-policy bgp-import-ipvpn in
-   route-policy pass-all out
-   as-override
-   soft-reconfiguration inbound always
-  !
- neighbor-group {{ name }}-v6
-  address-family ipv6 unicast
-   route-policy bgp-import-ipvpn in
-   route-policy pass-all out
-   as-override
-   soft-reconfiguration inbound always
-  !
-vrf {{ name }}
-  rd auto
-  address-family ipv4 unicast
-   maximum-paths eibgp 16
-   label mode per-ce
-   redistribute connected
-  !
-  address-family ipv6 unicast
-   maximum-paths eibgp 16
-   label mode per-ce
-   redistribute connected
-  !
-  neighbor {{ remote_ipv4_address }}
-   remote-as {{ remote_bgp_asn }}
-   use neighbor-group {{ name }}-v4
-  !
-  neighbor {{ remote_ipv6_address }}
-   remote-as {{ remote_bgp_asn }}
-   use neighbor-group {{ name }}-v6
-  !
- !
-!
-{code}
-
-{code:title=Junos|linenumbers=true|language=text|collapse=true}
-routing-options {
-    rib-groups {
-        {{ name }}-ucast-v4 {
-            import-rib [ {{ name }}.inet.0 {{ name }}.inet.2 ];
-        }
-        {{ name }}-ucast-v6 {
-            import-rib [ {{ name }}.inet6.0 {{ name }}.inet6.2 ];
-        }
-    }
-}
-routing-instances {
-    {{ name }} {
-        routing-options {
-            rib {{ name }}.inet6.0 {
-                static {
-                    rib-group {{ name }}-ucast-v6;
-                }
-                maximum-prefixes {{ ipv6_limit|default(100) }} threshold {{ ipv6_limit|default(100) }};
-            }
-            static {
-                rib-group {{ name }}-ucast-v4;
-            }
-            label allocation label-hybrid;
-            interface-routes {
-                rib-group {
-                    inet {{ name }}-ucast-v4;
-                    inet6 {{ name }}-ucast-v6;
-                }
-            }
-            maximum-prefixes {{ ipv4_limit|default(100) }} threshold {{ ipv4_limit|default(100) }};
-            multipath;
-            protect core;
-        }
-        protocols {
-            bgp {
-                path-selection external-router-id;
-                group {{ name }}-v4 {
-                    type external;
-                    import [ daa bgp-import-locpref ];
-                    family inet {
-                        unicast;
-                    }
-                    export daa;
-                    as-override;
-                    neighbor {{ remote_ipv4_address }} {
-                        peer-as {{ remote_bgp_asn }};
-                    }
-                }
-                group {{ name }}-v6 {
-                    type external;
-                    import [ daa bgp-import-locpref ];
-                    family inet6 {
-                        unicast;
-                    }
-                    export daa;
-                    as-override;
-                    neighbor {{ remote_ipv6_address }} {
-                        peer-as {{ remote_bgp_asn }};
-                    }
-                }
-                enforce-first-as;
-                log-updown;
-                multipath {
-                    allow-protection;
-                }
-            }
-        }
-        instance-type vrf;
-        provider-tunnel {
-            ldp-p2mp;
-        }
-        interface {{ interface.name }}.{{ unit }};
-        vrf-target target:2152:{{ target }};
-        vrf-table-label;
-    }
-}
-{code}
-
-h1. IPVPN with Multicast
-{code:title=IOS-XR|linenumbers=true|language=text|collapse=true}
-vrf {{ name }}
- address-family ipv4 unicast
-  import route-target
-   2152:{{ target }}
-  !
-  export route-target
-   2152:{{ target }}
-  !
-  maximum prefix {{ ipv6_limit|default(100) }} {{ ipv6_limit|default(100) }}
- !
- address-family ipv4 multicast
-  import route-target
-   2152:{{ target }}
-  !
-  export route-target
-   2152:{{ target }}
-  !
-  maximum prefix {{ ipv6_limit|default(100) }} {{ ipv6_limit|default(100) }}
- !
- address-family ipv6 unicast
-  import route-target
-   2152:{{ target }}
-  !
-  export route-target
-   2152:{{ target }}
-  !
-  maximum prefix {{ ipv6_limit|default(100) }} {{ ipv6_limit|default(100) }}
- !
- address-family ipv6 multicast
-  import route-target
-   2152:{{ target }}
-  !
-  export route-target
-   2152:{{ target }}
-  !
-  maximum prefix {{ ipv6_limit|default(100) }} {{ ipv6_limit|default(100) }}
- !
-!
-interface {{ interface.name }}
- vrf {{ name }}
-!
-router bgp 2152
- neighbor-group {{ name }}-v4
-  address-family ipv4 unicast
-   route-policy bgp-import-ipvpn in
-   route-policy pass-all out
-   as-override
-   soft-reconfiguration inbound always
-  !
-  address-family ipv4 multicast
-   route-policy bgp-import-ipvpn in
-   route-policy pass-all out
-   as-override
-   soft-reconfiguration inbound always
-  !
- !
- neighbor-group {{ name }}-v6
-  address-family ipv6 unicast
-   route-policy bgp-import-ipvpn in
-   route-policy pass-all out
-   as-override
-   soft-reconfiguration inbound always
-  !
-  address-family ipv6 multicast
-   route-policy bgp-import-ipvpn in
-   route-policy pass-all out
-   as-override
-   soft-reconfiguration inbound always
-  !
- !
- vrf {{ name }}
-  rd auto
-  address-family ipv4 unicast
-   maximum-paths eibgp 16
-   label mode per-ce
-   redistribute connected
-  !
-  address-family ipv4 multicast
-   redistribute connected
-  !
-  address-family ipv6 unicast
-   maximum-paths eibgp 16
-   label mode per-ce
-   redistribute connected
-  !
-  address-family ipv6 multicast
-   redistribute connected
-  !
-  address-family ipv4 mvpn
-  !
-  address-family ipv6 mvpn
-  !
-  neighbor {{ remote_ipv4_address }}
-   remote-as {{ remote_bgp_asn }}
-   use neighbor-group {{ name }}-v4
-  !
-  neighbor {{ remote_ipv6_address }}
-   remote-as {{ remote_bgp_asn }}
-   use neighbor-group {{ name }}-v6
-  !
- !
-!
-multicast-routing
- vrf {{ name }}
-  address-family ipv4
-   interface {{ interface.name }}
-    enable
-   !
-   bgp auto-discovery mldp
-   !
-   mdt default mldp p2mp
-  !
-  address-family ipv6
-   interface {{ interface.name }}
-    enable
-   !
-   bgp auto-discovery mldp
-   !
-   mdt default mldp p2mp
-  !
- !
-!
-router pim
- vrf {{ name }}
-  address-family ipv4
-   rpf topology route-policy rpf-mldp-default
-   mdt c-multicast-routing bgp
-   !
-  !
-  address-family ipv6
-   rpf topology route-policy rpf-mldp-default
-   mdt c-multicast-routing bgp
-   !
-  !
- !
-!
-{code}
-
-{code:title=Junos|linenumbers=true|language=text|collapse=true}
-routing-options {
-    rib-groups {
-        {{ name }}-mcast-v4 {
-            export-rib {{ name }}.inet.2;
-            import-rib {{ name }}.inet.2;
-        }
-        {{ name }}-mcast-v6 {
-            export-rib {{ name }}.inet6.2;
-            import-rib {{ name }}.inet6.2;
-        }
-        {{ name }}-ucast-v4 {
-            import-rib [ {{ name }}.inet.0 {{ name }}.inet.2 ];
-        }
-        {{ name }}-ucast-v6 {
-            import-rib [ {{ name }}.inet6.0 {{ name }}.inet6.2 ];
-        }
-    }
-}
-routing-instances {
-    {{ name }} {
-        routing-options {
-            rib {{ name }}.inet6.0 {
-                static {
-                    rib-group {{ name }}-ucast-v6;
-                }
-                maximum-prefixes {{ ipv6_limit|default(100) }} threshold {{ ipv6_limit|default(100) }};
-            }
-            static {
-                rib-group {{ name }}-ucast-v4;
-            }
-            label allocation label-hybrid;
-            interface-routes {
-                rib-group {
-                    inet {{ name }}-ucast-v4;
-                    inet6 {{ name }}-ucast-v6;
-                }
-            }
-            maximum-prefixes {{ ipv4_limit|default(100) }} threshold {{ ipv4_limit|default(100) }};
-            multipath;
-            protect core;
-        }
-        protocols {
-            pim {
-                rib-group {
-                    inet {{ name }}-mcast-v4;
-                    inet6 {{ name }}-mcast-v6;
-                }
-                interface {{ interface.name }}.{{ unit }} {
-                    mode sparse;
-                }
-            }
-            mvpn;
-            bgp {
-                path-selection external-router-id;
-                group {{ name }}-v4 {
-                    type external;
-                    import [ daa bgp-import-locpref ];
-                    family inet {
-                        unicast;
-                        multicast;
-                    }
-                    export daa;
-                    as-override;
-                    neighbor {{ remote_ipv4_address }} {
-                        peer-as {{ remote_bgp_asn }};
-                    }
-                }
-                group {{ name }}-v6 {
-                    type external;
-                    import [ daa bgp-import-locpref ];
-                    family inet6 {
-                        unicast;
-                        multicast;
-                    }
-                    export daa;
-                    as-override;
-                    neighbor {{ remote_ipv6_address }} {
-                        peer-as {{ remote_bgp_asn }};
-                    }
-                }
-                enforce-first-as;
-                log-updown;
-                multipath {
-                    allow-protection;
-                }
-            }
-        }
-        instance-type vrf;
-        provider-tunnel {
-            ldp-p2mp;
-        }
-        interface {{ interface.name }}.{{ unit }};
-        vrf-target target:2152:{{ target }};
-        vrf-table-label;
-    }
-}
-protocols {
-    igmp {
-        interface {{ interface.name }}.{{ unit }} {
-            version {{ igmp_version|default(3) }};
-        }
-    }
-    mld {
-        interface {{ interface.name }}.{{ unit }} {
-            version {{ mld_version|default(2) }};
-        }
-    }
-}
 {code}

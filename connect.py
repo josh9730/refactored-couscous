@@ -82,7 +82,7 @@ class LoginInteract:
         enable_account = GetLP().get_lp('enable')
 
         child = pexpect.spawn(f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {enable_account[0]}@{self.hostname} | ct"')
-        child.expect('Password:')
+        child.expect(r'.*Password:')
         child.sendline(enable_account[1])
         child.interact()
 

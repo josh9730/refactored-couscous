@@ -1,27 +1,316 @@
 ---
-ticket: NOC-647244
+ticket: NOC-652144
 pre_file_path: 'output_pre.json'
 post_file_path: 'output_post.json'
 check_type: device
 device:
-  - lax-agg8|iosxr
-  - lax-agg10|junos
-  - riv-agg8|iosxr
-  # - svl-agg8|iosxr
-  - svl-agg10|junos
-  - tus-agg8|iosxr
-  - sdg-agg4|iosxr
-  - sfo-agg4|iosxr
-  - slo-agg4|iosxr
-  - sol-agg4|junos
-  - pdc-agg1|junos
-  - bak-agg6|junos
-  - fre-agg4|iosxr
-  - frg-agg4|iosxr
-  - sac-agg4|iosxr
-  - cor-agg8|junos
-  - tri-agg2|iosxr
+  # - lax-agg8|iosxr
+  # - lax-agg10|junos
+  # - riv-agg8|iosxr
+  - svl-agg8|iosxr
+  # - svl-agg10|junos
+  # - tus-agg8|iosxr
+  # - sdg-agg4|iosxr
+  # - sfo-agg4|iosxr
+  # - slo-agg4|iosxr
+  # - sol-agg4|junos
+  # - pdc-agg1|junos
+  # - bak-agg6|junos
+  # - fre-agg4|iosxr
+  # - frg-agg4|iosxr
+  # - sac-agg4|iosxr
+  # - cor-agg8|junos
+  # - tri-agg2|iosxr
 circuit:
+  lax-agg10|junos:
+    137.164.0.4:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.4
+    137.164.0.10:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.10
+    137.164.0.15:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.15
+    137.164.0.31:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.31
+    137.164.0.65:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.65
+    137.164.0.67:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.67
+    137.164.0.89:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.89
+    137.164.0.92:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.92
+    137.164.0.241:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.241
+    137.164.2.3:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.3
+    137.164.2.4:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.4
+    137.164.2.18:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.18
+    137.164.2.19:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.19
+    137.164.2.55:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.55
+    137.164.2.94:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.94
+    137.164.2.95:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.95
+    137.164.2.96:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.96
+    137.164.2.99:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.99
+    137.164.2.101:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.101
+    137.164.2.102:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.102
+    137.164.2.111:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.111
+    137.164.2.112:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.112
+    137.164.2.142:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.142
+    137.164.2.145:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.145
+    137.164.2.156:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.156
+    137.164.2.194:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.194
+    137.164.2.225:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.225
+    137.164.2.234:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.234
+    137.164.2.241:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.241
+    137.164.2.249:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.249
+    137.164.39.25:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.25
+    137.164.39.29:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.29
+    137.164.39.45:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.45
+    137.164.39.60:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.60
+    137.164.39.75:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.75
+    137.164.39.77:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.77
+    137.164.39.81:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.81
+    137.164.39.104:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.104
+    137.164.39.107:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.107
+    137.164.39.118:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.118
+    137.164.39.156:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.156
+    137.164.39.169:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.169
+    137.164.39.207:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.207
+    137.164.39.219:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.219
+    137.164.39.229:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.229
+    137.164.39.238:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.238
+    137.164.39.243:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.243
+    137.164.2.23:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.23
+    137.164.39.251:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.251
+    137.164.39.21:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.21
+    137.164.39.147:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.147
+    137.164.2.232:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.232
+    137.164.39.231:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.231
+    137.164.39.62:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.62
+    137.164.39.68:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.68
+    137.164.39.65:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.65
+    137.164.39.51:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.51
+    137.164.39.1:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.1
+    137.164.0.93:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.93
+    137.164.39.179:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.179
+    137.164.39.142:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.142
+    137.164.39.85:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.85
+    137.164.0.82:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.82
+    137.164.0.94:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.94
+    137.164.2.238:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.238
+    137.164.0.81:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.81
+    137.164.2.230:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.230
+    137.164.2.159:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.159
+    137.164.0.16:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.16
+    137.164.0.17:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.17
+    137.164.0.18:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.18
+    137.164.0.238:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.238
+    137.164.0.237:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.237
+    137.164.0.240:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.240
+    137.164.0.235:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.235
+    137.164.0.236:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.236
+    137.164.0.234:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.234
+    137.164.0.77:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.77
+    137.164.0.78:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.78
+    137.164.2.25:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.25
+    137.164.39.224:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.224
+    137.164.0.86:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.86
+    137.164.39.83:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.83
+    137.164.39.19:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.19
+    137.164.39.223:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.223
+    137.164.39.162:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.162
+    137.164.39.178:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.178
+    137.164.2.210:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.210
+    137.164.39.2:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.2
+    137.164.0.130:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.130
+    137.164.0.138:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.138
+    137.164.0.114:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.114
+    137.164.0.88:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.88
+    137.164.39.52:
+      service: ibgp
+      ipv4_neighbor: 137.164.39.52
+    137.164.0.66:
+      service: ibgp
+      ipv4_neighbor: 137.164.0.66
+    137.164.2.49:
+      service: ibgp
+      ipv4_neighbor: 137.164.2.49
   # riv-agg8|iosxr:
   #   CLR-7620:
   #     service: ebgp
@@ -49,31 +338,31 @@ circuit:
   #   col-coe-2:
   #     service: ibgp
   #     port: TenGigE0/3/0/18
-  lax-agg10|junos:
-    CLR2690:
-      service: static
-      ipv4_routes:
-        - 205.154.223.0/24
-    oxnr-pub-lib-1:
-      service: ibgp
-      port: et-6/1/0.211
-    bumt-lib-1:
-      service: ibgp
-      port: et-6/1/0.309
-    CLR7608:
-      service: ebgp #hpr
-      port: et-7/1/1.343
-    lb-csu-2:
-      service: ibgp
-      port: et-6/5/0
-      ipv4_neighbor: 137.164.0.4
-      ipv6_neighbor: 2607:f380::118:9a40:41
-    cyp-cc-3:
-      service: ibgp
-      port: et-7/1/0.202
-    CLR-7073:
-      service: ebgp
-      port: 'et-7/1/0.285'
+  # lax-agg10|junos:
+  #   CLR2690:
+  #     service: static
+  #     ipv4_routes:
+  #       - 205.154.223.0/24
+  #   oxnr-pub-lib-1:
+  #     service: ibgp
+  #     port: et-6/1/0.211
+  #   bumt-lib-1:
+  #     service: ibgp
+  #     port: et-6/1/0.309
+  #   CLR7608:
+  #     service: ebgp #hpr
+  #     port: et-7/1/1.343
+  #   lb-csu-2:
+  #     service: ibgp
+  #     port: et-6/5/0
+  #     ipv4_neighbor: 137.164.0.4
+  #     ipv6_neighbor: 2607:f380::118:9a40:41
+  #   cyp-cc-3:
+  #     service: ibgp
+  #     port: et-7/1/0.202
+  #   CLR-7073:
+  #     service: ebgp
+  #     port: 'et-7/1/0.285'
   # lax-agg8|iosxr:
   #   CLR-6304:
   #     service: static

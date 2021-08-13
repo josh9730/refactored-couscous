@@ -2,23 +2,297 @@
 username_file_path: /Users/jdickman/Git/refactored-couscous/usernames.yml
 mop_repo: '/Users/jdickman/Git/1 - Docs/MOPs/YAML/'
 
-ticket: COR-1420
-page_title: Change FPC to 100G
-parent_page_id: 9653629
+ticket: NOC-653605
+page_title: Norco CC BGP
+parent_page_id: 8885131
 summary:
- - change xe-7/5/0 to 100G
+ - nor-cc-1 BGP turnup
 
 # times must be string, start_day must be either 'today' or in YYYY-MM-DD format
-start_time: 1500
-end_time: 1510
+start_time: 1430
+end_time: 1500
 start_day: today
 calendar: true
 changes:
-  - lax-agg10:
+  - nor-cc-1:
     - |-
-        set chassis fpc 7 pic 5 port 0 speed 100g
-        delete chassis fpc 7 pic 5 port 0 number-of-sub-ports 4
+      [edit interfaces xe-0/1/3]
+      -   description "[dc:ext] 10G LAN handoff";
+      +   description "[dc:ext] 10G Norco CC LAN";
+      +   gigether-options {
+      +       no-auto-negotiation;
+      +       speed 10g;
+      +   }
+      [edit interfaces xe-0/1/3 unit 0]
+      -    description "[dc:ccc][dc:edge][dc:site-norcc]";
+      +    description "[dc:edge][dc:ccc][dc:site-norcc]";
+      +    family inet {
+      +        no-redirects;
+      +        address 137.164.38.5/30;
+      +    }
+      +    family inet6 {
+      +        no-redirects;
+      +        dad-disable;
+      +    }
+      [edit routing-options rib inet6.0 static]
+            route 2607:f380::118:9a41:ff0/128 { ... }
+      +     route ::/0 {
+      +         discard;
+      +         no-install;
+      +     }                                 
+      [edit routing-options static]
+           route 137.164.16.255/32 { ... }
+      +    route 0.0.0.0/0 {
+      +        discard;
+      +        no-install;
+      +    }
+      [edit protocols bgp]
+           group cenic-dc-v6 { ... }
+      +    group ebgp {
+      +        type external;
+      +        accept-remote-nexthop;
+      +        peer-as 64592;
+      +        neighbor 137.164.38.6 {
+      +            description "Norco CC";
+      +            import ebgp_cust_v4_in;
+      +            family inet {
+      +                unicast {
+      +                    prefix-limit {
+      +                        maximum 500;
+      +                        teardown 80 idle-timeout 60;
+      +                    }
+      +                }
+      +                multicast {            
+      +                    prefix-limit {
+      +                        maximum 500;
+      +                        teardown 80 idle-timeout 60;
+      +                    }
+      +                }
+      +            }
+      +            export DEFAULT_ORIGINATE;
+      +            remove-private;
+      +        }
+      +    }
+      [edit policy-options]
+          route-filter-list cust-ddos-ISP-A-CP { ... }
+      +   route-filter-list nor-cc-v4 {
+      +       204.69.5.0/24 exact;
+      +       204.69.6.64/28 exact;
+      +   }
+      +   route-filter-list nor-cc-v4-export {
+      +       204.69.5.0/24 exact;
+      +   }
+      +   route-filter-list nor-cc-v6;
+      +   route-filter-list nor-cc-v6-export;
+      +   route-filter-list nor-cc-ddos-DDOS-A;
+      +   route-filter-list nor-cc-ddos-DDOS-A-CP;
+      +   route-filter-list nor-cc-ddos-DDOS-A-v6;
+      +   route-filter-list nor-cc-ddos-DDOS-A-CP-v6;
+      [edit policy-options]
+      +   policy-statement DEFAULT_ORIGINATE {
+      +       term t01 {
+      +           from {
+      +               prefix-list default-only;
+      +               condition [ conditional-default-v4-01 conditional-default-v4-02 conditional-default-v4-03 conditional-default-v4-04 conditional-default-v4-05 ];
+      +           }
+      +           then accept;
+      +       }
+      +       term t02 {
+      +           from {
+      +               prefix-list default-only-v6;
+      +               condition [ conditional-default-v6-01 conditional-default-v6-02 conditional-default-v6-03 conditional-default-v6-04 ];
+      +           }
+      +           then accept;
+      +       }
+      +       term t03 {
+      +           then reject;
+      +       }                               
+      +   }
+      +   policy-statement ebgp_cust_v4_in {
+      +       term denial_all {
+      +           from protocol bgp;
+      +           then default-action reject;
+      +       }
+      +       term t02 {
+      +           from {
+      +               as-path nor-cc-as-path;
+      +               route-filter-list nor-cc-v4;
+      +           }
+      +           then {
+      +               apply-groups bgp_standard;
+      +               default-action accept;
+      +           }
+      +       }
+      +       term t03 {
+      +           from {
+      +               route-filter-list nor-cc-ddos-DDOS-A;
+      +           }
+      +           then {
+      +               local-preference 110;
+      +               community add ddos-i2-cenic-internal;
+      +               community add ALL-ChartAssandHSN;
+      +               community add ALL-ChaAssandHSN2;
+      +               community add hub-site;
+      +               community add ALL-ASSandAFF2;
+      +               accept;
+      +           }
+      +       }
+      +       term t04 {
+      +           from {
+      +               route-filter-list nor-cc-ddos-DDOS-A-CP;
+      +           }
+      +           then {
+      +               local-preference 110;
+      +               community add ddos-i2-cenic-internal;
+      +               community add hub-site;
+      +               community add ALL-ASSandAFF2;
+      +               community add ALL-ChaAssandHSN2;
+      +               community add ALL-ChartAssandHSN;
+      +               community add ddos-trust-CP;
+      +               accept;
+      +           }
+      +       }
+      +       term t08 {                      
+      +           from {
+      +               community blackhole-all;
+      +               route-filter-list nor-cc-v4;
+      +           }
+      +           then {
+      +               community add blackhole-all;
+      +               community add CENIC-ISP-AUTHORIZED;
+      +               community add hub-site;
+      +               next-hop 137.164.16.255;
+      +               accept;
+      +           }
+      +       }
+      +       term t09 {
+      +           from {
+      +               community blackhole-isp;
+      +               route-filter-list nor-cc-v4-export;
+      +           }
+      +           then {
+      +               community add blackhole-isp;
+      +               community add commodity-peer;
+      +               community add CENIC-ISP-AUTHORIZED;
+      +               community add ALL-ASSandAFF2;
+      +               community add ALL-ChaAssandHSN2;
+      +               community add hub-site;
+      +               community add ALL-RandE;
+      +               community add ALL-ASSandAFF;
+      +               community add ALL-ChaAssandHSN;
+      +               accept;
+      +           }
+      +       }
+      +       term t10 {
+      +           from {
+      +               community blackhole-isp;
+      +               route-filter-list nor-cc-v4;
+      +           }
+      +           then {
+      +               community add blackhole-isp;
+      +               community add CENIC-ISP-AUTHORIZED;
+      +               community add ALL-ASSandAFF2;
+      +               community add hub-site;
+      +               accept;
+      +           }
+      +       }
+      +       term t11 {
+      +           from {
+      +               community DC_AT_CUST_ONLY;
+      +               route-filter-list nor-cc-v4;
+      +           }
+      +           then {
+      +               community add ALL-ChaAssandHSN2;
+      +               community add ALL-ASSandAFF2;
+      +               community add hub-site;
+      +               community add DC_AT_CUST_ONLY;
+      +               accept;
+      +           }
+      +       }
+      +       term t12 {
+      +           from {
+      +               route-filter-list nor-cc-v4-export;
+      +           }
+      +           then {
+      +               community add commodity-peer;
+      +               community add CENIC-ISP-AUTHORIZED;
+      +               community add ALL-ASSandAFF2;
+      +               community add ALL-ChaAssandHSN2;
+      +               community add ALL-RandE;
+      +               community add ALL-ASSandAFF;
+      +               community add ALL-ChaAssandHSN;
+      +               community add ALL-ChartAssandHSN;
+      +               community add hub-site;
+      +               accept;
+      +           }
+      +       }
+      +       term final {
+      +           then {
+      +               community add ass-no-export;
+      +               community add ALL-ASSandAFF2;
+      +               community add hub-site;
+      +           }
+      +       }
+      +   }
+      [edit policy-options]
+      +   community ddos-i2-cenic-internal members 2152:723;
+      [edit policy-options]
+          as-path rivcc-as-path { ... }
+      +   as-path nor-cc-as-path 64592+;
+      [edit policy-options]
+      +   condition conditional-default-v4-01 {
+      +       if-route-exists {
+      +           1.5.0.0/16;
+      +           table inet.0;
+      +       }                               
+      +   }
+      +   condition conditional-default-v4-02 {
+      +       if-route-exists {
+      +           4.0.0.0/9;
+      +           table inet.0;
+      +       }
+      +   }
+      +   condition conditional-default-v4-03 {
+      +       if-route-exists {
+      +           8.8.8.0/24;
+      +           table inet.0;
+      +       }
+      +   }
+      +   condition conditional-default-v4-04 {
+      +       if-route-exists {
+      +           31.13.64.0/18;
+      +           table inet.0;
+      +       }
+      +   }
+      +   condition conditional-default-v4-05 {
+      +       if-route-exists {
+      +           52.8.0.0/16;
+      +           table inet.0;               
+      +       }
+      +   }
+      +   condition conditional-default-v6-01 {
+      +       if-route-exists {
+      +           2600:1f11::/36;
+      +           table inet6.0;
+      +       }
+      +   }
+      +   condition conditional-default-v6-02 {
+      +       if-route-exists {
+      +           2620:0:1c00::/40;
+      +           table inet6.0;
+      +       }
+      +   }
+      +   condition conditional-default-v6-03 {
+      +       if-route-exists {
+      +           2620:149::/36;
+      +           table inet6.0;
+      +       }
+      +   }
+      +   condition conditional-default-v6-04 {
+      +       if-route-exists {
+      +           2603:1000::/25;             
+      +           table inet6.0;
+      +       }
+      +   }
 
-        set chassis fpc 7 pic 5 power off
-        run show chassis fpc pic-status 7
-        delete chassis fpc 7 pic 5 power off
+      [edit]
