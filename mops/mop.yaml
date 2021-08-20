@@ -2,86 +2,173 @@
 username_file_path: /Users/jdickman/Git/refactored-couscous/usernames.yml
 mop_repo: '/Users/jdickman/Git/1 - Docs/MOPs/YAML/'
 
-ticket: NOC-651085
-page_title: Marin COE Migration
+ticket: NOC-655296
+page_title: UCDH CLR-8026 DMS
 parent_page_id: 8884129
 summary:
- - Migrate Marin COE to new CPE
+ - Convert CLR-8026 to tagged port
+ - DC peering will use vlan 326 (we can shift vlans if needed)
 level:
- - 1
+ - 0
 rh:
- - 
+ - UCD
 exec:
  - NOC
 approval:
- - 
+ - N/A
 impact:
- - None
+ - CLR-8026
 escalation:
  - 'Deploying Engineer'
 p_rollback:
- - 'No'
+ - 'Yes'
 rollback:
  -
 pm:
   - |-
-    marin-coe-1:
-      show bgp neighbor 137.164.13.122 advertised-routes
-      show bgp neighbor 137.164.13.122 routes
-      show bgp neighbor 137.164.16.35 advertised-routes
-      show arp te0/0/2/2
+    sac-agg4:
+      show bgp neighbor 137.164.24.130 routes
+      show bgp neighbor 137.164.24.130 advertised-count
+      show bgp ipv6 unicast neighbor 2607:f380:1::118:9a41:8821 routes
+      show bgp ipv6 unicast neighbor 2607:f380:1::118:9a41:8821 advertised-count
 
 shipping:
 sections:
- 'Migrate LAN Handoff':
+  'Migrate Handoff to dot1q':
     - cmd-noc:
-      - Shutdown the following on marin-coe-1
+      - When UCDH is ready, shutdown the BGP peerings
       - |-
-        router bgp 2152 neighbor 137.164.13.122 shutdown
-        interface te0/0/2/2 shutdown
-    - cmd-rh:
-      - Migrate the following
-      - |-
-        From: marin-coe-1 te0/0/2/2
-        To: marin-coe-2 xe-0/1/3
+        sac-agg4:
+          router bgp 2152 neighbor 137.164.24.129 shutdown
+          router bgp 2152 neighbor 2607:f380:1::118:9a41:8821 shutdown
+    - rh: Re-configure UCDH side of the bundle to use vlan 326 for the DC peering.
     - cmd-noc:
-      - Configure devices as follows
+      - Reconfigure BE5
       - |-
-        marin-coe-2:
-        	activate interfaces xe-0/1/3
-        	activate protocols bgp group ebgp
-        	set protocols isis interface xe-0/1/0.0 level 2 metric 9999 ipv6-unicast-metric 9999
-        	set protocols isis interface xe-0/1/2.0 level 2 metric 9999 ipv6-unicast-metric 9999
-          activate protocols isis interface xe-0/1/5.0
-          activate protocols isis interface xe-0/1/6.0
-
-        oak-agg8:
-        	router isis interface Te0/0/0/11/0 address-family ipv4 unicast metric 9999
-        	router isis interface Te0/0/0/11/0 address-family ipv6 unicast metric 9999
-        	router isis interface Te0/0/0/11/1 address-family ipv4 unicast metric 9999
-        	router isis interface Te0/0/0/11/1 address-family ipv6 unicast metric 9999
-        	router isis interface Te0/0/0/25/3 address-family ipv4 unicast metric 99999
-        	router isis interface Te0/0/0/25/3 address-family ipv6 unicast metric 99999
-
-        marin-coe-1:
-        	router isis interface Te0/0/2/3 address-family ipv4 unicast metric 99999
-        	router isis interface Te0/0/2/3 address-family ipv6 unicast metric 99999
-          router isis interface Te0/0/2/1 address-family ipv4 unicast metric 99999
-        	router isis interface Te0/0/2/1 address-family ipv6 unicast metric 99999
-
-        sf-coe-2:
-          set protocols isis interface xe-0/1/2.0 level 2 metric 99999 ipv6-unicast-metric 99999
-          activate protocols isis interface xe-0/1/5.0
-          activate protocols isis interface xe-0/1/6.0
+        sac-agg4:
+          no interface be5
+          !
+          interface be5
+            mtu 9014
+            description [dc:ext] 20G to UCDH CLR-8026
+            bundle minimum-active links 1
+          !
+          interface be5.326
+            description [dc:edge][dc:uchs][dc:site-ucdmc] 20G to UCDH CLR-8026
+            ipv4 address 137.164.24.129 255.255.255.252
+            ipv6 nd suppress-ra
+            ipv6 nd dad attempts 0
+            ipv6 address 2607:f380:1::118:9a41:8811/122
+            load-interval 30
+            flow ipv4 monitor fmm-rp sampler fsm1 ingress
+            flow ipv6 monitor fmmv6-rp sampler fsm1 ingress
+          !
     - cmd-noc:
-      - Verify that xe-0/1/3 and the BGP peering to 137.164.13.122 come up. Check routes with pre-maintenance
+      - Enable BGP peerings and verify
       - |-
-        marin-coe-2:
-        	show route received-protocol bgp 137.164.13.122
-        	show route advertising-protocol bgp 137.164.13.122
+        sac-agg4:
+          no router bgp 2152 neighbor 137.164.24.129 shutdown
+          no router bgp 2152 neighbor 2607:f380:1::118:9a41:8821 shutdown
 
-        oak-agg8:
-        	show bgp neighbor 137.164.2.45 routes
-          show bgp neighbor 137.164.2.45 advertised-routes
-    - noc: Open decom tickets for marin-coe-1, CLR6669/7669 and the 10G circuit between marin-coe-1 and sf-coe-2 xe-0/1/2 (no CLR)
-    - noc: Update documentation and diagrams for marin-coe-2 & sf-coe-2.
+          Verify peering restores and Rx/Tx routes matches pre-maintenance.
+  'Configure DMS xconnects':
+    - rh: If not already completed, UCDH will need to configure a subinterface for vlan 3992 for DMS connectivity
+    - cmd-noc:
+      - Add DMS xconnect configs
+      - |-
+        sac-agg4:
+          interface be5.3992 l2transport
+            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
+            encapsulation dot1q 3992
+          !
+          interface be31.3992 l2transport
+            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
+            encapsulation dot1q 3992
+          !
+          l2vpn xconnect group DDOS
+            p2p DDOS-vlan-UCDH-3992
+              interface be5.3992
+              interface be31.3992
+
+        ---
+
+        tri-agg2:
+          interface be24.3992 l2transport
+            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
+            encapsulation dot1q 3992
+          !
+          interface be31.3992 l2transport
+            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
+            encapsulation dot1q 3992
+          !
+          l2vpn xconnect group DDOS
+            p2p DDOS-vlan-UCDH-3992
+              interface be24.3992
+              interface be32.3992
+
+        ---
+
+        riv-agg8:
+          interface be24.3992 l2transport
+            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
+            encapsulation dot1q 3992
+          !
+          interface be26.3992 l2transport
+            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
+            encapsulation dot1q 3992
+          !
+          l2vpn xconnect group DDOS
+            p2p DDOS-vlan-UCDH-3992
+              interface be24.3992
+              interface be26.3992
+
+        ---
+
+        sdg-agg4:
+          interface be26.3992 l2transport
+            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
+            encapsulation dot1q 3992
+          !
+          interface be21.3992 l2transport
+            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
+            encapsulation dot1q 3992
+          !
+          l2vpn xconnect group DDOS
+            p2p DDOS-vlan-UCDH-3992
+              interface be21.3992
+              interface be26.3992
+
+        ---
+
+        tus-agg8:
+          interface be21.3992 l2transport
+            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
+            encapsulation dot1q 3992
+          !
+          interface be20.3992 l2transport
+            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
+            encapsulation dot1q 3992
+          !
+          l2vpn xconnect group DDOS
+            p2p DDOS-vlan-UCDH-3992
+              interface be21.3992
+              interface be20.3992
+
+        ---
+
+        lax-agg8:
+          interface be20.3992 l2transport
+            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
+            encapsulation dot1q 3992
+          !
+          interface hu0/0/0/14.3992 l2transport
+            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
+            encapsulation dot1q 3992
+          !
+          l2vpn xconnect group DDOS
+            p2p DDOS-vlan-UCDH-3992
+              interface be20.3992
+              interface hu0/0/0/14.3992
+
+    - noc: Remainder of DMS setup will be between UCD & Radware
+    - noc: Conduct any operationalization tasks for CLR-8026/8069
