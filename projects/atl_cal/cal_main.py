@@ -1,7 +1,7 @@
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 import pickle
 import os.path
 import gspread
@@ -71,7 +71,7 @@ class CalendarStuff:
         return start_day, start_time
 
     def get_maint_events(self, maint_events):
-        """Get interesting data from Maintenance Calendar events
+        """Get interesting data from Maintenance Calendar events, called via weekly_events
 
         Args:
             maint_events (list): List of Maintenance Calendar events
@@ -102,7 +102,7 @@ class CalendarStuff:
         return maint_data
 
     def get_int_events(self, internal_events):
-        """Get interesting data from Internal Change events.
+        """Get interesting data from Internal Change events, called via weekly_events
 
         Args:
             internal_events (list): List of Internal Change events
@@ -203,3 +203,20 @@ class CalendarStuff:
 
         #pylint: disable=no-member
         self.service.events().insert(calendarId='cenic.org_oggku8rjbli9v7163ocroug09s@group.calendar.google.com', body=body).execute()
+
+    def get_engrv(self):
+
+        # time = datetime.now(timezone.utc).astimezone()
+        # start_time = (time - timedelta(hours=1)).isoformat()
+        # start_time = (time - timedelta(days=2)).isoformat()
+        # end_time = time.isoformat()
+
+        #pylint: disable=no-member
+        engrv_rotation = self.service.events().list(calendarId='cenic.org_72vsnc1bn4a4jj3i2bl9fli72k@group.calendar.google.com',
+                                                    q='EngRv', singleEvents=True, orderBy='startTime').execute()
+
+        return engrv_rotation['items'][0]['summary']
+
+
+
+

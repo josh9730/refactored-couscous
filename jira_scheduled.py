@@ -18,19 +18,13 @@ with open(os.path.join(script_dir, 'usernames.yml')) as file:
     data = yaml.full_load(file)
 
 parser = argparse.ArgumentParser(description='Manually run scheduled Jira tasks.')
-parser.add_argument("-b", "--buckets", help="Run bucket update script", action="store_true")
+parser.add_argument("-b", "--buckets", help="Run EngRv bucket update script", action="store_true")
 parser.add_argument("-o", "--outages", help="Run outage pull script", action="store_true")
 parser.add_argument("-cal", "--gcal", help="Run calendar events script", action="store_true")
 parser.add_argument("-t", "--tickets", help="Run Core tickets pull script", action="store_true")
 parser.add_argument("-r", "--open_rh", help="Run Open RH pull script", action="store_true")
 parser.add_argument("-c", "--circuits", help="Pull all open Circuits tickets", action="store_true")
 args = parser.parse_args()
-
-def buckets(atl_stuff):
-    # Update resources
-    atl_stuff.update_rotating_bucket(list(data['engrv_tickets'].values()), data['engrv_hours'])
-    atl_stuff.update_rotating_bucket(list(data['shipping_tickets'].values()), data['shipping_hours'])
-    atl_stuff.update_circuit(list(data['circuit_tickets'].values()), data['circuit_hours'])
 
 def outages(atl_stuff):
     # Outages
@@ -56,6 +50,13 @@ def circuits(atl_stuff):
     jql_circuits = 'Milestone is not EMPTY and Milestone not in ("M1-Eng Mgr assign resource to deployment issue", "M2-Order and Deliver Hardware")  and assignee in (jdickman, myunus, nlo, eho, tsanda) and status not in (Resolved, Deleted, Merged)'
     atl_stuff.circuits(jql_circuits)
 
+def buckets(cal_stuff, atl_stuff):
+    # Update EngRv bucket based on gCal entry for rotation
+    # Update Circuits bucket based on Active circuits from gcal
+    eng = cal_stuff.get_engrv()
+    atl_stuff.update_rotating_bucket(data['engrv_tickets'], data['engrv_hours'], eng)
+    atl_stuff.update_circuit(list(data['circuit_tickets'].values()), data['circuit_hours'])
+
 def main(args):
 
     username = data['cas']
@@ -65,7 +66,7 @@ def main(args):
     cal_stuff = CalendarStuff(username=username)
 
     if args.buckets:
-        buckets(atl_stuff)
+        buckets(cal_stuff, atl_stuff)
     elif args.outages:
         outages(atl_stuff)
     elif args.gcal:
@@ -81,7 +82,7 @@ def main(args):
 
         day = datetime.datetime.now().strftime("%a")
         if day == 'Mon':
-            buckets(atl_stuff)
+            engrv_bucket(cal_stuff, atl_stuff)
             outages(atl_stuff)
             gcal_pull(cal_stuff)
 

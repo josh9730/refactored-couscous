@@ -146,7 +146,7 @@ class JiraStuff(Logins):
         # read from 'database'
         circuits_df = pd.read_json('/Users/jdickman/Git/refactored-couscous/projects/atl_cal/circuits.json')
 
-        # lopp to create milestone updated date and days in milestone lists
+        # loop to create milestone updated date and days in milestone lists
         today = date.today()
         days_list = []
         milestones_date = []
@@ -192,30 +192,19 @@ class JiraStuff(Logins):
         gsheet = Spread(self.sheet_key, name)
         gsheet.df_to_sheet(upload_df, index=False, sheet=name, start='G1')
 
-    def update_rotating_bucket(self, bucket, hours):
-        """Update rotation buckets (shipping and EngRv)
-        Allocation is per week
+    def update_rotating_bucket(self, bucket_dict, hours, engineer):
+        """Update rotation bucket for EngRv. Allocation is per week
         """
 
-        last_week = (datetime.today() - timedelta(weeks=1)).strftime('%Y-%m-%d')
+        ticket = bucket_dict[engineer.split(' - ')[0]]
 
-        for i in bucket:
-
-            start_date = self.jira.issue_field_value(i, 'customfield_10410')
-            orig_est = {'timetracking': {'originalEstimate': str(hours)+ 'h'}}
-            self.jira.update_issue_field(i, orig_est)
-
-            if start_date == last_week:
-
-                # Rotates the previous week's bucket to end of rotation
-                new_start = (datetime.today() + timedelta(weeks=(len(bucket)-1))).strftime('%Y-%m-%d')
-                new_end = (datetime.today() + timedelta(weeks=(len(bucket)-1), days=5)).strftime('%Y-%m-%d')
-
-                field_start = {'customfield_10410': new_start}
-                field_end = {'customfield_10411': new_end}
-
-                self.jira.update_issue_field(i, field_start)
-                self.jira.update_issue_field(i, field_end)
+        self.jira.issue_update(ticket, {
+            'timetracking': {
+                'originalEstimate': str(hours)+ 'h'
+            },
+            'customfield_10410': datetime.today().strftime('%Y-%m-%d'),
+            'customfield_10411': (datetime.today() + timedelta(days=4)).strftime('%Y-%m-%d')
+        })
 
     def update_circuit(self, bucket, hours):
         """Update circuit deployment bucket based on # of active circuits"""
@@ -241,13 +230,15 @@ class JiraStuff(Logins):
 
         # Update buckets - move start/end ahead one week, update hours
         for i, ticket in enumerate(bucket):
-            field_start = {'customfield_10410': new_start}
-            field_end = {'customfield_10411': new_end}
-            orig_est = {'timetracking': {'originalEstimate': engineer[i]}}
 
-            self.jira.update_issue_field(ticket, field_start)
-            self.jira.update_issue_field(ticket, field_end)
-            self.jira.update_issue_field(ticket, orig_est)
+            self.jira.issue_update(ticket, {
+                'timetracking': {
+                    'originalEstimate': engineer[i]
+                },
+                'customfield_10410': new_start,
+                'customfield_10411': new_end
+            })
+            print(engineer[i], ticket)
 
     def update_jira_link(self, ticket, page_title):
         """Updates links in Jira ticket (adding link via API to confluence is unidirectional)
