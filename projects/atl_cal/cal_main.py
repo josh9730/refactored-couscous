@@ -205,11 +205,8 @@ class CalendarStuff:
         self.service.events().insert(calendarId='cenic.org_oggku8rjbli9v7163ocroug09s@group.calendar.google.com', body=body).execute()
 
     def get_engrv(self):
-
-        # time = datetime.now(timezone.utc).astimezone()
-        # start_time = (time - timedelta(hours=1)).isoformat()
-        # start_time = (time - timedelta(days=2)).isoformat()
-        # end_time = time.isoformat()
+        """Get engineer on EngRv, to be run each Monday
+        """
 
         #pylint: disable=no-member
         engrv_rotation = self.service.events().list(calendarId='cenic.org_72vsnc1bn4a4jj3i2bl9fli72k@group.calendar.google.com',

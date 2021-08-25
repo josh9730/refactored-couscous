@@ -82,7 +82,7 @@ def main(args):
 
         day = datetime.datetime.now().strftime("%a")
         if day == 'Mon':
-            engrv_bucket(cal_stuff, atl_stuff)
+            buckets(cal_stuff, atl_stuff)
             outages(atl_stuff)
             gcal_pull(cal_stuff)
 

@@ -2,22 +2,23 @@
 username_file_path: /Users/jdickman/Git/refactored-couscous/usernames.yml
 mop_repo: '/Users/jdickman/Git/1 - Docs/MOPs/YAML/'
 
-ticket: NOC-655296
-page_title: UCDH CLR-8026 DMS
-parent_page_id: 8884129
+ticket: NOC-649217
+page_title: svl-agg10 Peer-Group
+parent_page_id: 9653629
 summary:
- - Convert CLR-8026 to tagged port
- - DC peering will use vlan 326 (we can shift vlans if needed)
+ - Create new peer-group for VPN address-families
+ - Add chained-composite-next-hop
 level:
- - 0
+ - 3
 rh:
- - UCD
+ -
 exec:
  - NOC
 approval:
  - N/A
 impact:
- - CLR-8026
+ - All BGP peerings on svl-agg10
+ - Similar notice as NOC-635677
 escalation:
  - 'Deploying Engineer'
 p_rollback:
@@ -26,149 +27,83 @@ rollback:
  -
 pm:
   - |-
-    sac-agg4:
-      show bgp neighbor 137.164.24.130 routes
-      show bgp neighbor 137.164.24.130 advertised-count
-      show bgp ipv6 unicast neighbor 2607:f380:1::118:9a41:8821 routes
-      show bgp ipv6 unicast neighbor 2607:f380:1::118:9a41:8821 advertised-count
+    svl-agg10:
+      show bgp summary
 
 shipping:
 sections:
-  'Migrate Handoff to dot1q':
+  'VPN BGP Group Creation':
     - cmd-noc:
-      - When UCDH is ready, shutdown the BGP peerings
+      - Retrieve the authentication-key from the existing peer-group
       - |-
-        sac-agg4:
-          router bgp 2152 neighbor 137.164.24.129 shutdown
-          router bgp 2152 neighbor 2607:f380:1::118:9a41:8821 shutdown
-    - rh: Re-configure UCDH side of the bundle to use vlan 326 for the DC peering.
+        svl-agg10:
+          show configuration protocols bgp group infrarr-v4 authentication-key
+          request chassis decrypt {{ AUTH_KEY }}
     - cmd-noc:
-      - Reconfigure BE5
+      - Configure svl-agg10 as follows
       - |-
-        sac-agg4:
-          no interface be5
-          !
-          interface be5
-            mtu 9014
-            description [dc:ext] 20G to UCDH CLR-8026
-            bundle minimum-active links 1
-          !
-          interface be5.326
-            description [dc:edge][dc:uchs][dc:site-ucdmc] 20G to UCDH CLR-8026
-            ipv4 address 137.164.24.129 255.255.255.252
-            ipv6 nd suppress-ra
-            ipv6 nd dad attempts 0
-            ipv6 address 2607:f380:1::118:9a41:8811/122
-            load-interval 30
-            flow ipv4 monitor fmm-rp sampler fsm1 ingress
-            flow ipv6 monitor fmmv6-rp sampler fsm1 ingress
-          !
-    - cmd-noc:
-      - Enable BGP peerings and verify
-      - |-
-        sac-agg4:
-          no router bgp 2152 neighbor 137.164.24.129 shutdown
-          no router bgp 2152 neighbor 2607:f380:1::118:9a41:8821 shutdown
-
-          Verify peering restores and Rx/Tx routes matches pre-maintenance.
-  'Configure DMS xconnects':
-    - rh: If not already completed, UCDH will need to configure a subinterface for vlan 3992 for DMS connectivity
-    - cmd-noc:
-      - Add DMS xconnect configs
-      - |-
-        sac-agg4:
-          interface be5.3992 l2transport
-            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
-            encapsulation dot1q 3992
-          !
-          interface be31.3992 l2transport
-            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
-            encapsulation dot1q 3992
-          !
-          l2vpn xconnect group DDOS
-            p2p DDOS-vlan-UCDH-3992
-              interface be5.3992
-              interface be31.3992
-
-        ---
-
-        tri-agg2:
-          interface be24.3992 l2transport
-            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
-            encapsulation dot1q 3992
-          !
-          interface be31.3992 l2transport
-            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
-            encapsulation dot1q 3992
-          !
-          l2vpn xconnect group DDOS
-            p2p DDOS-vlan-UCDH-3992
-              interface be24.3992
-              interface be32.3992
-
-        ---
-
-        riv-agg8:
-          interface be24.3992 l2transport
-            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
-            encapsulation dot1q 3992
-          !
-          interface be26.3992 l2transport
-            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
-            encapsulation dot1q 3992
-          !
-          l2vpn xconnect group DDOS
-            p2p DDOS-vlan-UCDH-3992
-              interface be24.3992
-              interface be26.3992
-
-        ---
-
-        sdg-agg4:
-          interface be26.3992 l2transport
-            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
-            encapsulation dot1q 3992
-          !
-          interface be21.3992 l2transport
-            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
-            encapsulation dot1q 3992
-          !
-          l2vpn xconnect group DDOS
-            p2p DDOS-vlan-UCDH-3992
-              interface be21.3992
-              interface be26.3992
-
-        ---
-
-        tus-agg8:
-          interface be21.3992 l2transport
-            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
-            encapsulation dot1q 3992
-          !
-          interface be20.3992 l2transport
-            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
-            encapsulation dot1q 3992
-          !
-          l2vpn xconnect group DDOS
-            p2p DDOS-vlan-UCDH-3992
-              interface be21.3992
-              interface be20.3992
-
-        ---
-
-        lax-agg8:
-          interface be20.3992 l2transport
-            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
-            encapsulation dot1q 3992
-          !
-          interface hu0/0/0/14.3992 l2transport
-            description [dc:lxc][dc:dms][dc:l2edge] DMS - UCDH CLR-8069
-            encapsulation dot1q 3992
-          !
-          l2vpn xconnect group DDOS
-            p2p DDOS-vlan-UCDH-3992
-              interface be20.3992
-              interface hu0/0/0/14.3992
-
-    - noc: Remainder of DMS setup will be between UCD & Radware
-    - noc: Conduct any operationalization tasks for CLR-8026/8069
+        routing-options {
+          route-distinguisher-id 137.164.16.16;
+          protect core;
+          forwarding-table {
+            chained-composite-next-hop {
+              ingress {
+                evpn;
+                l3vpn extended-space;
+              }
+            }
+          }
+        }
+        protocols {
+          bgp {
+            group infrarr-svl-agg10-v4 {
+              type internal;
+              local-address 137.164.16.16;
+              rfc6514-compliant-safi129;
+              import bgp-import-infrarr;
+              family inet {
+                  unicast;
+                  multicast;
+              }
+              family inet-vpn {
+                  unicast;
+                  multicast;
+              }
+              family inet6-vpn {
+                  unicast;
+                  multicast;
+              }
+              family evpn {
+                  signaling;
+              }
+              family inet-mvpn {
+                  signaling;
+              }
+              family inet6-mvpn {
+                  signaling;
+              }
+              family route-target;
+              authentication-key {{ PLAINTEXT AUTH_KEY }};
+              export [ bgp-export-edge bgp-export-aggregate ];
+              cluster 137.164.16.16;
+              peer-as 2152;
+              neighbor 137.164.39.255 {
+                  passive;
+              }
+            }
+            group infrarr-svl-agg10-v6 {
+              type internal;
+              local-address 2607:f380::118:9a41:101;
+              import bgp-import-infrarr;
+              family inet6 {
+                  unicast;
+                  multicast;
+              }
+              authentication-key {{ PLAINTEXT AUTH_KEY }};
+              export [ bgp-export-edge bgp-export-aggregate ];
+              cluster 137.164.16.16;
+              peer-as 2152;
+            }
+          }
+        }
+    - noc: After committing, this will reset BGP sessions on svl-agg10. Verify that all peerings restore.
