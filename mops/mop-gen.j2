@@ -63,55 +63,35 @@ Jumper #{{ count.value }}:
 
 {noformat}{% endmacro -%}
 
-{jira:key={{ ticket }}}
-
-h1. === NOC Section ===
-
-h3. SUMMARY
-{% for i in summary %}
+h1. NOC Section
+||h3. RH TICKET|{jira:key={{ ticket }}}|
+||h3. SUMMARY|{% for i in summary %}
 * {{ i }}
-{% endfor %}
-
-h3. CHANGE LEVEL
-Level {{ level[0] }}
-
-{% if rh[0] %}
-h3. REMOTE HANDS REQUIRED
-{{ rh[0] }}
-{% endif %}
-
-h3. EXECUTION:
-{{ exec[0] }}
-
-{% if approval[0] %}
-h3. REMOTE HANDS APPROVAL
-{{ approval[0] }}
-{% endif %}
-
-h3. CLRs IMPACTED
-{% for i in impact %}
+{% endfor %}|
+||h3. CHANGE LEVEL| {{ level }}|
+||h3. CLRs IMPACTED|{% for i in impact %}
 * {{ i }}
-{% endfor %}
-
-{% if escalation[0] %}
-h3. ESCALATION
-{{ escalation[0] }}
+{% endfor %}|
+||h3. EXECUTION|{{ exec }}|
+{% if rh %}
+||h3. REMOTE HANDS|{{ rh }}|
+||h3. RH APPROVAL|{{ approval }}|
 {% endif %}
-
-{% if p_rollback[0] %}
-h3. PARTIAL ROLLBACK
-{{ p_rollback[0] }}
-{% endif %}
-
-{% if rollback[0] %}
-h3. ROLLBACK STEPS:
-{% for i in rollback %}
+||h3. ESCALATION|{{ escalation }}|
+||h3. PARTIAL ROLLBACK|{{ p_rollback }}|
+||h3. ROLLBACK STEPS|{% if rollback[0] %}
+{%- for i in rollback %}
+{noformat:nopanel=true}
 {{ i }}
+{noformat}
 {% endfor %}
-{% endif %}
+{% else %}
+* Rollback is reverse of MOP
+{% endif %}|
+\\
 
-{% if pm %}
-h3. PRE-MAINTENANCE
+{% if pm[0] -%}
+h2. +PRE-MAINTENANCE+
 {noformat:nopanel=true}
 {%- for i in pm %}
 {{ i }}
@@ -119,19 +99,31 @@ h3. PRE-MAINTENANCE
 {% endfor %}
 {noformat}
 {% endif -%}
+\\
+{section}
+{column:width=30%}
+{column}
+{column:width=40%}
+----
+{column}
+{column:width=30%}
+{column}
+{section}
 
-h1. === MOP START ===
-
+h1. +*{{ '{{' }}MOP START}}*+
+\\
+{% if tech_equip %}
+|Tech Equipment|{% for i in tech_equip %}
+* {{ i }}
+{% endfor %}{% endif %}
 {% if shipping %}
-h4. SHIPPING
-{% for ticket,fedex in shipping.items() %}
-{{ ticket }}
-{% for tracking in fedex %}
-- Fedex #{{ tracking }}
+||Shipping Ticket||Tracking #||Inbound Ticket||
+{% for i in shipping %}
+|{{ i }}|{{ shipping[i][0] }}|{{ shipping[i][1] }}|
+{% endfor %}{% endif %}
 
-{% endfor %}{% endfor %}{% endif %}
-{% if rh[0] %}
-h4. Please call 714-220-3494 before starting and reference {{ ticket }}
+{% if rh %}
+h4. Please call 714-220-3494 before starting and reference {{ ticket }}.
 {% endif %}
 
 {% for section, step_dict in sections.items() %}
@@ -163,15 +155,27 @@ h2. Section {{ loop.index }} - {{ section }}
 {% endfor %}
 
 {% endfor %}
-{% if rh[0] %}
-h2. Cleanup
-# *&#91;RH]* Remove and dispose of any jumpers that were disconnected as a result of the maintenance.
-#* Do not remove any inter-cage cross connects.
-# *&#91;RH]* Dispose of any empty boxes or other packaging materials leftover.
-# *&#91;NOC , CORE]* Open Post-Maintenance child ticket using the template [HERE|https://documentation.cenic.org/display/Operations/Post+Maintenance+Checklist]
-#* If NOC is involved in the maintenance, NOC will open Post-Maintenance ticket
-#* If NOC is NOT involved in the maintenance, Core will open Post-Maintenance ticket
-#* Core is responsible for updating CLRs & port tags for Core Executed changes
+{% if rh %}
+h2. RH CLEANUP WORK
+1. *&#91;RH]* Remove & dispose of any jumpers that were disconnected as a result of the maintenance (do not remove any inter-cage cross connects).
+2. *&#91;RH]* Dispose of any empty boxes and/or other packaging materials leftover as a result of this work.
 {% endif %}
 
-h1. === MOP END ===
+h2. CENIC CLEANUP WORK
+1. *&#91;NOC, CORE]* Open Post-Maintenance child ticket using the template *[HERE|https://documentation.cenic.org/display/Operations/Post+Maintenance+Checklist]*.
+    - If +*NOC*+ performed the changes in this maintenance window, NOC will open Post-Maintenance ticket.
+    - If NOC did +*NOT*+ perform the changes, the engineer involved (i.e. Core or Systems engineer) will open the Post-Maintenance ticket
+      - Core is responsible for updating CLRs and port tags for Core Executed changes.
+
+h1. +*{{ '{{' }}MOP END}}*+
+\\
+{section}
+{column:width=30%}
+{column}
+{column:width=40%}
+----
+{column}
+{column:width=30%}
+{column}
+{section}
+\\

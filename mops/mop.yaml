@@ -2,35 +2,43 @@
 username_file_path: /Users/jdickman/Git/refactored-couscous/usernames.yml
 mop_repo: '/Users/jdickman/Git/1 - Docs/MOPs/YAML/'
 
-ticket: NOC-649217
 page_title: svl-agg10 Peer-Group
-parent_page_id: 9653629
-summary:
- - Create new peer-group for VPN address-families
- - Add chained-composite-next-hop
-level:
- - 3
-rh:
- -
-exec:
- - NOC
-approval:
- - N/A
-impact:
- - All BGP peerings on svl-agg10
- - Similar notice as NOC-635677
-escalation:
- - 'Deploying Engineer'
-p_rollback:
- - 'Yes'
-rollback:
- -
-pm:
-  - |-
-    svl-agg10:
-      show bgp summary
+parent_page_id: 8885131
+ticket: NOC-649217
 
+summary:
+- Create new peer-group for VPN address-families
+- Add chained-composite-next-hop
+level: 3
+exec: NOC
+rh: LA2
+approval: COR-1234
+impact:
+- All BGP peerings on svl-agg10
+- Similar notice as NOC-635677
+escalation: Deploying Engineer
+
+p_rollback: Yes
+rollback:
+ - |-
+  
+
+pm:
+- |-
+  svl-agg10:
+    show bgp summary
+
+tech_equip:
+  - Light meter
+  - labeler
 shipping:
+  NOC-123456:
+    - Fedex
+    - Inbound
+  NOC-789123:
+    - Fedex
+    - Inbound
+
 sections:
   'VPN BGP Group Creation':
     - cmd-noc:

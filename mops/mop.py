@@ -120,17 +120,29 @@ class CreateMOPs:
         shutil.copy(os.path.dirname(__file__) + '/' + self.args.mop_type + '.yaml',
                     self.yaml_file['mop_repo'] + self.args.mop_type + '/' +  self.page_title + '.yaml')
 
+    def print_rendered(self):
+        """Print rendered MOP to screen, but no other actions"""
+
+        env = Environment(loader=FileSystemLoader('.'), trim_blocks=True, lstrip_blocks=True)
+        template = env.get_template("mop-gen.j2")
+
+        print(template.render(self.yaml_file))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate MOP and push to Confluence/Jira')
     parser.add_argument('mop_type', metavar='mop_type', choices=['mop', 'cd'], help='Type of document to create. Allowed values are \'mop\' and \'cd\'')
     parser.add_argument('-u', '--username', metavar='username', help='CAS username')
     parser.add_argument("-l", "--link", help="Create Jira Link", action="store_true")
+    parser.add_argument("-p", "--print", help="Print rendered MOP, no other actions", action="store_true")
     args = parser.parse_args()
 
     mops = CreateMOPs(args)
 
-    if args.mop_type == 'mop':
+    if args.print:
+        mops.print_rendered()
+
+    elif args.mop_type == 'mop':
         mops.create_mop()
 
     elif args.mop_type == 'cd':
