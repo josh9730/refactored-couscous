@@ -2,116 +2,83 @@
 username_file_path: /Users/jdickman/Git/refactored-couscous/usernames.yml
 mop_repo: '/Users/jdickman/Git/1 - Docs/MOPs/YAML/'
 
-page_title: svl-agg10 Peer-Group
-parent_page_id: 8885131
-ticket: NOC-649217
+page_title: MX204 Upgrades - 19.4R3-S2.2
+parent_page_id: 9662071
+ticket: NOC-657177
 
 summary:
-- Create new peer-group for VPN address-families
-- Add chained-composite-next-hop
-level: 3
+- Upgrade MX204 CPEs to 19.4R3-S2.2
+level: 2
 exec: NOC
-rh: LA2
-approval: COR-1234
+rh: 
+approval:
 impact:
-- All BGP peerings on svl-agg10
-- Similar notice as NOC-635677
+- Reload of each CPE, impact will vary
 escalation: Deploying Engineer
 
 p_rollback: Yes
 rollback:
  - |-
-  
+  If rollback is needed after the reboot:
+    request vmhost software rollback 
+      - You should see a message 'Rollback complete, please reboot the node for it to take effect'
+    request vmhost reboot
 
 pm:
 - |-
-  svl-agg10:
+  CODE UPLOAD
+
+  For each CPE, upload the new code to the device:
+    1. scp {{ INSTALLATION PACKAGE }} {{ MFA USER }}@{{ DEVICE }}:/var/tmp/
+    2. Verify MD5 Checksum (see Notes section above for Checksum):
+       file checksum md5 /var/tmp/{{ INSTALLATION PACKAGE }}
+
+    NOTE: Alternatively, the file can be downloaded from Juniper's website straight to the router. If you have a Juniper account this may be faster than the way above.
+
+  SNAPSHOTS
+
+  {{ device }}:
+    verify OOB access if available
     show bgp summary
+    show isis adjacency
+    show interface {{ }}
+    show chassis routing-engine
+    show chassis environment
+    show system alarms
+    show chassis fpc pic-status
+    show configuration | match ether-options | display set
+      - Note any interfaces have 'ether-options' instead of 'gigether-options' as this will need to be upgdated
 
 tech_equip:
-  - Light meter
-  - labeler
+  -
 shipping:
-  NOC-123456:
-    - Fedex
-    - Inbound
-  NOC-789123:
-    - Fedex
-    - Inbound
 
 sections:
-  'VPN BGP Group Creation':
+  'Update Config':
     - cmd-noc:
-      - Retrieve the authentication-key from the existing peer-group
+      - As determined in Pre-Maintenance, 'ether-options' needs to be updated to 'gigether-options'
       - |-
-        svl-agg10:
-          show configuration protocols bgp group infrarr-v4 authentication-key
-          request chassis decrypt {{ AUTH_KEY }}
+        show configuration {{ INTERFACE }}
+
+        set interface {{ INTERFACE }} gigether-options 802.3ad {{ AE# }}
+  'Install Software':
     - cmd-noc:
-      - Configure svl-agg10 as follows
+      - Take snapshots
       - |-
-        routing-options {
-          route-distinguisher-id 137.164.16.16;
-          protect core;
-          forwarding-table {
-            chained-composite-next-hop {
-              ingress {
-                evpn;
-                l3vpn extended-space;
-              }
-            }
-          }
-        }
-        protocols {
-          bgp {
-            group infrarr-svl-agg10-v4 {
-              type internal;
-              local-address 137.164.16.16;
-              rfc6514-compliant-safi129;
-              import bgp-import-infrarr;
-              family inet {
-                  unicast;
-                  multicast;
-              }
-              family inet-vpn {
-                  unicast;
-                  multicast;
-              }
-              family inet6-vpn {
-                  unicast;
-                  multicast;
-              }
-              family evpn {
-                  signaling;
-              }
-              family inet-mvpn {
-                  signaling;
-              }
-              family inet6-mvpn {
-                  signaling;
-              }
-              family route-target;
-              authentication-key {{ PLAINTEXT AUTH_KEY }};
-              export [ bgp-export-edge bgp-export-aggregate ];
-              cluster 137.164.16.16;
-              peer-as 2152;
-              neighbor 137.164.39.255 {
-                  passive;
-              }
-            }
-            group infrarr-svl-agg10-v6 {
-              type internal;
-              local-address 2607:f380::118:9a41:101;
-              import bgp-import-infrarr;
-              family inet6 {
-                  unicast;
-                  multicast;
-              }
-              authentication-key {{ PLAINTEXT AUTH_KEY }};
-              export [ bgp-export-edge bgp-export-aggregate ];
-              cluster 137.164.16.16;
-              peer-as 2152;
-            }
-          }
-        }
-    - noc: After committing, this will reset BGP sessions on svl-agg10. Verify that all peerings restore.
+        request system snapshot
+        request system snapshot recovery
+        request vmhost snapshot
+    - cmd-noc:
+      - Install, can take ~15 minutes
+      - |-
+        request vmhost software add /var/tmp/{{ INSTALLATION PACKAGE }}
+    - cmd-noc:
+      - Issue upgrade command. This will cause a reload, and impact services
+      - |-
+        request vmhost reboot
+    - cmd-noc:
+      - Verify the upgrade
+      - |-
+        show vmhost version
+        show version
+    - noc: Verify pre-/post-maintenance captures. If all services have restored, issue {{request vmhost snapshot}}.

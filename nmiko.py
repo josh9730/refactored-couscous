@@ -16,19 +16,21 @@ first_factor = keyring.get_password('mfa',user)
 otp_secret = keyring.get_password('otp',user)
 otp = pyotp.TOTP(otp_secret)
 
+
+# use '|junos' or '|iosxr' for device_type
 xr_bb_devices = [
-    # 'sac-agg4|iosxr',
-    # 'tri-agg2|iosxr',
-    # 'sfo-agg4|iosxr',
-    # 'sdg-agg4|iosxr',
-    # 'slo-agg4|iosxr',
-    # 'fre-agg4|iosxr',
-    # 'frg-agg4|iosxr',
-    'riv-agg8|iosxr',
-    'oak-agg8|iosxr',
-    'svl-agg8|iosxr',
-    'lax-agg8|iosxr',
-    'tus-agg8|iosxr'
+    'tri-agg2|iosxr',
+    'sdg-agg4|iosxr',
+    'sac-agg4|iosxr',
+    'sfo-agg4|iosxr',
+    'slo-agg4|iosxr',
+    'fre-agg4|iosxr',
+    'frg-agg4|iosxr',
+    # 'riv-agg8|iosxr',
+    # 'oak-agg8|iosxr',
+    # 'svl-agg8|iosxr',
+    # 'lax-agg8|iosxr',
+    # 'tus-agg8|iosxr'
 ]
 
 junos_bb_devices = [
@@ -40,11 +42,15 @@ junos_bb_devices = [
     'bak-agg6|junos'
 ]
 
-# use '|junos' or '|iosxr' for device_type
+misc_devices = [
+
+]
+
 device_list = xr_bb_devices
 
 xr_show_commands = [
-    'show rpl route-policy from_rr-clients'
+    'show int desc | ex "[\.]" | in Hu',
+    'show inventory | util egrep -B1 "CPAK|CFP"'
 ]
 
 junos_show_commands = [
@@ -57,7 +63,8 @@ def connect(device_type, device_name, user, passwd):
         device_type = device_type,
         host = device_name,
         username = user,
-        password = passwd
+        password = passwd,
+        fast_cli = False
     )
 
     return connection
@@ -78,13 +85,16 @@ def main():
         start_time = time.time()
         connection = connect(device_type, device_name, user, first_factor + otp.now())
 
-        print('\n', '=' * 20, device_name.upper(), '=' * 20, '\n')
+        print('\n', '-' * 20, device_name.upper(), '-' * 20, '\n')
         for command in commands_list:
             print(f"COMMAND: '{command}")
             print(connection.send_command(command), '\n\n')
 
         if counter != len(device):
-            time.sleep(30 - (time.time() - start_time))
+            if start_time < (abs(time.time() - start_time)):
+                time.sleep(30 - (time.time() - start_time))
+            else:
+                continue
 
 
 if __name__ == '__main__':
