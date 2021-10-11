@@ -23,7 +23,7 @@ class CreatePanelPair(Job):
             'manufacturer_id': '$manufacturer'
         }
     )
-    rack_1 = ObjectVar(
+    rack_a = ObjectVar(
         model = Rack,
         query_params = {
             'site_id': '$site_name'
