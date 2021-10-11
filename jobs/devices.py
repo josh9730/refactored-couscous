@@ -63,7 +63,7 @@ class CreatePanelPair(Job):
             name = f'{site_name}--{rack_a}--1',
             status = Status.objects.get(slug='active'),
             site = data['site_name'],
-            rack = data['rack_a']
+            rack = data['rack_a'],
             device_role = DeviceRole.objects.get(name='Hubsite - Patch Panels'),
             position = data['rack_a_pos'],
             face = 'front'
