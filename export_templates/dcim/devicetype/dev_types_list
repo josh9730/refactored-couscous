@@ -1,3 +1,0 @@
-{%- for dev_type in queryset -%}
-{{ dev_type.model }}
-{% endfor -%}
