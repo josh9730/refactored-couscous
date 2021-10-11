@@ -26,7 +26,7 @@ class CreatePanelPair(Job):
     rack_1 = ObjectVar(
         model = Rack,
         query_params = {
-            'site': '$site_name'
+            'name': '$site_name'
         }
     )
     rack_a_pos = IntegerVar(
