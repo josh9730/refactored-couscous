@@ -8,7 +8,7 @@ class CreatePanelPair(Job):
     class Meta:
         name = 'Create Patch Panel Pair'
         description: 'Create a pair of patch panels between two racks.'
-        # field_order = ['site_name', 'chassis', 'cassette_a', 'cassette_z']
+        field_order = ['manufacturer', 'chassis', 'site_name', 'rack_1']
         # commit_default = False
 
     site_name = ObjectVar(
@@ -55,14 +55,14 @@ class CreatePanelPair(Job):
 
     def run(self, data, commit):
 
-        site_name = data['site']['name']
+        site_name = data['site_name']['name']
         rack_a = data['rack_a']['name']
 
         panel_a = Device(
             device_type = data['chassis'],
             name = f'{site_name}--{rack_a}--1',
             status = Status.objects.get(slug='active'),
-            site = data['site'],
+            site = data['site_name'],
             device_role = DeviceRole.objects.get(name='Patch Panel'),
             position = data['rack_a_pos'],
             face = 'front'
