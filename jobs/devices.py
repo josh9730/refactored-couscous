@@ -15,7 +15,7 @@ class CreatePanelPair(Job):
         site = Site
     )
     manufacturer = ObjectVar(
-        model = manufacturer,
+        model = Manufacturer,
     )
     chassis = ObjectVar(
         model = DeviceType,
