@@ -1,16 +1,15 @@
-from django.utils.text import slugify
-
 from nautobot.dcim.models import Device, DeviceRole, DeviceType, Manufacturer, Site, Rack
 from nautobot.extras.models import Status
 from nautobot.extras.jobs import *
+
 
 class CreatePanelPair(Job):
 
     class Meta:
         name = 'Create Patch Panel Pair'
         description: 'Create a pair of patch panels between two racks.'
-        field_order = ['site_name', 'chassis', 'cassette_a', 'cassette_z']
-        commit_default = False
+        # field_order = ['site_name', 'chassis', 'cassette_a', 'cassette_z']
+        # commit_default = False
 
     site_name = ObjectVar(
         site = Site
@@ -24,7 +23,7 @@ class CreatePanelPair(Job):
             'manufacturer_id': '$manufacturer'
         }
     )
-    rack_a = ObjectVar(
+    rack_1 = ObjectVar(
         model = Rack,
         query_params = {
             'site': '$site'
@@ -66,7 +65,7 @@ class CreatePanelPair(Job):
             site = data['site'],
             device_role = DeviceRole.objects.get(name='Patch Panel'),
             position = data['rack_a_pos'],
-            rack_face = 'front'
+            face = 'front'
         )
 
         panel_a.validated_save()
