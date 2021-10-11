@@ -55,12 +55,9 @@ class CreatePanelPair(Job):
 
     def run(self, data, commit):
 
-        site_name = data['site_name']['name']
-        rack_a = data['rack_a']['name']
-
         panel_a = Device(
             device_type = data['chassis'],
-            name = f'{site_name}--{rack_a}--1',
+            name = f'{data['site_name']}--{data['rack_a']}--1',
             status = Status.objects.get(slug='active'),
             site = data['site_name'],
             device_role = DeviceRole.objects.get(name='Patch Panel'),
