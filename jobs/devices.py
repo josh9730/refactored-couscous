@@ -12,7 +12,7 @@ class CreatePanelPair(Job):
         # commit_default = False
 
     site_name = ObjectVar(
-        site = Site
+        model = Site
     )
     manufacturer = ObjectVar(
         model = Manufacturer,
