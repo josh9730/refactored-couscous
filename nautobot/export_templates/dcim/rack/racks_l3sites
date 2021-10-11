@@ -1,0 +1,6 @@
+{% set l3_sites = ['BAKE1','CORN1','EMVL1','FERG1','FRES1','LOSA2','PDCA1','RIVE1','SACR1','SACR2','SAND1','SFRA1','SLOB2','SNVL2','SOLE1','TUST1'] %}
+
+{%- for rack in queryset %}
+{%- if rack.site.name in l3_sites %}
+{{ rack.name }}
+{%- endif -%}{% endfor %}
