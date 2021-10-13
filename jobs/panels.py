@@ -38,7 +38,9 @@ class CreatePanelPair(Job):
         max_value=40,
     )
     facility_1_id = StringVar(
-        label="Panel A Facility ID", description="Facility name for panel", required=False
+        label="Panel A Facility ID",
+        description="Facility name for panel",
+        required=False,
     )
     rack_2 = ObjectVar(
         label="Rack B",
@@ -53,11 +55,14 @@ class CreatePanelPair(Job):
         max_value=40,
     )
     facility_2_id = StringVar(
-        label="Panel B Facility ID", description="Facility name for panel", required=False
+        label="Panel B Facility ID",
+        description="Facility name for panel",
+        required=False,
     )
     clr = IntegerVar(
         label="CLR",
-        description="CLR or label for MPO-MPO trunk connection",
+        description="CLR or label for MPO-MPO trunk connection. If blank, a default will be created.",
+        required=False,
     )
     FIBER_CHOICES = (("", ""), ("mmf", "Multimode Fiber"), ("smf", "Singlemode Fiber"))
     Fiber_Type = ChoiceVar(choices=FIBER_CHOICES)
@@ -128,6 +133,10 @@ class CreatePanelPair(Job):
         # Create MPO - MPO cable between the two cassettes.
         cassette_a_uuid = Device.objects.get(name=cassette_list[0]).id
         cassette_b_uuid = Device.objects.get(name=cassette_list[1]).id
+        if not data["clr"]:
+            clr = f"{cassette_list[0]}--{cassette_list[1]}--MPO24"
+        else:
+            clr = data["clr"]
         mpo = Cable(
             termination_a_id=RearPort.objects.get(device_id=cassette_a_uuid).id,
             termination_b_id=RearPort.objects.get(device_id=cassette_b_uuid).id,
