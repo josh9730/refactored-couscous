@@ -134,7 +134,7 @@ class CreatePanelPair(Job):
         cassette_a_uuid = Device.objects.get(name=cassette_list[0]).id
         cassette_b_uuid = Device.objects.get(name=cassette_list[1]).id
         if not data["clr"]:
-            clr = f"{cassette_list[0]}--{cassette_list[1]}--MPO24"
+            clr = f"{cassette_list[0]}--RP1 `TO` {cassette_list[1]}--RP1"
         else:
             clr = data["clr"]
         mpo = Cable(
