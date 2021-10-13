@@ -74,6 +74,7 @@ class CreatePanelPair(Job):
         for i in range(1, 3):
 
             # Create panel enclosures, defaults to Sliding
+            rack = data[f"rack_{i}"].split(" (")[0]
             tenant = Tenant.objects.get(name="CENIC Hubsite")
             panel = Device(
                 site=data["site_name"],
@@ -82,7 +83,7 @@ class CreatePanelPair(Job):
                 face="front",
                 device_type=DeviceType.objects.get(model=enclosure),
                 device_role=DeviceRole.objects.get(name="Hubsite - Patch Panels"),
-                name=f'PP--{data["site_name"]}--{data[f"rack_{i}"]}--U{data[f"rack_{i}_position"]}',
+                name=f'PP--{data["site_name"]}--{rack}--U{data[f"rack_{i}_position"]}',
                 status=Status.objects.get(slug="active"),
                 _custom_field_data={"facility_device_id": data[f"facility_{i}_id"]},
                 comments=f"**Patch Panel enclosure for cassettes. To check ports, see 'Device Bays' and select the desired Cassette.**",
@@ -91,7 +92,7 @@ class CreatePanelPair(Job):
             panel.validated_save()
             self.log_success(
                 obj=panel,
-                message=f'Created new panel: `{panel.name}`.\n\nSite: {data["site_name"]}\nRack: {data[f"rack_{i}"]}\nPosition: {data[f"rack_{i}_position"]}',
+                message=f'Created new panel: `{panel.name}`.\n\nSite: {data["site_name"]}\nRack: {rack}\nPosition: {data[f"rack_{i}_position"]}',
             )
 
             # Create Cassettes
