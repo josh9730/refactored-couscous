@@ -80,7 +80,7 @@ class CreatePanelPair(Job):
                 name=f'PP--{data["site_name"]}--{data[f"rack_{i}"]}--U{data[f"rack_{i}_position"]}',
                 status=Status.objects.get(slug="active"),
                 _custom_field_data={"vendor_device": data[f"vendor_{i}_id"]},
-                comments=f"**Cassette Patch Panel. To check ports, see 'Device Bays' and select the desired Cassette.**",
+                comments=f"**Patch Panel enclosure for cassettes. To check ports, see 'Device Bays' and select the desired Cassette.**",
                 tenant=tenant,
             )
             panel.validated_save()
@@ -91,18 +91,19 @@ class CreatePanelPair(Job):
 
             # Create Cassettes
             if data["Fiber_Type"] == "mmf":
-                cassette_type = "FHD MPO-24/LC OM4 Cassette Type A"
+                cassette_model = "FHD MPO-24/LC OM4 Cassette Type A"
             else:
-                cassette_type = "FHD MPO-24/LC OS2 Cassette Type A"
+                cassette_model = "FHD MPO-24/LC OS2 Cassette Type A"
             if i == 1:
-                cassette_type = cassette_type + "F"
+                cassette_model = cassette_model + "F"
+            cassette_type = cassette_model.split(" ")[-1:]
 
             cassette = Device(
                 site=data["site_name"],
                 rack=data[f"rack_{i}"],
-                device_type=DeviceType.objects.get(model=cassette_type),
+                device_type=DeviceType.objects.get(model=cassette_model),
                 device_role=DeviceRole.objects.get(name="Hubsite - Patch Panels"),
-                name=f"(C){panel.name}--S1",
+                name=f"(C-{cassette_type}){panel.name}--S1",
                 status=Status.objects.get(slug="active"),
                 tenant=tenant,
             )
