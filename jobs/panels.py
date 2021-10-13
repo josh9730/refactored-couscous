@@ -144,7 +144,7 @@ class CreatePanelPair(Job):
             termination_b_type_id=50,
             status=Status.objects.get(slug="connected"),
             type=data["Fiber_Type"],
-            label="CLR-" + str(data["clr"]),
+            label=clr,
         )
         mpo.validated_save()
         self.log_success(
