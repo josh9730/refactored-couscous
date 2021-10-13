@@ -7,6 +7,7 @@ from nautobot.dcim.models import (
     Rack,
     RearPort,
     Cable,
+    Tenant,
 )
 from nautobot.extras.models import Status
 from nautobot.extras.jobs import *
@@ -68,6 +69,7 @@ class CreatePanelPair(Job):
         for i in range(1, 3):
 
             # Create panel enclosures, defaults to Sliding
+            tenant = Tenant.objects.get(name='CENIC Hubsite').id
             panel = Device(
                 site=data["site_name"],
                 rack=data[f"rack_{i}"],
@@ -79,7 +81,7 @@ class CreatePanelPair(Job):
                 status=Status.objects.get(slug="active"),
                 _custom_field_data={"vendor_device": data[f"vendor_{i}_id"]},
                 comments=f"**Cassette Patch Panel. To check ports, see 'Device Bays' and select the desired Cassette.**",
-                tenant="CENIC Hubsite",
+                tenant=tenant,
             )
             panel.validated_save()
             self.log_success(
@@ -102,7 +104,7 @@ class CreatePanelPair(Job):
                 device_role=DeviceRole.objects.get(name="Hubsite - Patch Panels"),
                 name=f"(C){panel.name}--S1",
                 status=Status.objects.get(slug="active"),
-                tenant="CENIC Hubsite",
+                tenant=tenant,
             )
             cassette.validated_save()
             self.log_success(
