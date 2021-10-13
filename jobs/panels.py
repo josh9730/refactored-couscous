@@ -16,7 +16,7 @@ name = "Patch Panel Jobs"
 
 class CreatePanelPair(Job):
     """Maintained By: Josh Dickman (jdickman@cenic.org)
-       Use flake8 & black for formatting
+    Use flake8 & black for formatting
     """
 
     class Meta:
@@ -58,11 +58,7 @@ class CreatePanelPair(Job):
         label="CLR",
         description="CLR or label for MPO-MPO trunk connection",
     )
-    FIBER_CHOICES = (
-        ("",""),
-        ("mmf", "Multimode Fiber"),
-        ("smf", "Singlemode Fiber")
-    )
+    FIBER_CHOICES = (("", ""), ("mmf", "Multimode Fiber"), ("smf", "Singlemode Fiber"))
     Fiber_Type = ChoiceVar(choices=FIBER_CHOICES)
 
     def run(self, data, commit):
@@ -82,6 +78,8 @@ class CreatePanelPair(Job):
                 name=f'PP--{data["site_name"]}--{data[f"rack_{i}"]}--U{data[f"rack_{i}_position"]}',
                 status=Status.objects.get(slug="active"),
                 _custom_field_data={"vendor_device": data[f"vendor_{i}_id"]},
+                comments=f"**Cassette Patch Panel. To check ports, see 'Device Bays' and select the desired Cassette.**",
+                tenant="CENIC Hubsite",
             )
             panel.validated_save()
             self.log_success(
@@ -104,7 +102,7 @@ class CreatePanelPair(Job):
                 device_role=DeviceRole.objects.get(name="Hubsite - Patch Panels"),
                 name=f"(C){panel.name}--S1",
                 status=Status.objects.get(slug="active"),
-                # parent_device = Device.objects.get(name=panel.name)
+                tenant="CENIC Hubsite",
             )
             cassette.validated_save()
             self.log_success(
@@ -148,7 +146,7 @@ class CreatePanelPair(Job):
 #     class Meta:
 #         name = 'Paired Cassette Jumper Run'
 #         description = 'Run jumpers across two pairs of MPO-LC cassette panels. This is for connecting one device to another via a 'hub' rack. See Confluence patch panel docs for details.'
-        
+
 #     site_name = ObjectVar(label='Site Name', model=Site)
 #     rack_1 = ObjectVar(
 #         label = 'Rack A',
@@ -171,7 +169,7 @@ class CreatePanelPair(Job):
 #             'rack_id': '$rack_1'
 #         }
 #     )
-    
+
 #     #port_1 = ChoiceVar(
 #     #    label = 'Port',
 #     #    description = 'Port in Cassette ID A',
