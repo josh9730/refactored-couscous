@@ -1,0 +1,30 @@
+---
+speed
+network
+segment
+site code
+clr
+remote_dev
+remote_port
+cust - bool
+subint - bool
+
+Service
+  CENIC - CENIC L3
+  CENIC - CENIC L2
+  CENIC - CUST L3
+  CENIC - CUST L2
+  CENIC - CUST DMS
+
+Circuit type
+  WAN w
+  Edge
+
+service - l3/l2
+A Port
+  - backbone router
+  - asi
+
+z Port
+  - cpe
+  - 
