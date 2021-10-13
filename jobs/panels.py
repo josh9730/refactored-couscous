@@ -103,7 +103,7 @@ class CreatePanelPair(Job):
                 rack=data[f"rack_{i}"],
                 device_type=DeviceType.objects.get(model=cassette_model),
                 device_role=DeviceRole.objects.get(name="Hubsite - Patch Panels"),
-                name=f"(C-{cassette_type}){panel.name}--S1",
+                name=f"(C-{cassette_type[0]}){panel.name}--S1",
                 status=Status.objects.get(slug="active"),
                 tenant=tenant,
             )
