@@ -134,7 +134,7 @@ class PortTag(Job):
     #DEV_CHOICES = Job.load_yaml('sites.yaml')['ccc']
     
     
-    aDEV_CHOICES = (
+    DEV_CHOICES = (
         ("",""),
         ("cpe_rtr", "CPE Router"),
         ("cpe_sw", "CPE Switch"),
