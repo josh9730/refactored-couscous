@@ -74,7 +74,7 @@ class CreatePanelPair(Job):
         for i in range(1, 3):
 
             # Create panel enclosures, defaults to Sliding
-            rack = data[f"rack_{i}"].split(" (")[0]
+            rack = data[f"rack_{i}"].name.split(" (")[0]
             tenant = Tenant.objects.get(name="CENIC Hubsite")
             panel = Device(
                 site=data["site_name"],
