@@ -37,8 +37,8 @@ class CreatePanelPair(Job):
         min_value=1,
         max_value=40,
     )
-    vendor_1_id = StringVar(
-        label="Panel A Vendor ID", description="Vendor name for panel", required=False
+    facility_1_id = StringVar(
+        label="Panel A Facility ID", description="Facility name for panel", required=False
     )
     rack_2 = ObjectVar(
         label="Rack B",
@@ -52,8 +52,8 @@ class CreatePanelPair(Job):
         min_value=1,
         max_value=40,
     )
-    vendor_2_id = StringVar(
-        label="Panel B Vendor ID", description="Vendor name for panel", required=False
+    facility_2_id = StringVar(
+        label="Panel B Facility ID", description="Facility name for panel", required=False
     )
     clr = IntegerVar(
         label="CLR",
@@ -79,7 +79,7 @@ class CreatePanelPair(Job):
                 device_role=DeviceRole.objects.get(name="Hubsite - Patch Panels"),
                 name=f'PP--{data["site_name"]}--{data[f"rack_{i}"]}--U{data[f"rack_{i}_position"]}',
                 status=Status.objects.get(slug="active"),
-                _custom_field_data={"vendor_device": data[f"vendor_{i}_id"]},
+                _custom_field_data={"facility_device_id": data[f"facility_{i}_id"]},
                 comments=f"**Patch Panel enclosure for cassettes. To check ports, see 'Device Bays' and select the desired Cassette.**",
                 tenant=tenant,
             )
