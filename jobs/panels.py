@@ -154,63 +154,69 @@ class CreatePanelPair(Job):
         )
 
 
-# class JumperCassette(Job):
+class JumperCassette(Job):
 
-#     class Meta:
-#         name = 'Paired Cassette Jumper Run'
-#         description = 'Run jumpers across two pairs of MPO-LC cassette panels. This is for connecting one device to another via a 'hub' rack. See Confluence patch panel docs for details.'
+    class Meta:
+        name = "Paired Cassette Jumper Run"
+        description = "Run jumpers across two pairs of MPO-LC cassette panels. This is for connecting one device to another via a 'hub' rack. See Confluence patch panel docs for details."
 
-#     site_name = ObjectVar(label='Site Name', model=Site)
-#     rack_1 = ObjectVar(
-#         label = 'Rack A',
-#         model = Rack,
-#         query_params = {
-#             'site_id': '#site_name'
-#         }
-#     )
-#     cassette_1 = ObjectVar(
-#         label = 'Cassette ID A',
-#         description = 'Cassette ID for Rack A',
-#         query_params = {
-#             'rack_id': '$rack_1'
-#         }
-#     )
-#     device_1 = ObjectVar(
-#         label = 'Device A',
-#         description = 'Device for jumper termination in Rack A',
-#         query_params = {
-#             'rack_id': '$rack_1'
-#         }
-#     )
+    site_name = ObjectVar(label='Site Name', model=Site)
+    rack_1 = ObjectVar(
+        label = 'Rack A',
+        model = Rack,
+        query_params = {
+            'site_id': 'Ssite_name'
+        }
+    )
+    panel_1 = ObjectVar(
+        label = 'Device A',
+        model = Device,
+        query_params= {
+            'rack_id': '$rack_1'
+        }
+    )
+    cassette_1 = ObjectVar(
+        label = 'Cassette A',
+        model = Device,
+        query_params = {
+            'device_id': '$rack_1.get_children()'
+        }
+    )
+    #port_1 = ChoiceVar(
+    #    label = 'Port',
+    #    description = 'Port in Cassette ID A',
+    #    query_params = -ports free in cassette??
+    #)
+    # cassette_1_port = IntegerVar(
+    #     label = 'Port Number'
+    # )
+    # device_1_port = Inte
+    # rack_2 = ObjectVar(
+    #     label = 'Rack B',
+    #     model = Rack,
+    #     query_params = {
+    #         'site_id': '$site_name'
+    #     }
+    # )
+    # cassette_2 = ObjectVar(
+    #     label = 'Cassette ID B',
+    #     description = 'Cassette ID for Rack B',
+    #     query_params = {
+    #         'rack_id': '$rack_2'
+    #     }
+    # )
+    # clr = IntegerVar(
+    #     label = 'CLR',
+    #     description = 'CLR or label for the LC jumpers'
+    # )
+    # get fiber type from cassette
+    # get hub ports from the far end cassette ports
+    # get list of available interfaces per device
+    # get list of availabe front ports per cassette
 
-#     #port_1 = ChoiceVar(
-#     #    label = 'Port',
-#     #    description = 'Port in Cassette ID A',
-#     #    query_params = -ports free in cassette??
-#     #)
-#     cassette_1_port = IntegerVar(
-#         label = 'Port Number'
-#     )
-#     device_1_port = Inte
-#     rack_2 = ObjectVar(
-#         label = 'Rack B',
-#         model = Rack,
-#         query_params = {
-#             'site_id': '#site_name'
-#         }
-#     )
-#     cassette_2 = ObjectVar(
-#         label = 'Cassette ID B',
-#         description = 'Cassette ID for Rack B',
-#         query_params = {
-#             'rack_id': '$rack_2'
-#         }
-#     )
-#     clr = IntegerVar(
-#         label = 'CLR',
-#         description = 'CLR or label for the LC jumpers'
-#     )
-#     # get fiber type from cassette
-#     # get hub ports from the far end cassette ports
-#     # get list of available interfaces per device
-#     # get list of availabe front ports per cassette
+    def run(self, data, commit):
+
+
+        output = data['cassette_1']
+
+        return output
