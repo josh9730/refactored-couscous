@@ -31,13 +31,13 @@ class CreatePanelPair(Job):
         query_params={"site_id": "$site_name"},
     )
     rack_1_position = IntegerVar(
-        label="Rack B Position",
+        label="Rack A Position",
         description="Lowest RU filled by the new panel",
         min_value=1,
         max_value=40,
     )
     vendor_1_id = StringVar(
-        label="Rack A Vendor ID", description="Vendor name for panel", required=False
+        label="Panel A Vendor ID", description="Vendor name for panel", required=False
     )
     rack_2 = ObjectVar(
         label="Rack B",
@@ -52,7 +52,7 @@ class CreatePanelPair(Job):
         max_value=40,
     )
     vendor_2_id = StringVar(
-        label="Rack B Vendor ID", description="Vendor name for panel", required=False
+        label="Panel B Vendor ID", description="Vendor name for panel", required=False
     )
     clr = IntegerVar(
         label="CLR",
