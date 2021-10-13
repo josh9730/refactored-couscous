@@ -165,7 +165,7 @@ class JumperCassette(Job):
         label = 'Rack A',
         model = Rack,
         query_params = {
-            'site_id': 'Ssite_name'
+            'site_id': '$site_name'
         }
     )
     panel_1 = ObjectVar(
