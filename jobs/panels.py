@@ -174,7 +174,7 @@ class JumperCassette(Job):
         model = Device,
         query_params= {
             # 'rack_id': '$rack_1',
-            'tenant': '$tenant',
+            'tenant': tenant,
             # 'device_role': 'Hubsite - Patch Panels'
         }
     )
