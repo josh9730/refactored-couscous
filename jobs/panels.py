@@ -179,7 +179,7 @@ class JumperCassette(Job):
         label = 'Cassette A',
         model = Device,
         query_params = {
-            'device_id': '$panel_1.get_children()'
+            'tenant': 'CENIC Hubsite'
         }
     )
     #port_1 = ChoiceVar(
