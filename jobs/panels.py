@@ -172,8 +172,8 @@ class JumperCassette(Job):
         label = 'Cassette A',
         model = Device,
         query_params= {
-            'rack_id': '$rack_1',
-            'tenant': 'CENIC Hubsite',
+            # 'rack_id': '$rack_1',
+            # 'tenant': 'CENIC Hubsite',
             'device_role': 'Hubsite - Patch Panels'
         }
     )
