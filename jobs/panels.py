@@ -169,19 +169,21 @@ class JumperCassette(Job):
         }
     )
     panel_1 = ObjectVar(
-        label = 'Device A',
-        model = Device,
-        query_params= {
-            'rack_id': '$rack_1'
-        }
-    )
-    cassette_1 = ObjectVar(
         label = 'Cassette A',
         model = Device,
-        query_params = {
-            'tenant': 'CENIC Hubsite'
+        query_params= {
+            'rack_id': '$rack_1',
+            'tenant': 'CENIC Hubsite',
+            'device_role': 'Hubsite - Patch Panels'
         }
     )
+    # cassette_1 = ObjectVar(
+    #     label = 'Cassette A',
+    #     model = Device,
+    #     query_params = {
+            
+    #     }
+    # )
     #port_1 = ChoiceVar(
     #    label = 'Port',
     #    description = 'Port in Cassette ID A',
