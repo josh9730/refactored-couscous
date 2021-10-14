@@ -8,7 +8,6 @@ import pyotp
 
 
 class Login:
-
     def __init__(self, username, hostname, device_type):
         """Connection parameters, initialize with open() & close()
 
@@ -29,9 +28,10 @@ class Login:
 
         password = keyring.get_password("cas", self.username)
         jira = Jira(
-            url = 'https://servicedesk.cenic.org',
-            username = self.username,
-            password = password)
+            url="https://servicedesk.cenic.org",
+            username=self.username,
+            password=password,
+        )
 
         return jira
 
@@ -44,9 +44,10 @@ class Login:
 
         driver = get_network_driver(self.device_type)
         connection = driver(
-            hostname = self.hostname,
-            username = self.username,
-            password = self.first_factor + self.otp.now())
+            hostname=self.hostname,
+            username=self.username,
+            password=self.first_factor + self.otp.now(),
+        )
 
         return connection
 
@@ -58,10 +59,11 @@ class Login:
         """
 
         connection = ConnectHandler(
-            device_type = self.device_type,
-            host = self.hostname,
-            username = self.username,
-            password = self.first_factor + self.otp.now())
+            device_type=self.device_type,
+            host=self.hostname,
+            username=self.username,
+            password=self.first_factor + self.otp.now(),
+        )
 
         return connection
 
@@ -73,9 +75,10 @@ class Login:
         """
 
         connection = Device(
-            host = self.hostname,
-            user = self.username,
-            passwd = self.first_factor + self.otp.now())
+            host=self.hostname,
+            user=self.username,
+            passwd=self.first_factor + self.otp.now(),
+        )
 
         return connection
 
@@ -87,10 +90,11 @@ class Login:
         """
 
         connection = manager.connect(
-            host = self.hostname,
-            username = self.username,
-            password = self.first_factor + self.otp.now(),
+            host=self.hostname,
+            username=self.username,
+            password=self.first_factor + self.otp.now(),
             timeout=120,
-            hostkey_verify=False)
+            hostkey_verify=False,
+        )
 
         return connection

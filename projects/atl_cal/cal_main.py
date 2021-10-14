@@ -12,16 +12,20 @@ from atl_main import Logins
 
 
 class CalendarStuff:
-
     def __init__(self, username=None):
         self.jira = Logins(username).jira_login()
 
         # If modifying these scopes, delete the file token.pickle.
-        SCOPES = ['https://www.googleapis.com/auth/calendar.events']
+        SCOPES = ["https://www.googleapis.com/auth/calendar.events"]
 
         creds = None
-        if os.path.exists('/Users/jdickman/Git/refactored-couscous/projects/atl_cal/token.pickle'):
-            with open('/Users/jdickman/Git/refactored-couscous/projects/atl_cal/token.pickle', 'rb') as token:
+        if os.path.exists(
+            "/Users/jdickman/Git/refactored-couscous/projects/atl_cal/token.pickle"
+        ):
+            with open(
+                "/Users/jdickman/Git/refactored-couscous/projects/atl_cal/token.pickle",
+                "rb",
+            ) as token:
                 creds = pickle.load(token)
 
         if not creds or not creds.valid:
@@ -29,13 +33,18 @@ class CalendarStuff:
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    '/Users/jdickman/Git/refactored-couscous/projects/atl_cal/credentials.json', SCOPES)
+                    "/Users/jdickman/Git/refactored-couscous/projects/atl_cal/credentials.json",
+                    SCOPES,
+                )
                 creds = flow.run_local_server(port=0)
 
-            with open('/Users/jdickman/Git/refactored-couscous/projects/atl_cal/token.pickle', 'wb') as token:
+            with open(
+                "/Users/jdickman/Git/refactored-couscous/projects/atl_cal/token.pickle",
+                "wb",
+            ) as token:
                 pickle.dump(creds, token)
 
-        self.service = build('calendar', 'v3', credentials=creds)
+        self.service = build("calendar", "v3", credentials=creds)
 
     def create_row(self, requestor, ticket, cal_type, desc, event):
         """Create row for each event.
@@ -63,10 +72,10 @@ class CalendarStuff:
             list: strings of start day and time
         """
 
-        start = event['start'].get('dateTime', event['start'].get('date'))
+        start = event["start"].get("dateTime", event["start"].get("date"))
         start_date = str(datetime.fromisoformat(start))
-        start_day = start_date.split(' ')[0]
-        start_time = (start_date.split(' ')[1]).split('-')[0]
+        start_day = start_date.split(" ")[0]
+        start_time = (start_date.split(" ")[1]).split("-")[0]
 
         return start_day, start_time
 
@@ -80,24 +89,28 @@ class CalendarStuff:
             list: list of rows
         """
 
-        regex = re.compile(r'\d+:\sCENIC')
+        regex = re.compile(r"\d+:\sCENIC")
         maint_data = []
 
         for event in maint_events:
 
-            if re.match(regex, event['summary']):
+            if re.match(regex, event["summary"]):
 
-                summary = event['summary'].split(':')
-                ticket = 'NOC-' + summary[0]
+                summary = event["summary"].split(":")
+                ticket = "NOC-" + summary[0]
                 desc = summary[1].strip()
 
-                jql_request = f'issue = {ticket}'
+                jql_request = f"issue = {ticket}"
                 try:
-                    requestor = self.jira.jql(jql_request, limit=1)['issues'][0]['fields']['reporter']['name']
+                    requestor = self.jira.jql(jql_request, limit=1)["issues"][0][
+                        "fields"
+                    ]["reporter"]["name"]
                 except:
-                    requestor = ''
+                    requestor = ""
 
-                maint_data.append(self.create_row(requestor, ticket, 'Maintenance', desc, event))
+                maint_data.append(
+                    self.create_row(requestor, ticket, "Maintenance", desc, event)
+                )
 
         return maint_data
 
@@ -117,42 +130,57 @@ class CalendarStuff:
 
         for event in internal_events:
 
-            requestor = event['creator']['email'].split('@')[0]
-            desc = event['summary']
+            requestor = event["creator"]["email"].split("@")[0]
+            desc = event["summary"]
 
-            if full_ticket_re.match(event['summary']):
-                ticket = full_ticket_re.match(event['summary']).group()
-            elif ticket_re.match(event['summary']):
-                ticket = 'NOC-' + ticket_re.match(event['summary']).group()
+            if full_ticket_re.match(event["summary"]):
+                ticket = full_ticket_re.match(event["summary"]).group()
+            elif ticket_re.match(event["summary"]):
+                ticket = "NOC-" + ticket_re.match(event["summary"]).group()
             else:
-                ticket = ''
+                ticket = ""
 
-            int_data.append(self.create_row(requestor, ticket, 'Internal', desc, event))
+            int_data.append(self.create_row(requestor, ticket, "Internal", desc, event))
 
         return int_data
 
     def weekly_events(self):
-        """Get calendar events on maintenance and internal change calendar.
-        """
+        """Get calendar events on maintenance and internal change calendar."""
 
-        now = datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-        d1 = ((datetime.utcnow() - timedelta(days=7)).isoformat() + 'Z')
+        now = datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
+        d1 = (datetime.utcnow() - timedelta(days=7)).isoformat() + "Z"
 
         # Call the Calendar API
-        #pylint: disable=no-member
-        maint_cal = self.service.events().list(calendarId='cenic.org_36uqe435vlel8qv9ul57tomo1g@group.calendar.google.com',
-                                            timeMin=d1, timeMax=now, singleEvents=True,
-                                            orderBy='startTime').execute()
-        maint_events = maint_cal.get('items', [])
+        # pylint: disable=no-member
+        maint_cal = (
+            self.service.events()
+            .list(
+                calendarId="cenic.org_36uqe435vlel8qv9ul57tomo1g@group.calendar.google.com",
+                timeMin=d1,
+                timeMax=now,
+                singleEvents=True,
+                orderBy="startTime",
+            )
+            .execute()
+        )
+        maint_events = maint_cal.get("items", [])
 
-        internal_cal = self.service.events().list(calendarId='cenic.org_oggku8rjbli9v7163ocroug09s@group.calendar.google.com',
-                                            timeMin=d1, timeMax=now, singleEvents=True,
-                                            orderBy='startTime').execute()
-        internal_events = internal_cal.get('items', [])
+        internal_cal = (
+            self.service.events()
+            .list(
+                calendarId="cenic.org_oggku8rjbli9v7163ocroug09s@group.calendar.google.com",
+                timeMin=d1,
+                timeMax=now,
+                singleEvents=True,
+                orderBy="startTime",
+            )
+            .execute()
+        )
+        internal_events = internal_cal.get("items", [])
 
         gc = gspread.oauth()
-        sh = gc.open('Core Tickets')
-        worksheet = sh.worksheet('gcal_pull')
+        sh = gc.open("Core Tickets")
+        worksheet = sh.worksheet("gcal_pull")
 
         for i in range(2):
             if i == 0:
@@ -163,7 +191,7 @@ class CalendarStuff:
                 lastRow = len(worksheet.col_values(4))
 
             firstRow = lastRow + 1
-            worksheet.update(f'C{firstRow}:H', cal_data)
+            worksheet.update(f"C{firstRow}:H", cal_data)
 
     def create_event(self, start_time, end_time, day, title):
         """Creates Internal Calendar Event
@@ -175,7 +203,7 @@ class CalendarStuff:
             title (str): title for the event
         """
 
-        if day == 'today':
+        if day == "today":
             start_day = date.today()
         else:
             start_day = date.fromisoformat(str(day))
@@ -185,35 +213,39 @@ class CalendarStuff:
         end_hour = int(end_time[0:2])
         end_min = int(end_time[2:4])
 
-        start_iso = datetime(start_day.year, start_day.month, start_day.day, start_hour, start_min).isoformat()
-        end_iso = datetime(start_day.year, start_day.month, start_day.day, end_hour, end_min).isoformat()
+        start_iso = datetime(
+            start_day.year, start_day.month, start_day.day, start_hour, start_min
+        ).isoformat()
+        end_iso = datetime(
+            start_day.year, start_day.month, start_day.day, end_hour, end_min
+        ).isoformat()
 
         # create calendar dict to create event
         body = {
-            'summary': title,
-            'start': {
-                'timeZone': 'America/Los_Angeles',
-                'dateTime': start_iso
-            },
-            'end': {
-                'timeZone': 'America/Los_Angeles',
-                'dateTime': end_iso
-            }
+            "summary": title,
+            "start": {"timeZone": "America/Los_Angeles", "dateTime": start_iso},
+            "end": {"timeZone": "America/Los_Angeles", "dateTime": end_iso},
         }
 
-        #pylint: disable=no-member
-        self.service.events().insert(calendarId='cenic.org_oggku8rjbli9v7163ocroug09s@group.calendar.google.com', body=body).execute()
+        # pylint: disable=no-member
+        self.service.events().insert(
+            calendarId="cenic.org_oggku8rjbli9v7163ocroug09s@group.calendar.google.com",
+            body=body,
+        ).execute()
 
     def get_engrv(self):
-        """Get engineer on EngRv, to be run each Monday
-        """
+        """Get engineer on EngRv, to be run each Monday"""
 
-        #pylint: disable=no-member
-        engrv_rotation = self.service.events().list(calendarId='cenic.org_72vsnc1bn4a4jj3i2bl9fli72k@group.calendar.google.com',
-                                                    q='EngRv', singleEvents=True, orderBy='startTime').execute()
+        # pylint: disable=no-member
+        engrv_rotation = (
+            self.service.events()
+            .list(
+                calendarId="cenic.org_72vsnc1bn4a4jj3i2bl9fli72k@group.calendar.google.com",
+                q="EngRv",
+                singleEvents=True,
+                orderBy="startTime",
+            )
+            .execute()
+        )
 
-        return engrv_rotation['items'][0]['summary']
-
-
-
-
+        return engrv_rotation["items"][0]["summary"]
