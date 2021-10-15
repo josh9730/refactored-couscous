@@ -175,7 +175,7 @@ class JumperCassette(Job):
         label = 'Cassette A',
         model = Device,
         query_params= {
-            'rack_id': '$rack_1',
+            # 'rack_id': '$rack_1',
             # 'tenant_id': tenant,
             # 'device_role_id': panel_role
             'device_role_id': '$role',
