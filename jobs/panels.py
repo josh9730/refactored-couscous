@@ -168,26 +168,28 @@ class JumperCassette(Job):
             'site_id': '$site_name'
         }
     )
-    # tenant = Tenant.objects.get(name="CENIC Hubsite").id
+    tenant = Tenant.objects.get(name="CENIC Hubsite").id
     # panel_type = DeviceType.objects.get(name="FS FHD Enclosure, Sliding").id
-    role = DeviceRole.objects.get(name="Hubsite - Patch Panels").id
+    # role = DeviceRole.objects.get(name="Hubsite - Patch Panels").id
     panel_1 = ObjectVar(
         label = 'Cassette A',
         model = Device,
         query_params= {
-            # 'rack_id': '$rack_1',
-            # 'tenant_id': tenant,
+            'rack_id': '$rack_1',
+            'tenant_id': tenant,
             # 'device_role_id': panel_role
-            'device_role_id': role,
+            # 'device_role_id': role,
         }
     )
-    # cassette_1 = ObjectVar(
-    #     label = 'Cassette A',
-    #     model = Device,
-    #     query_params = {
-            
-    #     }
-    # )
+    # Device.objects.get(name="PP--BAKE1--410.09--U11").get_children()[0]
+    children = Device.objects.get(name=panel_1.name).get_children()
+    cassette_1 = ObjectVar(
+        label = 'Cassette A',
+        model = Device,
+        query_params = {
+            'device_id': children
+        }
+    )
     #port_1 = ChoiceVar(
     #    label = 'Port',
     #    description = 'Port in Cassette ID A',
