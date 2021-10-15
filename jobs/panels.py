@@ -182,7 +182,7 @@ class JumperCassette(Job):
         }
     )
     # Device.objects.get(name="PP--BAKE1--410.09--U11").get_children()[0]
-    children = Device.objects.get(name=panel_1).get_children()
+    children = Device.objects.get(name=panel_1).get_children()[0]
     cassette_1 = ObjectVar(
         label = 'Cassette A',
         model = Device,
