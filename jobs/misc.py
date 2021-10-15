@@ -130,11 +130,11 @@ class PortTag(Job):
         ("CENIC - CUST L2", "CENIC Device - Customer Device L2"),
         ("CENIC - CUST DMS", "CENIC Device - Customer Device DMS"),
     )
-    SITE_CHOICES = (("alacc", "Alameda CC"), ("wvmcc", "West Valley Mission CC"))
+    # SITE_CHOICES = (("alacc", "Alameda CC"), ("wvmcc", "West Valley Mission CC"))
     
     with open('sites.yaml') as file:
-        abc = load_yaml('sites.yaml')['ccc']
-    # aDEV_CHOICES = Job.load_yaml('sites.yaml')['ccc']
+        SITE_CHOICES = load_yaml('sites.yaml')['ccc']
+    # sites = Job.load_yaml('sites.yaml')
 
     DEV_CHOICES = (
         ("",""),
