@@ -131,10 +131,6 @@ class PortTag(Job):
         ("CENIC - CUST DMS", "CENIC Device - Customer Device DMS"),
     )
     # SITE_CHOICES = (("alacc", "Alameda CC"), ("wvmcc", "West Valley Mission CC"))
-    
-    with open('sites.yaml') as file:
-        SITE_CHOICES = load_yaml('sites.yaml')['ccc']
-    # sites = Job.load_yaml('sites.yaml')
 
     DEV_CHOICES = (
         ("",""),
@@ -159,8 +155,13 @@ class PortTag(Job):
         description="Pick a Service Type. See Confluence page for details on the service types",
         choices=SERVICE_CHOICES,
     )
-    site = ChoiceVar(
-        label="Site", description="Choose the customer site", choices=SITE_CHOICES
+    # site = ChoiceVar(
+    #     label="Site", description="Choose the customer site", choices=SITE_CHOICES
+    # )
+    site = ObjectVar(
+        label = "Site",
+        description = "Choose the customer site",
+        model = Site
     )
     local_dev = ChoiceVar(
         default = '',
@@ -196,7 +197,7 @@ class PortTag(Job):
         net = data["net"]
         segment = data["segment"]
         service = data["service"]
-        site_code = data["site"]
+        site_code = data["site"].lower()
         subint = data["subint"]
         cust = data["cust"]
         local_dev = data["local_dev"]
