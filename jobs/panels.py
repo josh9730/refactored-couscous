@@ -170,7 +170,7 @@ class JumperCassette(Job):
     )
     # tenant = Tenant.objects.get(name="CENIC Hubsite").id
     # panel_type = DeviceType.objects.get(name="FS FHD Enclosure, Sliding").id
-    role = DeviceRole.objects.get(name="Hubsite - Patch Panels")
+    role = DeviceRole.objects.get(name="Hubsite - Patch Panels").id
     panel_1 = ObjectVar(
         label = 'Cassette A',
         model = Device,
@@ -178,7 +178,7 @@ class JumperCassette(Job):
             # 'rack_id': '$rack_1',
             # 'tenant_id': tenant,
             # 'device_role_id': panel_role
-            'device_role': role,
+            'device_role_id': role,
         }
     )
     # cassette_1 = ObjectVar(
