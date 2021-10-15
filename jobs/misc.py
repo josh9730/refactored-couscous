@@ -1,5 +1,6 @@
 from nautobot.extras.jobs import *
 import netaddr
+import yaml
 
 name = "Misc. Jobs"
 
@@ -132,7 +133,7 @@ class PortTag(Job):
     SITE_CHOICES = (("alacc", "Alameda CC"), ("wvmcc", "West Valley Mission CC"))
     
     with open('sites.yaml') as file:
-        abc = Job.load_yaml('sites.yaml')['ccc']
+        abc = load_yaml('sites.yaml')['ccc']
     # aDEV_CHOICES = Job.load_yaml('sites.yaml')['ccc']
 
     DEV_CHOICES = (
