@@ -178,7 +178,7 @@ class JumperCassette(Job):
             'rack_id': '$rack_1',
             # 'tenant_id': tenant,
             # 'device_role_id': panel_role
-            'device_type': role,
+            'device_role': role,
         }
     )
     # cassette_1 = ObjectVar(
