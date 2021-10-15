@@ -131,9 +131,8 @@ class PortTag(Job):
     )
     SITE_CHOICES = (("alacc", "Alameda CC"), ("wvmcc", "West Valley Mission CC"))
     
-    #DEV_CHOICES = Job.load_yaml('sites.yaml')['ccc']
-    
-    
+    aDEV_CHOICES = Job.load_yaml('sites.yaml')['ccc']
+
     DEV_CHOICES = (
         ("",""),
         ("cpe_rtr", "CPE Router"),
