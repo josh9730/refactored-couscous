@@ -187,7 +187,7 @@ class JumperCassette(Job):
         label = 'Cassette A',
         model = Device,
         query_params = {
-            'device_id': children
+            'device': children
         }
     )
     #port_1 = ChoiceVar(
