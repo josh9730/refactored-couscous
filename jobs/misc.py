@@ -1,6 +1,6 @@
+from nautobot.dcim.models import Site
 from nautobot.extras.jobs import *
 import netaddr
-import yaml
 
 name = "Misc. Jobs"
 
