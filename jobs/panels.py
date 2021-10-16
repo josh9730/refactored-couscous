@@ -183,7 +183,7 @@ class JumperCassette(Job):
         model = Device,
         query_params= {
             'rack_id': '$rack_1',
-            'role': 'Hubsite - Patch Panels'
+            'role_id': DeviceRole.objects.get(name="Hubsite - Patch Panels").id
         }
     )
     # Device.objects.get(name="PP--BAKE1--410.09--U11").get_children()[0]
