@@ -9,7 +9,7 @@ from nautobot.dcim.models import (
     Cable,
 )
 from nautobot.tenancy.models import Tenant
-from nautobot.extras.models import Status
+from nautobot.extras.models import Status, Tag
 from nautobot.extras.jobs import *
 
 name = "Patch Panel Jobs"
@@ -112,6 +112,7 @@ class CreatePanelPair(Job):
                 name=f"(C-{cassette_type[0]}){panel.name}--S1",
                 status=Status.objects.get(slug="active"),
                 tenant=tenant,
+                tag=Tag.objects.get(name="Cassette")
             )
             cassette.validated_save()
             self.log_success(
@@ -173,6 +174,7 @@ class JumperCassette(Job):
 # >>> a = Device.objects.filter(**query_params).get(name__startswith="PP")
 
 # query_params = {
+#     'rack': Rack.objects.get(site=Site.objects.get(name="BAKE1"), name="410.09"),
 #     'device_role': DeviceRole.objects.get(name="Hubsite - Patch Panels"),
 #     'name__startswith': 'PP--'
 # }
@@ -182,7 +184,7 @@ class JumperCassette(Job):
         label = 'Cassette A',
         model = Device,
         query_params= {
-            # 'rack_id': '$rack_1',
+            'rack_id': '$rack_1',
             'role_id': DeviceRole.objects.get(name="Hubsite - Patch Panels").id,
             'name__startswith': 'PP--'
         }
