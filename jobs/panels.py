@@ -171,17 +171,19 @@ class JumperCassette(Job):
 
 # >>> query_params={"device_role_id": "78bd430d-8b5e-4d5c-914a-2fd8b8598597", "rack_id": "ae274e76-85e4-4b2c-bc3f-1afc58209471"}
 # >>> a = Device.objects.filter(**query_params).get(name__startswith="PP")
-    query_params = {
-        'device_role': DeviceRole.objects.get(name="Hubsite - Patch Panels"),
-        'rack_id': '$rack_1'
-    }
-    pp_role = Device.objects.filter(**query_params).get(name__startswith="PP")
+
+# query_params = {
+#     'device_role': DeviceRole.objects.get(name="Hubsite - Patch Panels"),
+#     'name__startswith': 'PP--'
+# }
+# pp_role = Device.objects.filter(**query_params).get(name__startswith="PP")\
+
     panel_1 = ObjectVar(
         label = 'Cassette A',
         model = Device,
         query_params= {
             'rack_id': '$rack_1',
-            'role_id': pp_role
+            'role': 'Hubsite - Patch Panels'
         }
     )
     # Device.objects.get(name="PP--BAKE1--410.09--U11").get_children()[0]
