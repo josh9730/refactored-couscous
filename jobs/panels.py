@@ -112,7 +112,7 @@ class CreatePanelPair(Job):
                 name=f"(C-{cassette_type[0]}){panel.name}--S1",
                 status=Status.objects.get(slug="active"),
                 tenant=tenant,
-                tag=Tag.objects.get(name="Cassette")
+                tags=Tag.objects.get(name="Cassette")
             )
             cassette.validated_save()
             self.log_success(
