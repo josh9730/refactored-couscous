@@ -255,8 +255,8 @@ class JumperCassette(Job):
         cable_1 = Cable(
             termination_a_id = interface_1_id,
             termination_b_id = port_1_id,
-            termination_a_type = 37,
-            termination_b_type = 35,
+            termination_a_type_id = 37,
+            termination_b_type_id = 35,
             status=Status.objects.get(slug="connected"),
             type = fiber_type,
             label = data['clr']
