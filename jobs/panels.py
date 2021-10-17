@@ -264,5 +264,5 @@ class JumperCassette(Job):
         cable_1.validated_save()
         self.log_success(
             obj=cable_1,
-            message=f"Created new jumper between `{interface_1}` and `{port_1}`",
+            message=f"Created new jumper between `{data["interface_1"]}` and `{data["port_1"]}`",
         )
