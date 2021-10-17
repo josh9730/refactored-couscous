@@ -177,7 +177,8 @@ class JumperCassette(Job):
             'role_id': DeviceRole.objects.get(name="Hubsite - Patch Panels").id,
         }
     )
-    panel_name = Device.objects.get(id=panel_1[0]).name
+    # panel_name = Device.objects.get(id=panel_1[0]).name
+    panel_name = panel_1.name
     cassette_1 = ObjectVar(
         label = 'Cassette A',
         model = Device,
