@@ -212,7 +212,7 @@ class JumperCassette(Job):
         label = 'Z-Side Cassette',
         model = Device,
         query_params= {
-            'rack_id': '$rack_1',
+            'rack_id': '$rack_2',
             'role_id': DeviceRole.objects.get(name="Hubsite - Patch Panel Cassettes").id,
         }
     )
@@ -220,7 +220,7 @@ class JumperCassette(Job):
        label = 'Z-Side Cassette Port',
        model = FrontPort,
        query_params = {
-           'device_id': '$cassette_1'
+           'device_id': '$cassette_2'
        }
     )
     device_2 = ObjectVar(
