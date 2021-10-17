@@ -181,7 +181,7 @@ class JumperCassette(Job):
         label = 'Cassette A',
         model = Device,
         query_params = {
-            'name__contains': panel_1.name,
+            'name__contains': Device.objects.get(id='$panel_1').name,
             'role_id':  DeviceRole.objects.get(name="Hubsite - Patch Panel Cassettes").id,
         }
     )
