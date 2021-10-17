@@ -245,7 +245,7 @@ class JumperCassette(Job):
 
     def run(self, data, commit):
 
-        if 'SMF' in data['cassette_1']:
+        if 'SMF' in data['cassette_1'].name:
             fiber_type = 'smf'
         else:
             fiber_type = 'mmf'
