@@ -174,7 +174,7 @@ class JumperCassette(Job):
         model = Device,
         query_params= {
             'rack_id': '$rack_1',
-            'role_id': DeviceRole.objects.get(name="Hubsite - Patch Panels").id,
+            'role_id': DeviceRole.objects.get(name="Hubsite - Patch Panel Cassettes").id,
         }
     )
     # cassette_1 = ObjectVar(
