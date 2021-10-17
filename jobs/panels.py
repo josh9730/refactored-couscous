@@ -183,7 +183,7 @@ class JumperCassette(Job):
         label = 'Cassette A',
         model = Device,
         query_params = {
-            'rack_id': '$rack_1'
+            'rack_id': '$rack_1',
             'name__contains': 'U11',
             'role_id':  DeviceRole.objects.get(name="Hubsite - Patch Panel Cassettes").id,
         }
