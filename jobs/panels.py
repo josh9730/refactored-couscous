@@ -262,7 +262,7 @@ class JumperCassette(Job):
             label = data['clr']
         )
         cable_1.validated_save()
-        self.log_success(
-            obj=cable_1,
-            message=f"Created new jumper between `{data["interface_1"].name}` and `{data["port_1"].name}`",
-        )
+        # self.log_success(
+        #     obj=cable_1,
+        #     message=f"Created new jumper between `{data["interface_1"].name}` and `{data["port_1"].name}`",
+        # )
