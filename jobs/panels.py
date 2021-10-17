@@ -250,19 +250,23 @@ class JumperCassette(Job):
         else:
             fiber_type = 'mmf'
 
-        interface_1_id = Interface.objects.get(name=data["interface_1"], device=data['device_1']).id
-        port_1_id = FrontPort.objects.get(name=data['front_port_1'], device=data['cassette_1']).id
-        cable_1 = Cable(
-            termination_a_id = interface_1_id,
-            termination_b_id = port_1_id,
-            termination_a_type_id = 37,
-            termination_b_type_id = 35,
-            status=Status.objects.get(slug="connected"),
-            type = fiber_type,
-            label = data['clr']
-        )
-        cable_1.validated_save()
-        # self.log_success(
-        #     obj=cable_1,
-        #     message=f"Created new jumper between `{data["interface_1"].name}` and `{data["port_1"].name}`",
-        # )
+        for i in range(1,3):
+
+            interface_id = Interface.objects.get(name=data[f"interface_{i}"], device=data[f"device_{i}""]).id
+            port_id = FrontPort.objects.get(name=data[f"front_port_{i}"], device=data[f"cassette_{i}"]).id
+            cable = Cable(
+                termination_a_id = interface_id,
+                termination_b_id = port_id,
+                termination_a_type_id = 37,
+                termination_b_type_id = 35,
+                status=Status.objects.get(slug="connected"),
+                type = fiber_type,
+                label = data['clr']
+            )
+            cable.validated_save()
+            dev_name = data['device_1'].name
+
+            self.log_success(
+                obj=cable_1,
+                message=f"Created new jumper between `{dev_name}`,
+            )
