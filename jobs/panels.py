@@ -8,6 +8,7 @@ from nautobot.dcim.models import (
     FrontPort,
     RearPort,
     Cable,
+    Interface,
 )
 from nautobot.tenancy.models import Tenant
 from nautobot.extras.models import Status, Tag
@@ -66,7 +67,7 @@ class CreatePanelPair(Job):
         required=False,
     )
     FIBER_CHOICES = (("", ""), ("mmf", "Multimode Fiber"), ("smf", "Singlemode Fiber"))
-    Fiber_Type = ChoiceVar(choices=FIBER_CHOICES)
+    fiber_type = ChoiceVar(choices=FIBER_CHOICES)
 
     def run(self, data, commit):
 
@@ -97,7 +98,7 @@ class CreatePanelPair(Job):
             )
 
             # Create Cassettes
-            if data["Fiber_Type"] == "mmf":
+            if data["fiber_type"] == "mmf":
                 cassette_model = "FHD MPO-24/LC OM4 Cassette Type A"
             else:
                 cassette_model = "FHD MPO-24/LC OS2 Cassette Type A"
@@ -110,11 +111,11 @@ class CreatePanelPair(Job):
                 rack=data[f"rack_{i}"],
                 device_type=DeviceType.objects.get(model=cassette_model),
                 device_role=DeviceRole.objects.get(name="Hubsite - Patch Panel Cassettes"),
-                name=f'(C-{data["Fiber_Type"].upper()}){panel.name}--S1',
+                name=f'(C-{data["fiber_type"].upper()}){panel.name}--S1',
                 status=Status.objects.get(slug="active"),
                 tenant=tenant,
                 tags=Tag.objects.get(name="Cassette"),
-                comments=f'{data["Fiber_Type"].upper()} MPO-LC Breakout Cassette, Type {cassette_type[0]}'
+                comments=f'{data["fiber_type"].upper()} MPO-LC Breakout Cassette, Type {cassette_type[0]}'
             )
             cassette.validated_save()
             self.log_success(
@@ -147,7 +148,7 @@ class CreatePanelPair(Job):
             termination_a_type_id=50,
             termination_b_type_id=50,
             status=Status.objects.get(slug="connected"),
-            type=data["Fiber_Type"],
+            type=data["fiber_type"],
             label=clr,
         )
         mpo.validated_save()
@@ -165,14 +166,28 @@ class JumperCassette(Job):
 
     site_name = ObjectVar(label='Site Name', model=Site)
     rack_1 = ObjectVar(
-        label = 'Rack A',
+        label = 'A-Side Rack',
         model = Rack,
         query_params = {
             'site_id': '$site_name'
         }
     )
+    device_1 = ObjectVar(
+        label = 'A-Side Device',
+        model = Device,
+        query_params = {
+            'rack_id': '$rack_1'
+        }
+    )
+    interface_1 = ObjectVar(
+        label = 'A-Side Interface',
+        model = Interface,
+        query_params = {
+            'device_id': '$device_1'
+        }
+    )
     cassette_1 = ObjectVar(
-        label = 'Cassette, Rack A',
+        label = 'A-Side Cassette',
         model = Device,
         query_params= {
             'rack_id': '$rack_1',
@@ -180,22 +195,21 @@ class JumperCassette(Job):
         }
     )
     port_1 = ObjectVar(
-       label = 'Port',
-       description = 'Port in Cassette, Rack A',
+       label = 'A-Side Cassette Port',
        model = FrontPort,
        query_params = {
            'device_id': '$cassette_1'
        }
     )
     rack_2 = ObjectVar(
-        label = 'Rack B',
+        label = 'Z-Side Rack',
         model = Rack,
         query_params = {
             'site_id': '$site_name'
         }
     )
     cassette_2 = ObjectVar(
-        label = 'Cassette, Rack B',
+        label = 'Z-Side Cassette',
         model = Device,
         query_params= {
             'rack_id': '$rack_1',
@@ -203,25 +217,37 @@ class JumperCassette(Job):
         }
     )
     port_2 = ObjectVar(
-       label = 'Port',
-       description = 'Port in Cassette, Rack B',
+       label = 'Z-Side Cassette Port',
        model = FrontPort,
        query_params = {
            'device_id': '$cassette_1'
        }
     )
+    device_2 = ObjectVar(
+        label = 'Z-Side Device',
+        model = Device,
+        query_params = {
+            'rack_id': '$rack_2'
+        }
+    )
+    interface_2 = ObjectVar(
+        label = 'Z-Side Interface',
+        model = Interface,
+        query_params = {
+            'device_id': '$device_2'
+        }
+    )
     clr = IntegerVar(
         label = 'CLR',
         description = 'CLR or label for the LC jumpers'
     )
-    # get fiber type from cassette
     # get hub ports from the far end cassette ports
     # get list of available interfaces per device
     # get list of availabe front ports per cassette
 
     def run(self, data, commit):
 
-
-        output = data['cassette_1']
-
-        return output
+        if 'SMF' in data['cassette_a']:
+            fiber_type = 'smf'
+        else:
+            fiber_type = 'mmf'
