@@ -177,7 +177,7 @@ class JumperCassette(Job):
         model = Device,
         query_params = {
             'rack_id': '$rack_1',
-            'role_id': DeviceRole.objects.exclude(name="Hubsite - Patch Panel Cassettes")
+            'role': DeviceRole.objects.exclude(name="Hubsite - Patch Panel Cassettes")
         }
     )
     interface_1 = ObjectVar(
