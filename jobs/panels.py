@@ -145,8 +145,8 @@ class CreatePanelPair(Job):
         mpo = Cable(
             termination_a_id=RearPort.objects.get(device_id=cassette_a_uuid).id,
             termination_b_id=RearPort.objects.get(device_id=cassette_b_uuid).id,
-            termination_a_type_id=RearPort,
-            termination_b_type_id=RearPort,
+            termination_a_type=RearPort,
+            termination_b_type=RearPort,
             status=Status.objects.get(slug="connected"),
             type=data["fiber_type"],
             label=clr,
