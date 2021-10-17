@@ -178,14 +178,14 @@ class JumperCassette(Job):
             'role_id':  DeviceRole.objects.get(name="Hubsite - Patch Panel Cassettes").id,
         }
     )
-    port_1 = ObjectVar(
-       label = 'Port',
-       description = 'Port in Cassette ID A',
-       model = FrontPort,
-       query_params = {
-           'device_id': '$cassette_1'
-       }
-    )
+    # port_1 = ObjectVar(
+    #    label = 'Port',
+    #    description = 'Port in Cassette ID A',
+    #    model = FrontPort,
+    #    query_params = {
+    #        'device_id': '$cassette_1'
+    #    }
+    # )
     # cassette_1_port = IntegerVar(
     #     label = 'Port Number'
     # )
