@@ -252,7 +252,7 @@ class JumperCassette(Job):
 
         for i in range(1,3):
 
-            interface_id = Interface.objects.get(name=data[f"interface_{i}"], device=data[f"device_{i}""]).id
+            interface_id = Interface.objects.get(name=data[f"interface_{i}"], device=data[f"device_{i}"]).id
             port_id = FrontPort.objects.get(name=data[f"front_port_{i}"], device=data[f"cassette_{i}"]).id
             cable = Cable(
                 termination_a_id = interface_id,
