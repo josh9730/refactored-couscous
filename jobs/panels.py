@@ -178,7 +178,7 @@ class JumperCassette(Job):
         }
     )
     # panel_name = Device.objects.get(id=panel_1[0]).name
-    kids = panel_1[0].get_children()
+    kids = panel_1.get_children()
     # panel_name = panel_1[0].name
     cassette_1 = ObjectVar(
         label = 'Cassette A',
