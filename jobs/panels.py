@@ -145,8 +145,8 @@ class CreatePanelPair(Job):
         mpo = Cable(
             termination_a_id=RearPort.objects.get(device_id=cassette_a_uuid).id,
             termination_b_id=RearPort.objects.get(device_id=cassette_b_uuid).id,
-            termination_a_type=RearPort,
-            termination_b_type=RearPort,
+            termination_a_type_id=50,
+            termination_b_type_id=50,
             status=Status.objects.get(slug="connected"),
             type=data["fiber_type"],
             label=clr,
@@ -250,13 +250,14 @@ class JumperCassette(Job):
         else:
             fiber_type = 'mmf'
 
-        # interface_1_id = Interface.objects.get(name=data["interface_1"]).id
-        # port_1_id = FrontPort.objects.get(name=data['front_port_1']).id
-        # cable_1 = Cable(
-        #     termination_a_id = interface_1_id,
-        #     termination_b_id = port_1_id,
-        #     termination_a_type = 
-        #     termination_b_type = 
-        #     status=Status.objects.get(slug="connected"),
-        #     type = fiber_type,
-        # )
+        interface_1_id = Interface.objects.get(name=data["interface_1"]).id
+        port_1_id = FrontPort.objects.get(name=data['front_port_1']).id
+        cable_1 = Cable(
+            termination_a_id = interface_1_id,
+            termination_b_id = port_1_id,
+            termination_a_type = 37,
+            termination_b_type = 35,
+            status=Status.objects.get(slug="connected"),
+            type = fiber_type,
+            label = data['clr']
+        )
