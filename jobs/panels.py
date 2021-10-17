@@ -169,7 +169,7 @@ class JumperCassette(Job):
             'site_id': '$site_name'
         }
     )
-    panel_1 = ObjectVar(
+    cassette_1 = ObjectVar(
         label = 'Cassette A',
         model = Device,
         query_params= {
@@ -177,23 +177,14 @@ class JumperCassette(Job):
             'role_id': DeviceRole.objects.get(name="Hubsite - Patch Panel Cassettes").id,
         }
     )
-    # cassette_1 = ObjectVar(
-    #     label = 'Cassette A',
-    #     model = Device,
-    #     query_params = {
-    #         'rack_id': '$rack_1',
-    #         'role_id':  DeviceRole.objects.get(name="Hubsite - Patch Panel Cassettes").id,
-
-    #     }
-    # )
-    # port_1 = ObjectVar(
-    #    label = 'Port',
-    #    description = 'Port in Cassette ID A',
-    #    model = FrontPort,
-    #    query_params = {
-    #        'device_id': '$cassette_1'
-    #    }
-    # )
+    port_1 = ObjectVar(
+       label = 'Port',
+       description = 'Port in Cassette ID A',
+       model = FrontPort,
+       query_params = {
+           'device_id': '$cassette_1'
+       }
+    )
     #port_1 = ChoiceVar(
     #    label = 'Port',
     #    description = 'Port in Cassette ID A',
