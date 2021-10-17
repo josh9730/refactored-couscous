@@ -6,6 +6,7 @@ from nautobot.dcim.models import (
     Site,
     Rack,
     RearPort,
+    FrontPort
     Cable,
 )
 from nautobot.tenancy.models import Tenant
@@ -169,31 +170,22 @@ class JumperCassette(Job):
             'site_id': '$site_name'
         }
     )
-    panel_1 = ObjectVar(
-        label = 'Cassette A',
-        model = Device,
-        query_params= {
-            'rack_id': '$rack_1',
-            'role_id': DeviceRole.objects.get(name="Hubsite - Patch Panels").id,
-        }
-    )
-    # panel_name = Device.objects.get(id=panel_1[0]).name
-    kids = panel_1.get_children()
-    # panel_name = panel_1[0].name
     cassette_1 = ObjectVar(
         label = 'Cassette A',
         model = Device,
         query_params = {
             'rack_id': '$rack_1',
             'role_id':  DeviceRole.objects.get(name="Hubsite - Patch Panel Cassettes").id,
-
         }
     )
-    #port_1 = ChoiceVar(
-    #    label = 'Port',
-    #    description = 'Port in Cassette ID A',
-    #    query_params = -ports free in cassette??
-    #)
+    port_1 = ObjectVar(
+       label = 'Port',
+       description = 'Port in Cassette ID A',
+       model = FrontPort
+    #    query_params = {
+    #        'pass_through_ports': 
+    #    }
+    )
     # cassette_1_port = IntegerVar(
     #     label = 'Port Number'
     # )
