@@ -178,6 +178,7 @@ class JumperCassette(Job):
         }
     )
     # panel_name = Device.objects.get(id=panel_1[0]).name
+    kids = panel_1.get_children()
     panel_name = panel_1[0].name
     cassette_1 = ObjectVar(
         label = 'Cassette A',
@@ -185,6 +186,7 @@ class JumperCassette(Job):
         query_params = {
             'rack_id': '$rack_1',
             'role_id':  DeviceRole.objects.get(name="Hubsite - Patch Panel Cassettes").id,
+
         }
     )
     #port_1 = ChoiceVar(
