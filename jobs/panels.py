@@ -5,6 +5,7 @@ from nautobot.dcim.models import (
     DeviceBay,
     Site,
     Rack,
+    FrontPort,
     RearPort,
     Cable,
 )
