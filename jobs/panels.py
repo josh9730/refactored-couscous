@@ -178,12 +178,12 @@ class JumperCassette(Job):
         }
     )
     # panel_name = Device.objects.get(id=panel_1[0]).name
-    panel_name = panel_1.name
+    # panel_name = panel_1.name
     cassette_1 = ObjectVar(
         label = 'Cassette A',
         model = Device,
         query_params = {
-            'name__contains': panel_name,
+            'name__contains': 'PP--BAKE1--410.09--U11',
             'role_id':  DeviceRole.objects.get(name="Hubsite - Patch Panel Cassettes").id,
         }
     )
