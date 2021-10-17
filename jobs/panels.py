@@ -261,7 +261,7 @@ class JumperCassette(Job):
             type = fiber_type,
             label = data['clr']
         )
-        mpo.validated_save()
+        cable_1.validated_save()
         self.log_success(
             obj=cable_1,
             message=f"Created new jumper between `{interface_1}` and `{port_1}`",
