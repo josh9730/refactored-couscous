@@ -250,8 +250,8 @@ class JumperCassette(Job):
         else:
             fiber_type = 'mmf'
 
-        interface_1_id = Interface.objects.get(name=data["interface_1"]).id
-        port_1_id = FrontPort.objects.get(name=data['front_port_1']).id
+        interface_1_id = Interface.objects.get(name=data["interface_1"], device=data['device_1']).id
+        port_1_id = FrontPort.objects.get(name=data['front_port_1'], device=data['cassette_1']).id
         cable_1 = Cable(
             termination_a_id = interface_1_id,
             termination_b_id = port_1_id,
