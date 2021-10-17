@@ -176,7 +176,8 @@ class JumperCassette(Job):
         label = 'A-Side Device',
         model = Device,
         query_params = {
-            'rack_id': '$rack_1'
+            'rack_id': '$rack_1',
+            'role_id': DeviceRole.objects.exclude(name="Hubsite - Patch Panel Cassettes")
         }
     )
     interface_1 = ObjectVar(
@@ -242,8 +243,6 @@ class JumperCassette(Job):
         description = 'CLR or label for the LC jumpers'
     )
     # get hub ports from the far end cassette ports
-    # get list of available interfaces per device
-    # get list of availabe front ports per cassette
 
     def run(self, data, commit):
 
