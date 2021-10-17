@@ -181,10 +181,10 @@ class JumperCassette(Job):
     port_1 = ObjectVar(
        label = 'Port',
        description = 'Port in Cassette ID A',
-       model = FrontPort
-    #    query_params = {
-    #        'pass_through_ports': 
-    #    }
+       model = FrontPort,
+       query_params = {
+           'device_id': '$cassette_1'
+       }
     )
     # cassette_1_port = IntegerVar(
     #     label = 'Port Number'
