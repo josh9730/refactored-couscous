@@ -110,10 +110,11 @@ class CreatePanelPair(Job):
                 rack=data[f"rack_{i}"],
                 device_type=DeviceType.objects.get(model=cassette_model),
                 device_role=DeviceRole.objects.get(name="Hubsite - Patch Panel Cassettes"),
-                name=f"(C-{cassette_type[0]}){panel.name}--S1",
+                name=f'(C-{data["Fiber_Type"].upper()}){panel.name}--S1',
                 status=Status.objects.get(slug="active"),
                 tenant=tenant,
-                tags=Tag.objects.get(name="Cassette")
+                tags=Tag.objects.get(name="Cassette"),
+                description=f'{data["Fiber_Type"].upper()} MPO-LC Breakout Cassette, Type {cassette_type[0]}'
             )
             cassette.validated_save()
             self.log_success(
@@ -171,7 +172,7 @@ class JumperCassette(Job):
         }
     )
     cassette_1 = ObjectVar(
-        label = 'Cassette A',
+        label = 'Cassette, Rack A',
         model = Device,
         query_params= {
             'rack_id': '$rack_1',
@@ -180,39 +181,39 @@ class JumperCassette(Job):
     )
     port_1 = ObjectVar(
        label = 'Port',
-       description = 'Port in Cassette ID A',
+       description = 'Port in Cassette, Rack A',
        model = FrontPort,
        query_params = {
            'device_id': '$cassette_1'
        }
     )
-    #port_1 = ChoiceVar(
-    #    label = 'Port',
-    #    description = 'Port in Cassette ID A',
-    #    query_params = -ports free in cassette??
-    #)
-    # cassette_1_port = IntegerVar(
-    #     label = 'Port Number'
-    # )
-    # device_1_port = Inte
-    # rack_2 = ObjectVar(
-    #     label = 'Rack B',
-    #     model = Rack,
-    #     query_params = {
-    #         'site_id': '$site_name'
-    #     }
-    # )
-    # cassette_2 = ObjectVar(
-    #     label = 'Cassette ID B',
-    #     description = 'Cassette ID for Rack B',
-    #     query_params = {
-    #         'rack_id': '$rack_2'
-    #     }
-    # )
-    # clr = IntegerVar(
-    #     label = 'CLR',
-    #     description = 'CLR or label for the LC jumpers'
-    # )
+    rack_2 = ObjectVar(
+        label = 'Rack B',
+        model = Rack,
+        query_params = {
+            'site_id': '$site_name'
+        }
+    )
+    cassette_2 = ObjectVar(
+        label = 'Cassette, Rack B',
+        model = Device,
+        query_params= {
+            'rack_id': '$rack_1',
+            'role_id': DeviceRole.objects.get(name="Hubsite - Patch Panel Cassettes").id,
+        }
+    )
+    port_2 = ObjectVar(
+       label = 'Port',
+       description = 'Port in Cassette, Rack B',
+       model = FrontPort,
+       query_params = {
+           'device_id': '$cassette_1'
+       }
+    )
+    clr = IntegerVar(
+        label = 'CLR',
+        description = 'CLR or label for the LC jumpers'
+    )
     # get fiber type from cassette
     # get hub ports from the far end cassette ports
     # get list of available interfaces per device
