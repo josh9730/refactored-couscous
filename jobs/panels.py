@@ -114,7 +114,7 @@ class CreatePanelPair(Job):
                 status=Status.objects.get(slug="active"),
                 tenant=tenant,
                 tags=Tag.objects.get(name="Cassette"),
-                description=f'{data["Fiber_Type"].upper()} MPO-LC Breakout Cassette, Type {cassette_type[0]}'
+                comments=f'{data["Fiber_Type"].upper()} MPO-LC Breakout Cassette, Type {cassette_type[0]}'
             )
             cassette.validated_save()
             self.log_success(
