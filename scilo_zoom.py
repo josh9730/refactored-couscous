@@ -16,11 +16,9 @@ import time
 import gspread
 import yaml
 import os
-import re
 from pprint import pprint
 
-script_dir = os.path.dirname(__file__)
-with open(os.path.join(script_dir, 'usernames.yml')) as file:
+with open('/Users/jdickman/Google Drive/My Drive/Scripts/usernames.yml') as file:
     data = yaml.full_load(file)['scilo_api']
 
 user = data['username']

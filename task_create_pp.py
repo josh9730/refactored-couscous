@@ -5,7 +5,6 @@ Adds 'CoreMgd' label and Epic Link to Design Task.
 """
 
 from atlassian import Jira
-import yaml
 import sys
 import os
 import argparse
@@ -25,9 +24,6 @@ parser.add_argument(
     "epic_ticket", metavar="epic_ticket", help="Epic ticket number, e.g. COR-1234"
 )
 args = parser.parse_args()
-
-with open(os.path.join(script_dir, "usernames.yml")) as file:
-    usernames = yaml.full_load(file)
 
 design_desc = """
 * *Hardware/Software* (necessary components that are on-hand/available and/or must be procured)
@@ -64,8 +60,8 @@ tasks = {
 
 def main():
 
-    jira = Logins(usernames["cas"]).jira_login()
-
+    username = get_user_vars('cas')
+    jira = Logins(uusername).jira_login()
     story_name = jira.issue_field_value(args.story_ticket, "summary")
 
     # create tasks

@@ -1,20 +1,17 @@
 import paramiko
-import yaml
-import os
 from lp import GetLP
+from utils import get_user_vars
 
 def main():
 
-    script_dir = os.path.dirname(__file__)
-    with open(os.path.join(script_dir, 'usernames.yml')) as file:
-        usernames = yaml.full_load(file)
+    data = get_user_vars()
 
-    username = usernames['cas']
+    username = data['cas']
     cas_pass = GetLP().get_lp('cas')[1]
     hostname = 'syslog'
     password = cas_pass
 
-    engineers = usernames['core']
+    engineers = data['core']
 
     command = 'zgrep {username} /var/syslog/logs/old/cisco.log.1.gz | zgrep -Ev "137.164.41.140|137.164.41.164|tus-fw-1|lam-fw-1|svl-fw-1|exit|login|logout|AUTH|TTY|LOGIN|LOGOUT|SSH|IDLE|show|ping|traceroute|configure|file"'
 

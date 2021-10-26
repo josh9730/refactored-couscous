@@ -3,13 +3,12 @@ from lastpass import Vault
 import keyring
 import re
 import argparse
-import yaml
-import os
+from utils import get_mfa_keyring
 
 
 class GetLP:
 
-    shorthand = {
+    _shorthand = {
         "optical": bytes("Optical", "utf-8"),
         "enable": bytes("CENIC Enable Account", "utf-8"),
         "oob": bytes("CENIC Out-of-Band- OOB", "utf-8"),
@@ -21,15 +20,8 @@ class GetLP:
     }
 
     def __init__(self):
+        self.username, self.first_factor, self.otp = get_mfa_keyring('lp_pass', 'lp')
 
-        script_dir = os.path.dirname(__file__)
-        with open(os.path.join(script_dir, "usernames.yml")) as file:
-            username = yaml.full_load(file)["cas"]
-
-        self.username = f"{username}@cenic.org"
-        self.first_factor = keyring.get_password("lp_pass", username)
-        otp_secret = keyring.get_password("lp", self.username)
-        self.otp = pyotp.TOTP(otp_secret)
 
     def get_lp(self, account):
         """Connect to Lastpass using API.
@@ -41,7 +33,7 @@ class GetLP:
             list: Username, password, and passthrough (OOB only)
         """
 
-        name = self.shorthand[account]
+        name = self._shorthand[account]
         vault = Vault.open_remote(self.username, self.first_factor, self.otp.now())
 
         for i in vault.accounts:
@@ -83,8 +75,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "account",
         metavar="account",
-        help=f"Account shortnames: {list(GetLP.shorthand)}",
-        choices=list(GetLP.shorthand),
+        help=f"Account shortnames: {list(GetLP._shorthand)}",
+        choices=list(GetLP._shorthand),
     )
 
     args = parser.parse_args()

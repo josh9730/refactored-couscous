@@ -1,28 +1,14 @@
 import pexpect
-import pyotp
-import keyring
 import argparse
 import time
-import yaml
-import os
 from lp import GetLP
-
-# keyring setup:
-# keyring set mfa [ mfa user ]  [ first factor ]
-# keyring set otp [ mfa user ] [ the secret from the URI ]
+from utils import get_mfa_keyring
 
 
 class LoginInteract:
     def __init__(self, args=None):
 
-        script_dir = os.path.dirname(__file__)
-        with open(os.path.join(script_dir, "usernames.yml")) as file:
-            usernames = yaml.full_load(file)
-        self.username = usernames["mfa"]
-
-        self.first_factor = keyring.get_password("mfa", self.username)
-        otp_secret = keyring.get_password("otp", self.username)
-        self.otp = pyotp.TOTP(otp_secret)
+        self.username, self.first_factor, self.otp = get_mfa_keyring('mfa', 'otp')
         self.hostname = args.hostname
 
         if args.enable:

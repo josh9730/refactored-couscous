@@ -94,7 +94,7 @@ def main():
     if args.username:
         username = args.username
     else:
-        with open("/Users/jdickman/Git/refactored-couscous/usernames.yml") as file:
+        with open("/Users/jdickman/Google Drive/My Drive/Scripts/usernames.yml") as file:
             username = yaml.full_load(file)["mfa"]
 
     check_type = data["check_type"]
