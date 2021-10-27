@@ -28,9 +28,9 @@ def get_keyring(account, username):
 
 
 def get_mfa_keyring(user_keyring, mfa_keyring):
-    mfa_user = get_user_vars(user_keyring)
+    mfa_user = get_user_vars(user_keyring)[0]
 
-    first = get_keyring(user_keyring, mfa_user.split("@")[0])
+    first = get_keyring(user_keyring, mfa_user)
     otp_secret = get_keyring(mfa_keyring, mfa_user)
 
     otp = pyotp.TOTP(otp_secret)
