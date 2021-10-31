@@ -1,6 +1,6 @@
 ---
-username_file_path: /Users/jdickman/Git/refactored-couscous/usernames.yml
-mop_repo: '/Users/jdickman/Git/1 - Docs/MOPs/YAML/'
+username_file_path: /Users/jdickman/Google Drive/My Drive/Scripts/usernames.yml
+mop_repo: '/Users/jdickman/Google Drive/My Drive/MOPs/YAML/'
 
 ticket: SYS-670
 page_title: ACL updates
