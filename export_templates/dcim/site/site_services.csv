@@ -1,5 +1,0 @@
-Site,Description,Address,Services
-{%- for site in queryset %}
-{%- if (site.region.name == 'California') and (site.tenant.name == 'CENIC Hubsite') %}
-{{ site.name }},{{ site.facility }},"{{ site.physical_address }}","{% for i in site.cf.site_services %}{{ i }}, {% endfor %}"
-{%- endif -%}{% endfor %}
