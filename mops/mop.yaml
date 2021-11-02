@@ -2,18 +2,18 @@
 username_file_path: /Users/jdickman/Google Drive/My Drive/Scripts/usernames.yml
 mop_repo: '/Users/jdickman/Google Drive/My Drive/MOPs/YAML/'
 
-page_title: SACR2 De-install
-parent_page_id: 8891693
-ticket: NOC-660070
+page_title: LOSA4 WS Jumper Re-Runs
+parent_page_id: 9662071
+ticket: NOC-661283
 
 summary:
-- De-install and palletize devices
+- Re-provision CLRs 16374 - 16377 to use Arista switch
 level: 0
 exec: NOC
-rh: SACR2
+rh: LOSA4
 approval: NOC-657500
 impact:
--
+- No CENIC circuits will be impacted
 escalation: Deploying Engineer
 
 p_rollback: Yes
@@ -22,22 +22,152 @@ rollback:
 pm:
 -
 tech_equip:
-  - May require DC power work
-  - Will require at least 2 techs
+  - Labeler
+  - Cletops
 shipping:
 
 sections:
-  'Remove devices':
-    - rh: "*NOTE* The work in this MOP is related to the freight pickups as discussed with Enrique/Lumen. The equipment from the racks here will be picked up along with the (palletized) equipment from the warehouse."
-    - cmd-rh:
-      - There are installed devices in racks 001.002, 001.006, 001.008 and CRS-1 (2.001) as follows
-      - |-
-        001.002: Brocade MLX-16, tri-bb-sw-1
-        001.006: Brocade MLX-16, tri-bb-sw-2
-        001.008: Brocade MLX-16, tri-hpr3
-        CRS-1: Cisco GSR, tri-core1
+  'Pre-Run Jumpers':
+    - jumper:
+      - Run and do not terminate the following (8) jumpers
+      - acage: Suite 11
+        arack: 1.004
+        adevice: PP:LOSA2-LOSA4-RISR
+        aport: 25/26 Front
+        acable: SC
+        aterm: 'No'
+        alabel: CLR16374
+        zcage: Suite 11
+        zrack: 2.003
+        zdevice: Arista switch
+        zport: et25/1
+        zterm: 'Yes'
+        zcable: LC
+        zlabel: CLR16374
 
-        Each of these devices has been powered down per our notes, but this may be incorrect. All devices must be powered down.
-    - rh: Once each device has been located and power confirmed off, disconnect and *dispose of* all connected jumpers from each device.
-    - rh: Remove each device from the racks, and palletize each using the racks on hand (as discussed with Enrique).
-    - rh: Each pallet can be placed in the warehouse or in the cage off to the side, as determined by RH. We will schedule a freight pickup as soon as this MOP and the warehouse palletization are completed.
+      - acage: Suite 11
+        arack: 1.004
+        adevice: PP:LOSA2-LOSA4-RISR
+        aport: 27/28 Front
+        acable: SC
+        aterm: 'No'
+        alabel: CLR16375
+        zcage: Suite 11
+        zrack: 2.003
+        zdevice: Arista switch
+        zport: et26/1
+        zterm: 'Yes'
+        zcable: LC
+        zlabel: CLR16375
+
+      - acage: Suite 11
+        arack: 1.004
+        adevice: PP:LOSA2-LOSA4-RISR
+        aport: 29/30 Front
+        acable: SC
+        aterm: 'No'
+        alabel: CLR16376
+        zcage: Suite 11
+        zrack: 2.003
+        zdevice: Arista switch
+        zport: et27/1
+        zterm: 'Yes'
+        zcable: LC
+        zlabel: CLR16376
+
+      - acage: Suite 11
+        arack: 1.004
+        adevice: PP:LOSA2-LOSA4-RISR
+        aport: 31/32 Front
+        acable: SC
+        aterm: 'No'
+        alabel: CLR16377
+        zcage: Suite 11
+        zrack: 2.003
+        zdevice: Arista switch
+        zport: et28/1
+        zterm: 'Yes'
+        zcable: LC
+        zlabel: CLR16377
+
+      - acage: Suite 11
+        arack: 1.002
+        adevice: Ciena Waveserver Ai
+        aport: 3
+        acable: LC
+        aterm: 'No'
+        alabel: CLR16374
+        zcage: Suite 11
+        zrack: 2.003
+        zdevice: Arista switch
+        zport: et29/1
+        zterm: 'Yes'
+        zcable: LC
+        zlabel: CLR16374
+
+      - acage: Suite 11
+        arack: 1.002
+        adevice: Ciena Waveserver Ai
+        aport: 4
+        acable: LC
+        aterm: 'No'
+        alabel: CLR16375
+        zcage: Suite 11
+        zrack: 2.003
+        zdevice: Arista switch
+        zport: et30/1
+        zterm: 'Yes'
+        zcable: LC
+        zlabel: CLR16375
+
+      - acage: Suite 11
+        arack: 1.002
+        adevice: Ciena Waveserver Ai
+        aport: 7
+        acable: LC
+        aterm: 'No'
+        alabel: CLR16376
+        zcage: Suite 11
+        zrack: 2.003
+        zdevice: Arista switch
+        zport: et31/1
+        zterm: 'Yes'
+        zcable: LC
+        zlabel: CLR16376
+
+      - acage: Suite 11
+        arack: 1.002
+        adevice: Ciena Waveserver Ai
+        aport: 8
+        acable: LC
+        aterm: 'No'
+        alabel: CLR16377
+        zcage: Suite 11
+        zrack: 2.003
+        zdevice: Arista switch
+        zport: et32/1
+        zterm: 'Yes'
+        zcable: LC
+        zlabel: CLR16377
+    - cmd-rh:
+      - On direction from CENIC/UCSD, terminate jumpers as follows
+      - |-
+        CLR16374
+          Replace existing jumper and terminate new jumper labeled CLR16374 on:
+            1.004: PP:LOSA2-LOSA4-RISR, Ports 25/26
+            1.002: Ciena Waveserver Ai, Port 3
+
+        CLR16375
+          Replace existing jumper and terminate new jumper labeled CLR16375 on:
+            1.004: PP:LOSA2-LOSA4-RISR, Ports 27/28
+            1.002: Ciena Waveserver Ai, Port 4
+
+        CLR16376
+          Replace existing jumper and terminate new jumper labeled CLR16376 on:
+            1.004: PP:LOSA2-LOSA4-RISR, Ports 29/30
+            1.002: Ciena Waveserver Ai, Port 7
+
+        CLR16377
+          Replace existing jumper and terminate new jumper labeled CLR16377 on:
+            1.004: PP:LOSA2-LOSA4-RISR, Ports 31/32
+            1.002: Ciena Waveserver Ai, Port 8

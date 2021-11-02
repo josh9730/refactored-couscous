@@ -41,6 +41,7 @@ Jumper #{{ count.value }}:
         {% endif %}
         Terminate: {% if j.aterm == 'No' %}No{% else %}Yes
         {% endif %}
+
     Z Location:
         {% if j.zcage %}
         Cage: {{ j.zcage }}
@@ -56,9 +57,10 @@ Jumper #{{ count.value }}:
         Jumper: {{ j.zcable }}
         {% endif %}{% if j.label %}
         Label: {{ j.label }}
+        {% endif %}{% if j.zterm %}
+        Terminate: {{ j.zterm }}
         {% endif %}
-        Terminate: {% if j.aterm == 'No' %}No{% else %}Yes
-        {% endif %}
+
 {% endfor %}
 
 {noformat}{% endmacro -%}
