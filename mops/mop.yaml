@@ -7,11 +7,11 @@ parent_page_id: 9662071
 ticket: NOC-661283
 
 summary:
-- Re-provision CLRs 16374 - 16377 to use Arista switch
+- Verify and troubleshoot 
 level: 0
 exec: NOC
 rh: LOSA4
-approval: NOC-657500
+approval: NOC-661451
 impact:
 - No CENIC circuits will be impacted
 escalation: Deploying Engineer
