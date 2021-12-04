@@ -1,5 +1,7 @@
 from atlassian import Jira
-from utils import jira_login
+
+from .utils import jira_login
+
 
 tickets = [
     "NOC-647144|eho",

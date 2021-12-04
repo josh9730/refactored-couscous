@@ -1,19 +1,21 @@
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from datetime import datetime, timedelta, date, timezone
 import pickle
 import os.path
 import gspread
 import re
 import json
 import keyring
-from atl_main import Logins
+from datetime import datetime, timedelta, date, timezone
+
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+
+from .utils import get_user_vars, jira_login
 
 
 class CalendarStuff:
     def __init__(self, username=None):
-        self.jira = Logins(username).jira_login()
+        self.jira = jira_login()
 
         # If modifying these scopes, delete the file token.pickle.
         SCOPES = ["https://www.googleapis.com/auth/calendar.events"]
@@ -155,7 +157,7 @@ class CalendarStuff:
         maint_cal = (
             self.service.events()
             .list(
-                calendarId="cenic.org_36uqe435vlel8qv9ul57tomo1g@group.calendar.google.com",
+                calendarId=get_user_vars("maint_url")[0],
                 timeMin=d1,
                 timeMax=now,
                 singleEvents=True,
@@ -168,7 +170,7 @@ class CalendarStuff:
         internal_cal = (
             self.service.events()
             .list(
-                calendarId="cenic.org_oggku8rjbli9v7163ocroug09s@group.calendar.google.com",
+                calendarId=get_user_vars("ic_url")[0],
                 timeMin=d1,
                 timeMax=now,
                 singleEvents=True,
@@ -229,7 +231,7 @@ class CalendarStuff:
 
         # pylint: disable=no-member
         self.service.events().insert(
-            calendarId="cenic.org_oggku8rjbli9v7163ocroug09s@group.calendar.google.com",
+            calendarId=get_user_vars("ic_url")[0],
             body=body,
         ).execute()
 
@@ -240,7 +242,7 @@ class CalendarStuff:
         engrv_rotation = (
             self.service.events()
             .list(
-                calendarId="cenic.org_72vsnc1bn4a4jj3i2bl9fli72k@group.calendar.google.com",
+                calendarId=get_user_vars("engrv_url")[0],
                 q="EngRv",
                 singleEvents=True,
                 orderBy="startTime",

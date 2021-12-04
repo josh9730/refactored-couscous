@@ -8,6 +8,7 @@ Args:
 import netaddr
 import argparse
 
+
 parser = argparse.ArgumentParser(description="Convert IPv4 to IPv6 address.")
 parser.add_argument(
     "address", metavar="IPv4Address", help="IPv4 address with mask in slash notation."

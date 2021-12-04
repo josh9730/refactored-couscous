@@ -4,11 +4,14 @@ Creates the 6 ticket buckets and links them to the Story. Includes the descripti
 Adds 'CoreMgd' label and Epic Link to Design Task.
 """
 
-from atlassian import Jira
 import sys
 import os
+
+from atlassian import Jira
 import argparse
-from utils import jira_login
+
+from tools.utils import jira_login
+
 
 parser = argparse.ArgumentParser(
     description="Create tickets for Story per Planning Process"

@@ -1,8 +1,10 @@
 ''' General purpose netmiko script'''
 
-from netmiko import ConnectHandler
 import time
-from utils import get_mfa_keyring
+
+from netmiko import ConnectHandler
+
+from tools.utils import get_mfa_keyring
 
 
 # use '|junos' or '|iosxr' for device_type

@@ -7,16 +7,18 @@
     - need to extend to append new interfaces to DF
 '''
 
-from datetime import datetime, timedelta
-from gspread_pandas import Spread
-import pandas as pd
 import requests
 import json
 import time
-import gspread
 import yaml
 import os
+
+import gspread
+from datetime import datetime, timedelta
+from gspread_pandas import Spread
+import pandas as pd
 from pprint import pprint
+
 
 with open('/Users/jdickman/Google Drive/My Drive/Scripts/usernames.yml') as file:
     data = yaml.full_load(file)['scilo_api']

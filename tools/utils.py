@@ -1,8 +1,9 @@
-from atlassian import Confluence, Jira
 import yaml
 import keyring
 import pyotp
 import sys
+
+from atlassian import Confluence, Jira
 
 """
 keyring setup:
