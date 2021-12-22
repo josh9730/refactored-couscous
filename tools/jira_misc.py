@@ -1,20 +1,10 @@
 from atlassian import Jira
 
-from .utils import jira_login
+from utils import jira_login
 
 
 tickets = [
-    "NOC-647144|eho",
-    "NOC-647138|tsanda",
-    "NOC-647139|tsanda",
-    "NOC-647146|tsanda",
-    "NOC-654444|eho",
-    "NOC-647463|eho",
-    "NOC-649007|tsanda",
-    "NOC-661261|tsanda",
-    "NOC-647150|tsanda",
-    "NOC-647145|myunus",
-    "NOC-647135|myunus",
+    "NOC-647149|ashaheen",
 ]
 
 description = "Please complete pre-deployment activities as described [HERE|https://documentation.cenic.org/display/Core/Core+Tail+Circuit+Deployment+Process#CoreTailCircuitDeploymentProcess-predeployment]"

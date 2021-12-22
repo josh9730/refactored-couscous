@@ -88,8 +88,9 @@ class JiraStuff:
                     "fields.customfield_10209.value",
                 ]
                 if j == 65:
+                    gsheet.clear_sheet(rows=500, cols=30, sheet=name)
                     gsheet.df_to_sheet(
-                        df[FoI], index=False, sheet=name, replace=True, start=f"{k}1"
+                        df[FoI], index=False, sheet=name, replace=False, start=f"{k}1"
                     )  # clear and push to sheet
                 else:
                     gsheet.df_to_sheet(

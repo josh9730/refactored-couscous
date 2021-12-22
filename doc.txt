@@ -1,3 +1,132 @@
+h2. Process
+
+# Ops Notification
+## This can be done through the bi-monthly Core-Ops meeting
+## A Lead NOC Engineer will be identified who will be responsible for verifying the Onboarding process
+## The identified Lead NOC Engineer will be assigned as the reporter for the 
+# Open tickets
+## Tickets should be created in Jira Service Desk under the NOC Project
+## *Security Review*
+## *Config & Inventory Review*
+## *Monitoring Review*
+## *Operations Review*
+# Remediate Tasks
+## {expand:title= EXPAND FOR JIRA COPY/PASTING}
+{noformat:nopanel=true}
+**Security Review Task Items**
+- TACACS / Authentication
+- Syslog (via Rancid login) 
+- ISO device scan 
+- Software code 
+
+
+**Config & Inventory Review Task Items** 
+- RANCID 
+- Inventory 
+- DCIM 
+- Cobber 
+- CAMEL 
+- Git/NSO 
+- Config standards 
+
+
+**Monitoring Review Task Items** 
+- Science Logic 
+- Cricket 
+
+
+**Operations Review Task Items** 
+- Netflow 
+- Device documentation
+{noformat}
+{expand}
+## Security Review Items
+### Evaluate and address authentication, access and service restrictions, logging, and ISO security evaluations needs. 
+### Current Tools & Links:
+### TACACS
+### Syslog (via Rancid)
+### Requirements:
+#### All devices that are capable of using TACACS must utilize MFA. No local logins are permitted except the NOC backdoor account
+#### All Layer 1 devices must report to CAMEL
+#### All Layer 2/3 devices must report to Syslog
+#### All devices must:
+##### Have a standard code version identified and defined on Approved Network Devices
+##### Be scanned by ISO for vulnerabilities
+## Config & Inventory Review Items
+### This Task will address configuration backups, DCIM & Cobber considerations, and inventory needs. 
+### Current Tools & Links:
+#### RANCID
+#### Inventory
+#### DCIM (pending docs)
+#### Cobber (pending docs)
+#### CAMEL
+#### GitLab
+#### NSO (pending docs)
+### Requirements:
+#### All Devices must:
+##### Use rancid for config backups
+##### Report inventory data to AMS
+##### Have appropriate templates created in DCIM
+#### All Layer 1 Devices must report to CAMEL
+#### All devices with config statements must have standards in Git/NSO
+## Monitoring Review Items
+### This Task will address performance and monitoring. 
+### Current Tools & Links:
+#### Science Logic
+#### Cricket
+### Requirements:
+#### All devices except those reporting to CAMEL must report data to SciLo:
+##### Interface status, errors, and utilization
+##### Protocol monitoring
+##### Optics PMs
+##### Environmental PMs
+#### All devices except those reporting to CAMEL must report data to Cricket
+##### Utilization
+#### Devices reporting to CAMEL must report all of the above items to CAMEL
+##Operational Review Items
+### This Task will address Netflow and operational concerns (e.g. documentation & training as needed for Ops/Core support on the new device)
+### Requirements
+#### Documentation for new device types (see Ciena 6500 for an example)
+#### Netflow configurations
+#### Password rotation plan
+#### Support model:
+##### Who is responsible for escalation needs. Will typically be Core, but Systems may also be involved.
+# Onboarding Review
+## Assign master Onboarding ticket to designated Lead NOC Engineer for review.
+## This review will happen internally to NOC, and will determine if support for the device has been appropriately identified.
+## *NO* Operational Readiness will occur until this review has happened.
+
+
+
+Assign Onboarding Story to Core Engineering Manager once all items are completed. Manager will review the status of Onboarding, and add written approval to close out onboarding tasks.
+Ops Engineers will check for the approval in the Onboarding Story during Operational Readiness.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 h1. Issues
 
 1. Route target advertised to Customer by default in Junos
