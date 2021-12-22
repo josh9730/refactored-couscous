@@ -1,0 +1,60 @@
+---
+# Section options:
+# - rh, core, noc: Single line instructions
+# - cmd-rh, cmd-core, cmd-noc:
+#  - Multi-line instructions in a no-format macro
+#  - |-
+#    Multiline text
+# - expand-core, expand-noc: Multi-line instructions in an expand macro. Written same as cmd-
+# - jumper:
+#  - Instructions
+#  - acage:
+#    arack:
+#    adevice:
+#    aport:
+#    acable:
+#    aterm: 'Yes'
+#    zcage:
+#    zrack:
+#    zdevice:
+#    zport:
+#    zterm: 'No'
+# - note: Bulleted item underneath the previous instruction
+
+
+mop_repo: {{ mop_repo }}
+
+# absolute path to file, ignored if values set below
+login_path: {{ login_path }}
+# locally defined, overrides 'login_path' if defined
+login_vars:
+  confluence_url: {{ confluence_url }}
+  jira_url: {{ jira_url }}
+  cas: {{ cas }}
+
+page_title: 
+parent_page_id: 
+ticket: 
+
+summary:
+ - 
+level: 
+exec: 
+rh: 
+approval: 
+impact:
+- 
+escalation: Deploying Engineer
+
+p_rollback: Yes
+rollback:
+ -
+pm:
+-
+
+tech_equip:
+  - 
+shipping:
+
+
+sections:

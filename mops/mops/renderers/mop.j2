@@ -1,0 +1,183 @@
+{% set count = namespace(value=1) -%}
+
+{% macro expand(header, steps_list) %}
+# *&#91;{{ header }}]* {{ steps_list[0] }}:
+{code:title=CLICK TO EXPAND|linenumbers=true|language=text|collapse=true}
+{{ steps_list[1] }}
+
+{code}{% endmacro -%}
+
+{% macro cmd(header, steps_list) %}
+# *&#91;{{ header }}]* {{ steps_list[0] }}:
+{noformat:nopanel=true}
+{{ steps_list[1] }}
+
+{noformat}{% endmacro -%}
+
+{% macro jumpers(step) -%}
+# *&#91;RH]* {{ step[0] }}:
+{noformat:nopanel=true}
+{% for j in step[1:] %}
+{% if not loop.first%}
+
+{% endif %}
+Jumper #{{ count.value }}:
+{% set count.value = count.value + 1 %}
+    A Location:
+        {% if j.acage %}
+        Cage: {{ j.acage }}
+        {% endif %}{% if j.arack %}
+        Rack: {{ j.arack }}
+        {% endif %}{% if j.adevice %}
+        Device: {{ j.adevice }}
+        {% endif %}{% if j.acid %}
+        CID: {{ j.acid }}
+        {% endif %}{% if j.aport %}
+        Port: {{ j.aport }}
+        {% endif %}{% if j.acable %}
+        Jumper: {{ j.acable}}
+        {% endif %}{% if j.label %}
+        Label: {{ j.label }}
+        {% endif %}
+        Terminate: {% if j.aterm == 'No' %}No{% else %}Yes
+        {% endif %}
+
+    Z Location:
+        {% if j.zcage %}
+        Cage: {{ j.zcage }}
+        {% endif %}{% if j.zrack %}
+        Rack: {{ j.zrack }}
+        {% endif %}{% if j.zdevice %}
+        Device: {{ j.zdevice }}
+        {% endif %}{% if j.zcid %}
+        CID: {{ j.zcid }}
+        {% endif %}{% if j.zport %}
+        Port: {{ j.zport }}
+        {% endif %}{% if j.zcable %}
+        Jumper: {{ j.zcable }}
+        {% endif %}{% if j.label %}
+        Label: {{ j.label }}
+        {% endif %}{% if j.zterm %}
+        Terminate: {{ j.zterm }}
+        {% endif %}
+
+{% endfor %}
+
+{noformat}{% endmacro -%}
+
+h1. NOC Section
+||h3. RH TICKET|*[{{ ticket }}|https://servicedesk.cenic.org/browse/{{ ticket }}]*|
+||h3. SUMMARY|{% for i in summary %}
+* {{ i }}
+{% endfor %}|
+||h3. CHANGE LEVEL| {{ level }}|
+||h3. CLRs IMPACTED|{% for i in impact %}
+* {{ i }}
+{% endfor %}|
+||h3. EXECUTION|{{ exec }}|
+{% if rh %}
+||h3. REMOTE HANDS|{{ rh }}|
+||h3. RH APPROVAL|*[{{ approval }}|https://servicedesk.cenic.org/browse/{{ approval }}]*|
+{% endif %}
+||h3. ESCALATION|{{ escalation }}|
+||h3. PARTIAL ROLLBACK|{{ p_rollback }}|
+||h3. ROLLBACK STEPS|{% if rollback[0] %}
+{%- for i in rollback %}
+{noformat:nopanel=true}
+{{ i }}
+{noformat}
+{% endfor %}
+{% else %}
+* Rollback is reverse of MOP
+{% endif %}|
+\\
+
+{% if pm[0] -%}
+h2. +PRE-MAINTENANCE+
+{noformat:nopanel=true}
+{%- for i in pm %}
+{{ i }}
+
+{% endfor %}
+{noformat}
+{% endif -%}
+\\
+{section}
+{column:width=30%}
+{column}
+{column:width=40%}
+----
+{column}
+{column:width=30%}
+{column}
+{section}
+
+h1. +*{{ '{{' }}MOP START}}*+
+\\
+{% if tech_equip %}
+|Tech Equipment|{% for i in tech_equip %}
+* {{ i }}
+{% endfor %}{% endif %}
+{% if shipping %}
+||Shipping Ticket||Tracking #||Inbound Ticket||
+{% for i in shipping %}
+|{{ i }}|{{ shipping[i][0] }}|{{ shipping[i][1] }}|
+{% endfor %}{% endif %}
+
+{% if rh %}
+h4. Please call 714-220-3494 before starting and reference {{ ticket }}.
+{% endif %}
+
+{% for section, step_dict in sections.items() %}
+h2. Section {{ loop.index }} - {{ section }}
+{% for i in step_dict %}
+{%- for header, step in i.items() -%}
+{% if header == 'rh' %}
+# *&#91;RH]* {{ step }}
+{% elif header == 'cmd-rh' %}
+{{ cmd('RH', step) }}
+{% elif header == 'noc' %}
+# *&#91;NOC]* {{ step }}
+{% elif header == 'jumper' %}
+{{ jumpers(step) }}
+{% elif header == 'cmd-noc' %}
+{{ cmd('NOC', step) }}
+{% elif header == 'expand-noc' %}
+{{ expand('NOC', step) }}
+{% elif header == 'core' %}
+# *&#91;CORE]* {{ step }}
+{% elif header == 'cmd-core' %}
+{{ cmd('CORE', step) }}
+{% elif header == 'expand-core' %}
+{{ expand('CORE', step) }}
+{% elif header == 'note' %}
+** *NOTE:* {{ step }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+
+{% endfor %}
+{% if rh %}
+h2. RH CLEANUP WORK
+1. *&#91;RH]* Remove & dispose of any jumpers that were disconnected as a result of the maintenance (do not remove any inter-cage cross connects).
+2. *&#91;RH]* Dispose of any empty boxes and/or other packaging materials leftover as a result of this work.
+{% endif %}
+
+h2. CENIC CLEANUP WORK
+1. *&#91;NOC, CORE]* Open Post-Maintenance child ticket using the template *[HERE|https://documentation.cenic.org/display/Operations/Post+Maintenance+Checklist]*.
+    - If +*NOC*+ performed the changes in this maintenance window, NOC will open Post-Maintenance ticket.
+    - If NOC did +*NOT*+ perform the changes, the engineer involved (i.e. Core or Systems engineer) will open the Post-Maintenance ticket
+      - Core is responsible for updating CLRs and port tags for Core Executed changes.
+
+h1. +*{{ '{{' }}MOP END}}*+
+\\
+{section}
+{column:width=30%}
+{column}
+{column:width=40%}
+----
+{column}
+{column:width=30%}
+{column}
+{section}
+\\
