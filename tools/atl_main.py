@@ -7,34 +7,12 @@ import gspread
 import time
 import json
 
-
-class Logins:
-    def __init__(self, username):
-        self.username = username
-        self.password = keyring.get_password("cas", self.username)
-
-    def jira_login(self):
-        jira = Jira(
-            url="https://servicedesk.cenic.org",
-            username=self.username,
-            password=self.password,
-        )
-
-        return jira
-
-    def conf_login(self):
-        confluence = Confluence(
-            url="https://documentation.cenic.org/",
-            username=self.username,
-            password=self.password,
-        )
-
-        return confluence
+from .utils import jira_login, conf_login
 
 
-class JiraStuff(Logins):
-    def __init__(self, username, sheet_key=""):
-        self.jira = Logins(username).jira_login()
+class JiraStuff:
+    def __init__(self, sheet_key=""):
+        self.jira = jira_login()
         self.sheet_key = sheet_key
 
     def outages(self, jql_request):
@@ -110,8 +88,9 @@ class JiraStuff(Logins):
                     "fields.customfield_10209.value",
                 ]
                 if j == 65:
+                    gsheet.clear_sheet(rows=500, cols=30, sheet=name)
                     gsheet.df_to_sheet(
-                        df[FoI], index=False, sheet=name, replace=True, start=f"{k}1"
+                        df[FoI], index=False, sheet=name, replace=False, start=f"{k}1"
                     )  # clear and push to sheet
                 else:
                     gsheet.df_to_sheet(
@@ -186,7 +165,7 @@ class JiraStuff(Logins):
         # read from 'database'
         circuits_df = pd.read_json(
             "/Users/jdickman/Git/refactored-couscous/projects/atl_cal/circuits.json"
-        )
+        )  # broken, re-create sheet
 
         # loop to create milestone updated date and days in milestone lists
         today = date.today()
@@ -315,9 +294,9 @@ class JiraStuff(Logins):
         self.jira.issue_create(fields=cust_fields)
 
 
-class ConfluenceStuff(Logins):
-    def __init__(self, username):
-        self.confluence = Logins(username).conf_login()
+class ConfluenceStuff:
+    def __init__(self):
+        self.confluence = conf_login()
 
     def page_update_wiki_format(self, parent_id, page_title, page_body):
         """Update or Create Confluence page

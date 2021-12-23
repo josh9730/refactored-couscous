@@ -66,7 +66,7 @@ Jumper #{{ count.value }}:
 {noformat}{% endmacro -%}
 
 h1. NOC Section
-||h3. RH TICKET|{jira:key={{ ticket }}}|
+||h3. RH TICKET|*[{{ ticket }}|https://servicedesk.cenic.org/browse/{{ ticket }}]*|
 ||h3. SUMMARY|{% for i in summary %}
 * {{ i }}
 {% endfor %}|
@@ -77,7 +77,7 @@ h1. NOC Section
 ||h3. EXECUTION|{{ exec }}|
 {% if rh %}
 ||h3. REMOTE HANDS|{{ rh }}|
-||h3. RH APPROVAL|{{ approval }}|
+||h3. RH APPROVAL|*[{{ approval }}|https://servicedesk.cenic.org/browse/{{ approval }}]*|
 {% endif %}
 ||h3. ESCALATION|{{ escalation }}|
 ||h3. PARTIAL ROLLBACK|{{ p_rollback }}|

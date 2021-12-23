@@ -1,18 +1,16 @@
 """Weekly and daily automated runs, used by LaunchControl. Argparse to manually launch a script.
 """
 
-import argparse
-import datetime
 import sys
 import os
 
-script_dir = os.path.dirname(__file__)
-sys.path.append(os.path.join(script_dir, "projects/atl_cal"))
+import argparse
+import datetime
 
-# pylint: disable=import-error
-from atl_main import JiraStuff
-from cal_main import CalendarStuff
-from utils import get_user_vars
+from tools.utils import get_user_vars
+from tools.atl_main import JiraStuff
+from tools.cal_main import CalendarStuff
+
 
 data = get_user_vars()
 
@@ -81,37 +79,36 @@ def buckets(cal_stuff, atl_stuff):
 
 def main(args):
 
-    username = data["cas"]
     sheet_key = data["sheet_key"]
 
-    atl_stuff = JiraStuff(username, sheet_key=sheet_key)
-    cal_stuff = CalendarStuff(username=username)
+    jira = JiraStuff(sheet_key=sheet_key)
+    cal = CalendarStuff()
 
     if args.buckets:
-        buckets(cal_stuff, atl_stuff)
+        buckets(cal, jira)
     elif args.outages:
-        outages(atl_stuff)
+        outages(jira)
     elif args.gcal:
-        gcal_pull(cal_stuff)
+        gcal_pull(cal)
     elif args.tickets:
-        ticket_pull(atl_stuff)
+        ticket_pull(jira)
     elif args.open_rh:
-        open_rh(atl_stuff)
+        open_rh(jira)
     elif args.circuits:
-        circuits(atl_stuff)
+        circuits(jira)
 
     else:
 
         day = datetime.datetime.now().strftime("%a")
         if day == "Mon":
-            buckets(cal_stuff, atl_stuff)
-            outages(atl_stuff)
-            gcal_pull(cal_stuff)
+            buckets(cal, jira)
+            outages(jira)
+            gcal_pull(cal)
 
         else:
-            ticket_pull(atl_stuff)
-            open_rh(atl_stuff)
-            # circuits(atl_stuff)
+            ticket_pull(jira)
+            open_rh(jira)
+            # circuits(jira)
 
 
 if __name__ == "__main__":

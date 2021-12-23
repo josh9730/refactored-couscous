@@ -1,6 +1,8 @@
 import paramiko
+
 from lp import GetLP
-from utils import get_user_vars
+from tools.utils import get_user_vars
+
 
 def main():
 

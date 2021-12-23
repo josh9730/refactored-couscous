@@ -1,8 +1,9 @@
-from atlassian import Confluence, Jira
 import yaml
 import keyring
 import pyotp
 import sys
+
+from atlassian import Confluence, Jira
 
 """
 keyring setup:
@@ -43,3 +44,10 @@ def conf_login():
     password = keyring.get_password("cas", username)
     confluence = Confluence(url=confluence_url, username=username, password=password)
     return confluence
+
+def jira_login():
+    jira_url, username = get_user_vars("jira_url", "cas")
+
+    password = keyring.get_password("cas", username)
+    jira = Jira(url=jira_url, username=username, password=password)
+    return jira

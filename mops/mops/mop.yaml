@@ -1,0 +1,67 @@
+---
+# Section options:
+# - rh, core, noc: Single line instructions
+# - cmd-rh, cmd-core, cmd-noc:
+#  - Multi-line instructions in a no-format macro
+#  - |-
+#    Multiline text
+# - expand-core, expand-noc: Multi-line instructions in an expand macro. Written same as cmd-
+# - jumper:
+#  - Instructions
+#  - acage:
+#    arack:
+#    adevice:
+#    aport:
+#    acable:
+#    aterm: 'Yes'
+#    zcage:
+#    zrack:
+#    zdevice:
+#    zport:
+#    zterm: 'No'
+# - note: Bulleted item underneath the previous instruction
+
+
+mop_repo: /Users/jdickman/Google Drive/My Drive/MOPs/YAML/
+
+# absolute path to file, ignored if values set below
+login_path: /Users/jdickman/Google Drive/My Drive/Scripts/usernames.yml
+# locally defined, overrides 'login_path' if defined
+login_vars:
+  confluence_url: 
+  jira_url: 
+  cas: 
+
+page_title: SACR2 XConnect Panel Install
+parent_page_id: 45428825
+ticket: NOC-664802
+
+summary:
+ - Install 48-port LC panel at SACR2
+level: 0
+exec: NOC
+rh: SACR2
+approval: COR-1696
+impact:
+- None
+escalation: Deploying Engineer
+
+p_rollback: Yes
+rollback:
+ -
+pm:
+-
+
+tech_equip:
+  - Labeler
+shipping:
+  NOC-663883:
+    - 7754 7528 9544
+    - "22681004"
+
+sections:
+  "Install Panel":
+    - rh: Locate rack 1.008
+    - rh: Install the shipped 48-port LC panel in 1.008 at RU 36
+    - rh: Label panel as "XCP-ARDO1-410.02-U20"
+    - noc: Get billable time.

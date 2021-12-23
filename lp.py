@@ -1,9 +1,11 @@
-import pyotp
-from lastpass import Vault
-import keyring
 import re
+
 import argparse
-from utils import get_mfa_keyring
+import pyotp
+import keyring
+from lastpass import Vault
+
+from tools.utils import get_mfa_keyring
 
 
 class GetLP:

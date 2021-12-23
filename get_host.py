@@ -3,6 +3,7 @@
 
 import subprocess
 
+
 def get_hostname(IP):
     # print('---\nAddress: ', IP,)
     bashCmd = ['host', f'{IP}']
