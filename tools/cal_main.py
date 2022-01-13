@@ -238,7 +238,10 @@ class CalendarStuff:
     def get_engrv(self):
         """Get engineer on EngRv, to be run each Monday"""
 
-        # pylint: disable=no-member
+        now = (datetime.utcnow() - timedelta(days=2)).isoformat() + "Z"
+        d1 = (datetime.utcnow() + timedelta(weeks=4)).isoformat() + "Z"
+
+        engrv_order = []
         engrv_rotation = (
             self.service.events()
             .list(
@@ -246,8 +249,12 @@ class CalendarStuff:
                 q="EngRv",
                 singleEvents=True,
                 orderBy="startTime",
+                timeMin=now,
+                timeMax=d1,
             )
             .execute()
         )
+        for i in engrv_rotation['items']:
+            engrv_order.append(i['summary'].split(" ")[0])
 
-        return engrv_rotation["items"][0]["summary"]
+        return engrv_order

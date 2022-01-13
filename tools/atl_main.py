@@ -238,6 +238,21 @@ class JiraStuff:
             },
         )
 
+    def update_engrv(self, bucket_dict, hours, engineer_list):
+        """Update rotating buckets for EngRv. Allocation is per week, gets the upcoming month's order"""
+
+        today = datetime.today()
+        for count, eng in enumerate(engineer_list):
+            ticket = bucket_dict[eng]
+            self.jira.issue_update(
+                ticket,
+                {
+                    "timetracking": {"originalEstimate": str(hours) + "h"},
+                    "customfield_10410": (today + timedelta(days = count*7)).strftime("%Y-%m-%d"),
+                    "customfield_10411": (today + timedelta(days = count*7 + 4)).strftime("%Y-%m-%d"),
+                },
+            )
+
     def update_circuit(self, bucket, hours):
         """Update circuit deployment bucket based on # of active circuits"""
 
@@ -251,6 +266,7 @@ class JiraStuff:
             worksheet.get("C3")[0][0],
             worksheet.get("C4")[0][0],
             worksheet.get("C5")[0][0],
+            worksheet.get("C6")[0][0],
         ]
 
         new_start = datetime.today().strftime("%Y-%m-%d")

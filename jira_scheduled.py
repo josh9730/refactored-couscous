@@ -70,8 +70,8 @@ def circuits(atl_stuff):
 def buckets(cal_stuff, atl_stuff):
     # Update EngRv bucket based on gCal entry for rotation
     # Update Circuits bucket based on Active circuits from gcal
-    eng = cal_stuff.get_engrv()
-    atl_stuff.update_rotating_bucket(data["engrv_tickets"], data["engrv_hours"], eng)
+    eng_list = cal_stuff.get_engrv()
+    atl_stuff.update_engrv(data["engrv_tickets"], data["engrv_hours"], eng_list)
     atl_stuff.update_circuit(
         list(data["circuit_tickets"].values()), data["circuit_hours"]
     )
@@ -108,7 +108,7 @@ def main(args):
         else:
             ticket_pull(jira)
             open_rh(jira)
-            # circuits(jira)
+            # circuits(jira) # fix circuits.json
 
 
 if __name__ == "__main__":
