@@ -2,12 +2,12 @@
 mop_repo: /Users/jdickman/Google Drive/My Drive/MOPs/YAML/
 
 # absolute path to file, ignored if values set below
-login_path: 
-# locally defined, overrides 'path' if defined
+login_path: /Users/jdickman/Google Drive/My Drive/Scripts/usernames.yml
+# locally defined, overrides 'login_path' if defined
 login_vars:
-  confluence_url: None
-  jira_url: None
-  cas: None
+  confluence_url: 
+  jira_url: 
+  cas: 
 
 ticket: 
 page_title: 

@@ -72,6 +72,7 @@ def yaml_defaults(_yaml_file, file_type):
 
     mop_repo = _yaml_file.get("mop_repo")
     path = _yaml_file.get("login_path")
+    print(path)
     ic_url = _yaml_file.get("ic_url")
     yaml_vars = _yaml_file.get("login_vars")
 
@@ -83,6 +84,8 @@ def yaml_defaults(_yaml_file, file_type):
         yaml_vars.update({"confluence_url": ""})
         yaml_vars.update({"jira_url": ""})
         yaml_vars.update({"cas": ""})
+
+    print(yaml_vars)
 
     env = Environment(
         loader=FileSystemLoader("defaults/"), trim_blocks=True, lstrip_blocks=True
