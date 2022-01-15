@@ -85,8 +85,6 @@ def yaml_defaults(_yaml_file, file_type):
         yaml_vars.update({"jira_url": ""})
         yaml_vars.update({"cas": ""})
 
-    print(yaml_vars)
-
     env = Environment(
         loader=FileSystemLoader("defaults/"), trim_blocks=True, lstrip_blocks=True
     )

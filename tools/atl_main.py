@@ -66,50 +66,28 @@ class JiraStuff:
 
         name = "Bulk"
         gsheet = Spread(self.sheet_key, name)
-        j = 65
 
+        full_df = pd.DataFrame()
         for i in engineer:
-
             results = self.jira.jql(
                 jql_request.format(engineer=i),
                 limit=500,
-                fields=["assignee", "key", "summary", "updated", "customfield_10209"],
+                fields=["assignee", "key", "status", "summary", "updated", "customfield_10209"],
             )
-            df = pd.json_normalize(results["issues"])
-            k = chr(j)
-
-            try:
-
-                FoI = [
+            df = pd.json_normalize(results["issues"])[
+                [
                     "fields.assignee.name",
                     "key",
+                    "fields.status.name",
                     "fields.summary",
                     "fields.updated",
                     "fields.customfield_10209.value",
                 ]
-                if j == 65:
-                    gsheet.clear_sheet(rows=500, cols=30, sheet=name)
-                    gsheet.df_to_sheet(
-                        df[FoI], index=False, sheet=name, replace=False, start=f"{k}1"
-                    )  # clear and push to sheet
-                else:
-                    gsheet.df_to_sheet(
-                        df[FoI], index=False, sheet=name, replace=False, start=f"{k}1"
-                    )
+            ]
+            full_df = pd.concat([full_df, df])
 
-            except:
-
-                FoI = [
-                    "fields.assignee.name",
-                    "key",
-                    "fields.summary",
-                    "fields.updated",
-                ]
-                gsheet.df_to_sheet(
-                    df[FoI], index=False, sheet=name, replace=False, start=f"{k}1"
-                )
-
-            j += 5  # increment for cell
+        gsheet.clear_sheet(rows=500, cols=10, sheet=name)
+        gsheet.df_to_sheet(full_df, index=False, sheet=name, replace=False, start="A1")
 
     def circuits(self, jql_request):
         """Retrieve all tickets with a Milestone in M4 - M9, push to sheet, and update how long the ticket has been in that milestone.

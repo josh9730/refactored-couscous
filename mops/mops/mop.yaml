@@ -32,18 +32,18 @@ login_vars:
   jira_url: 
   cas: 
 
-page_title: SACR2 XConnect Panel Install
-parent_page_id: 45428825
-ticket: NOC-664802
+page_title: RIVE1 200G Install
+parent_page_id: 8884131
+ticket: NOC-665214
 
 summary:
- - Install 48-port LC panel at SACR2
+ - Install 200G card for FRES/FRES spur upgrade
 level: 0
 exec: NOC
-rh: SACR2
-approval: COR-1696
+rh: RIVE1
+approval: COR-2053
 impact:
-- None
+- 
 escalation: Deploying Engineer
 
 p_rollback: Yes
@@ -53,15 +53,49 @@ pm:
 -
 
 tech_equip:
-  - Labeler
+  - Fiber cleaner
 shipping:
-  NOC-663883:
-    - 7754 7528 9544
-    - "22681004"
+  
+
+
 
 sections:
-  "Install Panel":
-    - rh: Locate rack 1.008
-    - rh: Install the shipped 48-port LC panel in 1.008 at RU 36
-    - rh: Label panel as "XCP-ARDO1-410.02-U20"
-    - noc: Get billable time.
+  "Install New 200G Circuit":
+    - rh: Locate the 200G-CK-C card in RIVE1CA51O Shelf 3 Slot 2. Remove this card and re-slot into Shelf 4 Slot 2.
+    - note: NOC to perform lamp test to verify shelves
+    - rh: Remove the CPAK-100G-SR10 from the 200G card and insert into any free port on the ASR9010 in RR-D
+    - rh: Insert the shipped CPAK-100G-SR4 into the 200G card
+    - jumper:
+      - Run the following (2) jumpers using the shipped cables
+      - arack: RR-B
+        adevice: RIVE1CA51O Shelf 3 Slot 2
+        aport: Port 2 (trunk)
+        acable: LC-LC SMF
+        aterm: 'Yes'
+        zrack: RR-B
+        zdevice: Filter panel facing San Bernardino
+        zport: 1536.61nm
+        zterm: 'Yes'
+      - arack: RR-B
+        adevice: RIVE1CA51O Shelf 3 Slot 2
+        aport: Port 1 (client)
+        acable: MPO-12 MMF
+        aterm: 'Yes'
+        zrack: RR-A
+        zdevice: riv-agg8
+        zport: Hu0/0/0/16
+        zterm: 'Yes'
+    - cmd-noc:
+      - Place circuit IS state
+      - |-
+        Shelf View -> Circuits -> CLR-20454 -> Change state to IS
+    - cmd-noc:
+      - Place TXP ports in OOS-MT
+      - |-
+        RIVE1CA51O Shelf 3 Slot 2 -> Provisioning -> Ports -> Place both ports in OOS-MT
+    - cmd-noc:
+      - Verify connectivity on trunk ports
+      - |-
+        RIVE1CA51O Shelf 1 Slot 4 -> Provisioning -> Verify Channel 8 has power
+    - noc: Check if RH completed in NOC-665212 (Fresno install). If either have been completed, mark leave the CTC circuit in IS. Otherwise, change the circuit state back to 'OOS'.
+
