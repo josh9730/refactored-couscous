@@ -77,11 +77,41 @@ class JiraStuff:
             df = pd.json_normalize(results["issues"])[
                 [
                     "fields.assignee.name",
+                    "fields.summary",
                     "key",
                     "fields.status.name",
-                    "fields.summary",
                     "fields.updated",
                     "fields.customfield_10209.value",
+                ]
+            ]
+            # trim to YYYY-MM-DD format
+            df["fields.updated"] = df["fields.updated"].apply(lambda x: x[:10])
+            full_df = pd.concat([full_df, df])
+
+        gsheet.clear_sheet(rows=500, cols=10, sheet=name)
+        gsheet.df_to_sheet(full_df, index=False, sheet=name, replace=False, start="A1")
+
+    def resources_reporting(self, engineer, jql_request):
+
+        name = "resources"
+        gsheet = Spread(self.sheet_key, name)
+        full_df = pd.DataFrame()
+        for i in engineer:
+            if i == "jdickman":
+                continue
+            results = self.jira.jql(
+                jql_request.format(engineer=i),
+                limit=500,
+                fields=["assignee", "key", "summary", "customfield_10410", "customfield_10411", "timetracking"],
+            )
+            df = pd.json_normalize(results["issues"])[
+                [
+                    "fields.assignee.name",
+                    "key",
+                    "fields.summary",
+                    "fields.customfield_10410",
+                    "fields.customfield_10411",
+                    "fields.timetracking.originalEstimateSeconds"
                 ]
             ]
             full_df = pd.concat([full_df, df])

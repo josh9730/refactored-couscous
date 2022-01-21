@@ -33,6 +33,9 @@ parser.add_argument(
 parser.add_argument(
     "-c", "--circuits", help="Pull all open Circuits tickets", action="store_true"
 )
+parser.add_argument(
+    "-res", "--resources", help="Run Resource Report", action="store_true"
+)
 args = parser.parse_args()
 
 
@@ -50,7 +53,7 @@ def gcal_pull(cal_stuff):
 def ticket_pull(atl_stuff):
     # Update Core tickets
     jql_tickets = (
-        "assignee={engineer} and status not in (Resolved, Deleted, Done, Merged)"
+        "assignee={engineer} and status not in (Resolved, Deleted, Done, Merged) order by project ASC"
     )
     atl_stuff.core_tickets(data["engineer"], jql_tickets)
 
@@ -77,6 +80,12 @@ def buckets(cal_stuff, atl_stuff):
     )
 
 
+def resources_reporting(atl_stuff):
+
+    jql_resources = 'assignee = {engineer} and project = "CENIC Core Projects" and status = "In Progress"'
+    atl_stuff.resources_reporting(data["engineer"], jql_resources)
+
+
 def main(args):
 
     sheet_key = data["sheet_key"]
@@ -96,6 +105,8 @@ def main(args):
         open_rh(jira)
     elif args.circuits:
         circuits(jira)
+    elif args.resources:
+        resources_reporting(jira)
 
     else:
 
@@ -103,11 +114,11 @@ def main(args):
         if day == "Mon":
             buckets(cal, jira)
             outages(jira)
-            gcal_pull(cal)
+            # gcal_pull(cal)
 
         else:
             ticket_pull(jira)
-            open_rh(jira)
+            # open_rh(jira)
             # circuits(jira) # fix circuits.json
 
 

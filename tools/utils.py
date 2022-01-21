@@ -4,6 +4,7 @@ import pyotp
 import sys
 
 from atlassian import Confluence, Jira
+from jira import JIRA
 
 """
 keyring setup:
@@ -51,3 +52,4 @@ def jira_login():
     password = keyring.get_password("cas", username)
     jira = Jira(url=jira_url, username=username, password=password)
     return jira
+
