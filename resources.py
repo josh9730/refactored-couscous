@@ -60,7 +60,11 @@ def main(args):
     tic_start, tic_end, tic_hrs = get_ticket(jira, args)
     check_date(args.end)
 
-    if args.end == tic_end and args.hours > 0:
+    if args.start:
+        """new ticket being tracked for resources"""
+        update_ticket(jira, args.ticket, args.start, args.end, args.hours, 0)
+
+    elif args.end == tic_end and args.hours > 0:
         """adjust hours with same end date
 
         original estimate = tic_hrs + args.hours
@@ -94,14 +98,23 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="")
+    parser = argparse.ArgumentParser(description="Calculate resources & update ticket")
     parser.add_argument("ticket", metavar="Ticket", help="Jira ticket")
-    parser.add_argument("end", metavar="End", help="New End Date in YYYY-MM-DD format.")
+    parser.add_argument(
+        "end", metavar="End Date", help="New End Date in YYYY-MM-DD format."
+    )
     parser.add_argument(
         "hours",
         metavar="Add Hours",
-        help="Additional Hours to be added as integer",
         type=int,
+        help="Additional Hours to be added as integer",
+    )
+    parser.add_argument(
+        "start",
+        metavar="Start Date",
+        nargs="?",
+        default=None,
+        help="Optionally set new Start Date in YYYY-MM-DD format",
     )
     args = parser.parse_args()
     main(args)
