@@ -1,59 +1,81 @@
 
 interface e1/16
-  description 4045
+  description CLR-4045
   switchport
   switchport mode trunk
   spanning-tree port type trunk
-  switchport trunk allowed vlans [976, 977, 3730, 3731, 3732, 3733, 3734, 3735, 3736, 3737, 3738, 3739, 3740, 3741, 3742, 3743, 3744, 3745, 3746, 3747, 3748]
+  switchport trunk allowed vlans 976, 977, 3730, 3731, 3732, 3733, 3734, 3735, 3736, 3737, 3738, 3739, 3740, 3741, 3742, 3743, 3744, 3745, 3746, 3747, 3748
   logging event port trunk-status
   spanning-tree port type edge
   spanning-tree bpduguard disable
   mtu 9216
   logging event port link-status
   no shutdown
- 
-vlan 976 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 977 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3730 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3731 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3732 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3733 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3734 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3735 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3736 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3737 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3738 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3739 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3740 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3741 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3742 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3743 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3744 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3745 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3746 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3747 
-  name 4045-lax-agg10-hpr-lxc 
-vlan 3748 
-  name 4045-lax-agg10-hpr-lxc 
+vlan 976
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 977
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3730
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3731
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3732
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3733
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3734
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3735
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3736
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3737
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3738
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3739
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3740
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3741
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3742
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3743
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3744
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3745
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3746
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3747
+  name CLR-4045-lax-agg10-hpr-lxc
+vlan 3748
+  name CLR-4045-lax-agg10-hpr-lxc
 
-
+interface e/17
+  description CLR-1234
+  switchport
+  switchport mode trunk
+  spanning-tree port type trunk
+  switchport trunk allowed vlans 400, 401, 402, 403, 404, 405
+  logging event port trunk-status
+  spanning-tree port type edge
+  spanning-tree bpduguard disable
+  mtu 9216
+  logging event port link-status
+  no shutdown
+vlan 400
+  name CLR-1234-lax-agg10-hpr-lxc
+vlan 401
+  name CLR-1234-lax-agg10-hpr-lxc
+vlan 402
+  name CLR-1234-lax-agg10-hpr-lxc
+vlan 403
+  name CLR-1234-lax-agg10-hpr-lxc
+vlan 404
+  name CLR-1234-lax-agg10-hpr-lxc
+vlan 405
+  name CLR-1234-lax-agg10-hpr-lxc
 

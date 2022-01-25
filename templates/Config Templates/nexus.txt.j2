@@ -1,21 +1,39 @@
 
-interface {{ name }}
-  description {{ description }}
+{% for interface in interfaces %}
+interface {{ interface.name }}
+  description {{ interface.description }}
   switchport
   switchport mode trunk
   spanning-tree port type trunk
-  switchport trunk allowed vlans {{ vlan }}
+  switchport trunk allowed vlans {{ interface.vlan|join(', ') }}
   logging event port trunk-status
   spanning-tree port type edge
   spanning-tree bpduguard disable
   mtu 9216
   logging event port link-status
   no shutdown
-{% for i in vlan %} 
-vlan {{ i }} 
+{% for i in interface.vlan %}
+vlan {{ i }}
+  name {{ interface.description }}-lax-agg10-hpr-lxc
+{% endfor %}
+
+{% endfor %}
+
+{#
+interface {{ name }}
+  description {{ description }}
+  switchport
+  switchport mode trunk
+  spanning-tree port type trunk
+  switchport trunk allowed vlans {{ vlan|join(', ') }}
+  logging event port trunk-status
+  spanning-tree port type edge
+  spanning-tree bpduguard disable
+  mtu 9216
+  logging event port link-status
+  no shutdown
+{% for i in vlan %}
+vlan {{ i }}
   name {{ description }}-lax-agg10-hpr-lxc
-{%- endfor %} 
-
-
-
-
+{% endfor %}
+#}

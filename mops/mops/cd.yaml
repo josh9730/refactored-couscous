@@ -9,17 +9,21 @@ login_vars:
   jira_url: 
   cas: 
 
-ticket: 
-page_title: 
-parent_page_id: 
+ticket: COR-2053
+page_title: FRE-FRG Spur Circuits
+parent_page_id: 45428825
 summary:
- - 
+ - Create (3) 100G optical circuits on Route 51
 
 # times must be string, start_day must be either 'today' or in YYYY-MM-DD format
 ic_url: cenic.org_oggku8rjbli9v7163ocroug09s@group.calendar.google.com
-start_time: 
-end_time: 
-start_day: 
+start_time: 1810
+end_time: 1830
+start_day: today
 
 changes:
-  - 
+  - Route 51:
+    - |-
+      Create CC--FERG1CA51O--TRIC1CA51O--100G--20319 as non-WSON on wave 1536.61
+      Create CC--FRES1CA51O--FERG1CA51O--100G--20449 as non-WSON on wave 1536.61
+      Create CC--FRES1CA51O--RIVE1CA51O--100G--20454 as non-WSON on wave 1536.61
