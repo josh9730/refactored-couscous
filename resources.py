@@ -114,19 +114,19 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Calculate resources & update ticket")
+    parser.add_argument(
+        "end", metavar="End-Date", help="New End Date in YYYY-MM-DD format."
+    )
     parser.add_argument("ticket", metavar="Ticket", help="Jira ticket")
     parser.add_argument(
-        "end", metavar="End Date", help="New End Date in YYYY-MM-DD format."
-    )
-    parser.add_argument(
         "hours",
-        metavar="Add Hours",
+        metavar="New-Hours",
         type=int,
         help="Additional Hours to be added as integer",
     )
     parser.add_argument(
         "start",
-        metavar="Start Date",
+        metavar="Start-Date",
         nargs="?",
         default=None,
         help="Optionally set new Start Date in YYYY-MM-DD format",
