@@ -1,0 +1,41 @@
+
+interface e1/1
+  description Test Port e1/1
+  no cdp enable
+  switchport
+  switchport mode trunk
+  switchport trunk allowed vlan [123, 456, 655]
+  spanning-tree port type edge trunk
+  load-interval 30
+  logging event port link-status
+  logging event port trunk-status
+  mtu 9216
+  no shutdown
+
+vlan 123
+  name 123--Test Port e1/1
+vlan 456
+  name 456--Test Port e1/1
+vlan 655
+  name 655--Test Port e1/1
+==========
+interface e1/2
+  description Test Port e1/2
+  no cdp enable
+  switchport
+  switchport mode trunk
+  switchport trunk allowed vlan [123, 456, 655]
+  spanning-tree port type edge trunk
+  load-interval 30
+  logging event port link-status
+  logging event port trunk-status
+  mtu 9216
+  no shutdown
+
+vlan 123
+  name 123--Test Port e1/2
+vlan 456
+  name 456--Test Port e1/2
+vlan 655
+  name 655--Test Port e1/2
+==========

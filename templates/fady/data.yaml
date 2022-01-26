@@ -1,0 +1,14 @@
+---
+interfaces:
+  - interface_name: e1/1
+    tagging_standard: 'Test Port e1/1'
+    trunk_vlan_list:
+      - 123
+      - 456
+      - 655
+  - interface_name: e1/2
+    tagging_standard: 'Test Port e1/2'
+    trunk_vlan_list:
+      - 123
+      - 456
+      - 655

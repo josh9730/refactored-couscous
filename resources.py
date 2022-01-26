@@ -15,7 +15,6 @@ hours = timetracking.originalEstimateSeconds
 
 def holidays_list():
     """Return list of holidays for current and upcoming year"""
-    ### MAKE A CHANGE
     year = datetime.today().year
     ca_holidays = holidays.CountryHoliday(
         "US", prov=None, state="CA", years=[year, year + 1]

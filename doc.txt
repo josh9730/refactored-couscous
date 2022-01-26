@@ -70,7 +70,7 @@ h2. Process
 #### All Layer 1 Devices must report to CAMEL
 #### All devices with config statements must have standards in Git/NSO
 ## Monitoring Review Items
-### This Task will address performance and monitoring. 
+### This Task will address performance and monitoring.
 ### Current Tools & Links:
 #### Science Logic
 #### Cricket
