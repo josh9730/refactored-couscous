@@ -7,9 +7,9 @@ import typer
 import holidays
 
 """
-start = customfield_10410
-end_date = customfield_10411
-hours = timetracking.originalEstimateSeconds
+
+Uses Typer, see 'resources.py --help'
+
 """
 
 resources = typer.Typer(
@@ -94,7 +94,7 @@ def get_ticket(jira: Jira, ticket: str) -> tuple[str, str]:
 def update_ticket(
     jira: Jira, ticket: str, start_date: str, end_date: str, org_est: int, rem_est: int
 ) -> None:
-    """Update start_date, end_date, estimates and check ticket is In Progress"""
+    """Update start_date, end_date, estimates and check ticket is In Progress."""
     jira.issue_update(
         ticket,
         {
