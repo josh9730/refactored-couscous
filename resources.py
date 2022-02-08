@@ -1,22 +1,33 @@
 from datetime import datetime
-from typing import Optional, Tuple
+from atlassian import Jira
+from typing import Optional
 import numpy as np
 import keyring
 import typer
 import holidays
-from atlassian import Jira
 
 """
 start = customfield_10410
 end_date = customfield_10411
 hours = timetracking.originalEstimateSeconds
-.strftime("%Y-%m-%d")
 """
 
-main = typer.Typer(add_completion=False)
+resources = typer.Typer(
+    help="""
+Create ticket or updates ticket resource allocations.
+
+Both commands rely on keyring for Jira login (username, password, url):
+
+    - keyring set jira url {{ URL }}
+
+    - keyring set cas user
+
+    - keyring set cas {{ USERNAME }}
+"""
+)
 
 
-def jira_login():
+def jira_login() -> Jira:
     cas_user = keyring.get_password("cas", "user")
     cas_pass = keyring.get_password("cas", cas_user)
     jira_url = keyring.get_password("jira", "url")
@@ -43,19 +54,19 @@ def new_org_est(ticket_start: str, end_date: str, new_hours: int) -> int:
     """Return Original Estimate based on new hours input.
 
     Gets new hours/day between today to end_date.
-    Mltiplies that out over the days from start date to end date
+    Multiplies that out over the days from start date to end date
     """
     today = datetime.today().strftime("%Y-%m-%d")
-    days_remaining = num_weekdays(today, end_date) + 1
+    days_remaining = num_weekdays(today, end_date) + 1  # add 1 to account for today
     hrs_remaining = new_hours / days_remaining
     total_days = num_weekdays(ticket_start, end_date) + 1
     return int(hrs_remaining * total_days)
 
 
-def check_date(date: str):
+def check_date(date: str) -> None:
     """Check date string format."""
     try:
-        date = datetime.fromisoformat(date)
+        datetime.fromisoformat(date)
     except ValueError:
         print("\nDate Error: Date must be in YYYY-MM-DD or MM/DD/YYYY format.\n")
 
@@ -70,7 +81,7 @@ def convert_date(date: str) -> str:
     return date
 
 
-def get_ticket(jira: Jira, ticket: str) -> Tuple[str, str]:
+def get_ticket(jira: Jira, ticket: str) -> tuple[str, str]:
     """Return start_date, end_date, orginal_estimate from ticket."""
     ticket_return = jira.get_issue(
         ticket, fields=["customfield_10410, customfield_10411"]
@@ -98,29 +109,84 @@ def update_ticket(
     jira.set_issue_status(ticket, "In Progress")
 
 
-@main.command()
-def resources(
-    end_date: str = typer.Argument(..., help="Ticket End Date"),
-    ticket: str = typer.Argument(..., help="Ticket, including COR/SYS/DEV/etc"),
+@resources.command()
+def create(
+    parent_ticket: str = typer.Argument(..., help="Ticket, including project field"),
+    epic: str = typer.Option(None, help="Epic Ticket, including project field"),
+):
+    """Create and link a new ticket for resource tracking.
+
+    Based on parent_ticket field (and optionally Epic ticket), creates a new ticket
+    and links appropriately.
+    """
+    jira = jira_login()
+
+    # uses parent summary and assignee for new ticket
+    parent_fields = jira.get_issue(parent_ticket, fields=["summary", "assignee"])
+    jira.issue_create(
+        fields={
+            "summary": f'{parent_fields["fields"]["summary"]} - Resources',
+            "description": "Task for resource allocation needs.",
+            "assignee": {
+                "name": parent_fields["fields"]["assignee"]["name"],
+            },
+            "project": {
+                "key": "COR",
+            },
+            "issuetype": {
+                "name": "Task",
+            },
+        }
+    )
+
+    # Retrieve recently created tickets (limit=1) to update links
+    jql_request = 'project = "CENIC Core Projects"  and creator = jdickman and created >=  -1m order by created ASC'
+    issue_key = jira.jql(jql_request, limit=1, fields=["key"])["issues"][0]["key"]
+
+    # create DependsOn / DependedOnBy linking
+    jira.create_issue_link(
+        data={
+            "type": {
+                "name": "DependsOn",
+            },
+            "inwardIssue": {
+                "key": parent_ticket,
+            },
+            "outwardIssue": {
+                "key": issue_key,
+            },
+        }
+    )
+
+    # create epic link
+    jira.issue_update(
+        issue_key,
+        {
+            "customfield_10401": epic,
+        },
+    )
+
+
+@resources.command()
+def update(
+    end_date: str = typer.Argument(
+        ..., help="Ticket End Date, YYYY-MM-DD or MM/DD/YYYY"
+    ),
+    ticket: str = typer.Argument(..., help="Ticket, including project field"),
     hours: int = typer.Argument(..., help="Hours from Today until End Date"),
-    start_date: Optional[str] = typer.Argument(None, help="Ticket Start Date"),
+    start_date: Optional[str] = typer.Option(
+        None, help="Ticket Start Date, YYYY-MM-DD or MM/DD/YYYY"
+    ),
 ) -> None:
     """Calculate resources and update ticket based on supplied fields.
 
-    Primary use will be extending end_dates and adding hours. Hours are calculated from
-    new end_date - today, counting only weekdays (minus holidays). Does not account for
-    PTO or other variables.
+    Primary use will be extending end_dates and adding hours. Hours/day are calculated from
+    new end_date -> today, counting only weekdays (minus holidays). Hours/day then calculated from
+    start_date -> end_date, and the original_estimate is updated with the new hours. Automatically
+    updates ticket status to In Progress if needed.
 
-    May also be used to add/change a start_date or extend end_date with no new hours.
-
-
-    Relies on keyring for Jira logins:
-
-        - keyring set jira url {{ URL }}
-
-        - keyring set mfa {{ USERNAME }}
-
-        - keyring set otp {{ USERNAME }}
+    Does not account for PTO or other variables. May also be used to add/change a start_date
+    or extend end_date with no new hours. Can additionally create & link (DependsOn) a new ticket.
     """
     jira = jira_login()
     ticket_start, ticket_end = get_ticket(jira, ticket)
@@ -131,6 +197,9 @@ def resources(
 
     if start_date:
         # New ticket being tracked for resources or changing start date
+        if "/" in start_date:
+            start_date = convert_date(start_date)
+        check_date(start_date)
         update_ticket(jira, ticket, start_date, end_date, hours, 0)
 
     elif end_date > ticket_end and hours == 0:
@@ -148,4 +217,4 @@ def resources(
 
 
 if __name__ == "__main__":
-    main()
+    resources()

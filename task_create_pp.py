@@ -74,7 +74,7 @@ def main():
 
     # find tickets recently created, expect 6
     jql_request = 'project = "CENIC Core Projects"  and creator = jdickman and created >=  -1m order by created ASC'
-    issues = jira.jql(jql_request, limit=6, fields=["key"])
+    issues = jira.jql(jql_request, limit=1, fields=["key"])
 
     # for each new ticket, link to Story
     for i in range(6):
