@@ -122,7 +122,7 @@ def create(
     jira = jira_login()
 
     # uses parent summary and assignee for new ticket
-    parent_fields = jira.get_issue(parent_ticket, fields=["summary", "assignee"])
+    parent_fields = jira.get_issue(parent_ticket, fields=["summary", "assignee", "project"])
     jira.issue_create(
         fields={
             "summary": f'{parent_fields["fields"]["summary"]} - Resources',
@@ -131,7 +131,7 @@ def create(
                 "name": parent_fields["fields"]["assignee"]["name"],
             },
             "project": {
-                "key": "COR",
+                "key": parent_fields["fields"]["project"]["key"],
             },
             "issuetype": {
                 "name": "Task",
