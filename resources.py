@@ -13,6 +13,7 @@ Uses Typer, see 'resources.py --help'
 """
 
 resources = typer.Typer(
+    add_completion=False,
     help="""
 Create ticket or updates ticket resource allocations.
 
@@ -184,7 +185,7 @@ def update(
     updates ticket status to In Progress if needed.
 
     Does not account for PTO or other variables. May also be used to add/change a start_date
-    or extend end_date with no new hours. Can additionally create & link (DependsOn) a new ticket.
+    or extend end_date with no new hours.
     """
     jira = jira_login()
     ticket_start, ticket_end = get_ticket(jira, ticket)
