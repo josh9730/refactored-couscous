@@ -111,7 +111,9 @@ def update_ticket(
 
 @resources.command()
 def create(
-    parent_ticket: str = typer.Argument(..., help="Ticket, including project field"),
+    parent_ticket: str = typer.Argument(
+        ..., help="Parent Ticket, including project field"
+    ),
     epic: str = typer.Option(None, help="Epic Ticket, including project field"),
 ):
     """Create and link a new ticket for resource tracking.
@@ -122,20 +124,24 @@ def create(
     jira = jira_login()
 
     # uses parent summary and assignee for new ticket
-    parent_fields = jira.get_issue(parent_ticket, fields=["summary", "assignee", "project"])
+    parent_fields = jira.get_issue(
+        parent_ticket, fields=["summary", "assignee", "project"]
+    )["fields"]
+
     jira.issue_create(
         fields={
-            "summary": f'{parent_fields["fields"]["summary"]} - Resources',
+            "summary": f'{parent_fields["summary"]} - Resources',
             "description": "Task for resource allocation needs.",
             "assignee": {
-                "name": parent_fields["fields"]["assignee"]["name"],
+                "name": parent_fields["assignee"]["name"],
             },
             "project": {
-                "key": parent_fields["fields"]["project"]["key"],
+                "key": parent_fields["project"]["key"],
             },
             "issuetype": {
                 "name": "Task",
             },
+            "customfield_10401": epic,
         }
     )
 
@@ -156,14 +162,6 @@ def create(
                 "key": issue_key,
             },
         }
-    )
-
-    # create epic link
-    jira.issue_update(
-        issue_key,
-        {
-            "customfield_10401": epic,
-        },
     )
 
 
