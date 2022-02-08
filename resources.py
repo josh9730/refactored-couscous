@@ -24,7 +24,7 @@ Both commands rely on keyring for Jira login (username, password, url):
     - keyring set cas user
 
     - keyring set cas {{ USERNAME }}
-"""
+""",
 )
 
 
@@ -62,6 +62,20 @@ def new_org_est(ticket_start: str, end_date: str, new_hours: int) -> int:
     hrs_remaining = new_hours / days_remaining
     total_days = num_weekdays(ticket_start, end_date) + 1
     return int(hrs_remaining * total_days)
+
+
+def check_ticket(jira: Jira, ticket: str) -> None:
+    """Check project of user-supplied ticket against list of project keys."""
+
+    # returns list of dicts
+    projects = jira.projects(included_archived=None)
+
+    # create list of project keys
+    key_list = []
+    [key_list.append(project["key"]) for project in projects]
+
+    if ticket.split("-")[0] not in key_list:
+        raise SystemExit(f"\nTicket Project Key must be one of {key_list}.\n")
 
 
 def check_date(date: str) -> None:
@@ -123,6 +137,9 @@ def create(
     and links appropriately.
     """
     jira = jira_login()
+    check_ticket(jira, parent_ticket)
+    if epic:
+        check_ticket(jira, epic)
 
     # uses parent summary and assignee for new ticket
     parent_fields = jira.get_issue(
@@ -188,6 +205,7 @@ def update(
     or extend end_date with no new hours.
     """
     jira = jira_login()
+    check_ticket(jira, ticket)
     ticket_start, ticket_end = get_ticket(jira, ticket)
 
     if "/" in end_date:
@@ -211,8 +229,9 @@ def update(
         update_ticket(jira, ticket, ticket_start, end_date, org_est, 0)
 
     else:
-        print("\nSupplied End Date must be >= Current End and Hours must be >= 0")
-        exit(1)
+        raise SystemExit(
+            "\nSupplied End Date must be >= Current End and Hours must be >= 0"
+        )
 
 
 if __name__ == "__main__":
