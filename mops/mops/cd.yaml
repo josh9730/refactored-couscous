@@ -9,21 +9,24 @@ login_vars:
   jira_url: 
   cas: 
 
-ticket: COR-2053
-page_title: FRE-FRG Spur Circuits
-parent_page_id: 45428825
+ticket: NOC-507412
+page_title: Sutter COE ISIS Cost-In
+parent_page_id: 8884129
 summary:
- - Create (3) 100G optical circuits on Route 51
+ - Cost-In CLR20029
 
 # times must be string, start_day must be either 'today' or in YYYY-MM-DD format
 ic_url: cenic.org_oggku8rjbli9v7163ocroug09s@group.calendar.google.com
-start_time: 1810
-end_time: 1830
+start_time: 1720
+end_time: 1730
 start_day: today
 
 changes:
-  - Route 51:
+  - sut-coe-1:
     - |-
-      Create CC--FERG1CA51O--TRIC1CA51O--100G--20319 as non-WSON on wave 1536.61
-      Create CC--FRES1CA51O--FERG1CA51O--100G--20449 as non-WSON on wave 1536.61
-      Create CC--FRES1CA51O--RIVE1CA51O--100G--20454 as non-WSON on wave 1536.61
+      router isis 2152 interface te0/0/2/3 address-family ipv4 unicast metric 9999
+      router isis 2152 interface te0/0/2/3 address-family ipv6 unicast metric 9999
+  - sut-coe-2:
+    - |-
+      router isis 2152 interface te0/0/2/3 address-family ipv4 unicast metric 9999
+      router isis 2152 interface te0/0/2/3 address-family ipv6 unicast metric 9999

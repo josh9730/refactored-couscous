@@ -37,9 +37,18 @@
         "required": True,
         "nullable": True,
     },
-    "mop_repo": {"required": True, "type": "string"},
-    "page_title": {"required": True, "type": "string"},
-    "parent_page_id": {"required": True, "type": "integer"},
+    "mop_repo": {
+        "required": True,
+        "type": "string",
+    },
+    "page_title": {
+        "required": True,
+        "type": "string",
+    },
+    "parent_page_id": {
+        "required": True,
+        "type": "integer",
+    },
     "ticket": {
         "required": True,
         "type": "string",
@@ -48,11 +57,26 @@
     "summary": {
         "required": True,
         "type": "list",
-        "schema": {"required": True, "type": "string"},
+        "schema": {
+            "required": True,
+            "type": "string",
+        },
     },
-    "level": {"required": True, "type": "number", "min": 0, "max": 3},
-    "exec": {"required": True, "type": "string", "regex": "^(NOC)|(COR)|(SYS)"},
-    "rh": {"required": False, "type": "string", "dependencies": "approval"},
+    "level": {
+        "required": True,
+        "type": "number",
+        "min": 0, "max": 3,
+    },
+    "exec": {
+        "required": True,
+        "type": "string",
+        "regex": "^(NOC)|(COR)|(SYS)",
+    },
+    "rh": {
+        "required": False,
+        "type": "string",
+        "dependencies": "approval",
+    },
     "approval": {
         "required": False,
         "type": "string",
@@ -62,7 +86,10 @@
         "required": True,
         "type": "list",
     },
-    "escalation": {"required": True, "type": "string"},
+    "escalation": {
+        "required": True,
+        "type": "string",
+    },
     "p_rollback": {
         "required": True,
         "type": "boolean",
@@ -86,7 +113,13 @@
             "type": "string",
             "regex": "^((NOC)|(COR)|(SYS))-[0-9]{3,6}$",
         },
-        "valuesrules": {"nullable": True, "type": "list", "schema": {"type": "string"}},
+        "valuesrules": {
+            "nullable": True,
+            "type": "list",
+            "schema": {
+                "type": "string",
+            },
+        },
     },
     "sections": {
         "required": True,
@@ -99,7 +132,10 @@
             "required": True,
             "schema": {
                 "type": "dict",
-                "keysrules": {"type": "string", "check_with": is_func},
+                "keysrules": {
+                    "type": "string",
+                    "check_with": is_func,
+                },
             },
         },
     },

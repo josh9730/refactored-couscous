@@ -76,7 +76,8 @@ def buckets(cal_stuff, atl_stuff):
     eng_list = cal_stuff.get_engrv()
     atl_stuff.update_engrv(data["engrv_tickets"], data["engrv_hours"], eng_list)
     atl_stuff.update_circuit(
-        list(data["circuit_tickets"].values()), data["circuit_hours"]
+        list(data["circuit_tickets"].values()),
+        data["circuit_hours"]
     )
 
 
