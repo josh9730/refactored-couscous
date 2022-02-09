@@ -221,8 +221,12 @@ def lpass(
 
 @logins.command()
 def netmiko_pull(
-    devices: str = typer.Option(..., prompt=True, help="Comma-separated string of devices & device types"),
-    command: str = typer.Option(..., prompt=True, help="Single command to send to all devices.")
+    devices: str = typer.Option(
+        ..., prompt=True, help="Comma-separated string of devices & device types"
+    ),
+    command: str = typer.Option(
+        ..., prompt=True, help="Single command to send to all devices."
+    ),
 ):
     """Uses Netmiko to send a command to a list of devices. Prompts for list of devices and command,
     no need to use the Options.
@@ -240,20 +244,20 @@ def netmiko_pull(
     device_list = devices.split(",")
     for counter, device in enumerate(device_list, 1):
         device.strip()
-        device_name, device_type = device.split('|')
+        device_name, device_type = device.split("|")
 
-        if device_type == 'junos':
-            device_type = 'juniper_junos'
+        if device_type == "junos":
+            device_type = "juniper_junos"
 
-        elif device_type == 'iosxr':
-            device_type = 'cisco_xr'
+        elif device_type == "iosxr":
+            device_type = "cisco_xr"
 
         start_time = time.time()
         connection = netmiko_connect(device_type, device_name)
 
-        print('\n', '-' * 20, device_name.upper(), '-' * 20, '\n')
+        print("\n", "-" * 20, device_name.upper(), "-" * 20, "\n")
         print(f"COMMAND: '{command}")
-        print(connection.send_command(command), '\n\n')
+        print(connection.send_command(command), "\n\n")
 
         if counter != len(device):
             if start_time < (abs(time.time() - start_time)):
