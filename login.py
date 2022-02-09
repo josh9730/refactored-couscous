@@ -221,7 +221,8 @@ def netmiko_pull(
     devices: str = typer.Option(..., prompt=True, help="Comma-separated string of devices & device types"),
     command: str = typer.Option(..., prompt=True, help="Single command to send to all devices.")
 ):
-    """Uses Netmiko to send a command to a list of devices. Prompts for list of devices and command.
+    """Uses Netmiko to send a command to a list of devices. Prompts for list of devices and command,
+    no need to use the Options.
 
     Devices:
 
