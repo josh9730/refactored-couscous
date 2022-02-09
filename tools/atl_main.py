@@ -1,11 +1,8 @@
-from atlassian import Jira, Confluence
 from gspread_pandas import Spread
 from datetime import date, datetime, timedelta
 import pandas as pd
-import keyring
 import gspread
 import time
-import json
 
 from .utils import jira_login, conf_login
 
@@ -72,7 +69,14 @@ class JiraStuff:
             results = self.jira.jql(
                 jql_request.format(engineer=i),
                 limit=500,
-                fields=["assignee", "key", "status", "summary", "updated", "customfield_10209"],
+                fields=[
+                    "assignee",
+                    "key",
+                    "status",
+                    "summary",
+                    "updated",
+                    "customfield_10209",
+                ],
             )
             df = pd.json_normalize(results["issues"])[
                 [
@@ -102,7 +106,14 @@ class JiraStuff:
             results = self.jira.jql(
                 jql_request.format(engineer=i),
                 limit=500,
-                fields=["assignee", "key", "summary", "customfield_10410", "customfield_10411", "timetracking"],
+                fields=[
+                    "assignee",
+                    "key",
+                    "summary",
+                    "customfield_10410",
+                    "customfield_10411",
+                    "timetracking",
+                ],
             )
             df = pd.json_normalize(results["issues"])[
                 [
@@ -111,7 +122,7 @@ class JiraStuff:
                     "fields.summary",
                     "fields.customfield_10410",
                     "fields.customfield_10411",
-                    "fields.timetracking.originalEstimateSeconds"
+                    "fields.timetracking.originalEstimateSeconds",
                 ]
             ]
             full_df = pd.concat([full_df, df])
@@ -184,8 +195,7 @@ class JiraStuff:
             try:
                 # if ticket exists in DF
                 if (
-                    circuits_df.at[ticket, "Current Milestone"]
-                    == milestones_list[index]
+                    circuits_df.at[ticket, "Current Milestone"] == milestones_list[index]
                 ):
 
                     # if milestone has NOT been updated
@@ -256,8 +266,12 @@ class JiraStuff:
                 ticket,
                 {
                     "timetracking": {"originalEstimate": str(hours) + "h"},
-                    "customfield_10410": (today + timedelta(days = count*7)).strftime("%Y-%m-%d"),
-                    "customfield_10411": (today + timedelta(days = count*7 + 4)).strftime("%Y-%m-%d"),
+                    "customfield_10410": (today + timedelta(days=count * 7)).strftime(
+                        "%Y-%m-%d"
+                    ),
+                    "customfield_10411": (
+                        today + timedelta(days=count * 7 + 4)
+                    ).strftime("%Y-%m-%d"),
                 },
             )
 

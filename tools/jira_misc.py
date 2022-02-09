@@ -1,5 +1,3 @@
-from atlassian import Jira
-
 from utils import jira_login
 
 

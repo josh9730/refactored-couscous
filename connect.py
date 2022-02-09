@@ -1,6 +1,5 @@
 import argparse
 import time
-
 import pexpect
 
 from lp import GetLP
@@ -10,7 +9,7 @@ from tools.utils import get_mfa_keyring
 class LoginInteract:
     def __init__(self, args=None):
 
-        self.username, self.first_factor, self.otp = get_mfa_keyring('mfa', 'otp')
+        self.username, self.first_factor, self.otp = get_mfa_keyring("mfa", "otp")
         self.hostname = args.hostname
 
         if args.enable:
@@ -60,9 +59,9 @@ class LoginInteract:
 
         child = pexpect.spawn(f'/bin/bash -c "telnet -4 {self.hostname} | ct"')
         child.expect("Username:")
-        child.sendline(enable_account[0])
-        child.expect("Password:")
         child.sendline(enable_account[1])
+        child.expect("Password:")
+        child.sendline(enable_account[2])
         child.interact()
 
     def enable_login(self):
@@ -71,10 +70,10 @@ class LoginInteract:
         enable_account = GetLP().get_lp("enable")
 
         child = pexpect.spawn(
-            f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {enable_account[0]}@{self.hostname} | ct"'
+            f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {enable_account[1]}@{self.hostname} | ct"'
         )
         child.expect(r".*Password:")
-        child.sendline(enable_account[1])
+        child.sendline(enable_account[2])
         child.interact()
 
     def cas_login(self):
@@ -83,10 +82,10 @@ class LoginInteract:
         cas_account = GetLP().get_lp("cas")
 
         child = pexpect.spawn(
-            f'/bin/bash -c "ssh {self.username[:-3]}@{self.hostname} | ct"'
+            f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {self.username[:-3]}@{self.hostname} | ct"'
         )
         child.expect("assword:")
-        child.sendline(cas_account[1])
+        child.sendline(cas_account[2])
         child.interact()
 
 

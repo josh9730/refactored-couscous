@@ -49,12 +49,18 @@ junos_show_commands = [
 ]
 
 def connect(device_type, device_name, username, passwd):
+    print(username, passwd)
+    print(device_type, device_name)
     connection = ConnectHandler(
         device_type = device_type,
         host = device_name,
         username = username,
         password = passwd,
-        fast_cli = False
+        conn_timeout = 60,
+        verbose=True,
+        auth_timeout=60
+        # port = 22
+        # fast_cli = False
     )
     return connection
 
@@ -62,6 +68,7 @@ def main():
 
     for counter, device in enumerate(device_list, 1):
         device_name, device_type = device.split('|')
+        print(device_name)
 
         if device_type == 'junos':
             device_type = 'juniper_junos'

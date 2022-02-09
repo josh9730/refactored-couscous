@@ -1,5 +1,4 @@
 import re
-
 import argparse
 import pyotp
 import keyring
@@ -23,6 +22,7 @@ class GetLP:
 
     def __init__(self):
         self.username, self.first_factor, self.otp = get_mfa_keyring('lp_pass', 'lp')
+        # print(self.username, self.first_factor, self.otp)
 
 
     def get_lp(self, account):
