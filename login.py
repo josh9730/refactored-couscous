@@ -63,7 +63,11 @@ class LPChoices(str, Enum):
 
 
 def get_lp(account: str):
+    """Return account info for supplied LastPass account name.
 
+    Additional accounts can be added by updating _shorthand (and
+    LPChoices Enum for the return_lp function)
+    """
     _shorthand = {
         "Optical": bytes("Optical", "utf-8"),
         "Enable": bytes("CENIC Enable Account", "utf-8"),
@@ -116,12 +120,11 @@ def get_lp(account: str):
 
 def netmiko_connect(device_type, device_name):
     mfa_user, first_factor, otp = mfa_default()
-    password = first_factor + otp.now()
     connection = ConnectHandler(
         device_type=device_type,
         host=device_name,
         username=mfa_user,
-        password=password,
+        password=first_factor + otp.now(),
         fast_cli=False,  # disabled for IOS-XRs
     )
     return connection
@@ -244,8 +247,6 @@ def netmiko_pull(
 
         elif device_type == 'iosxr':
             device_type = 'cisco_xr'
-
-        print(device_name, device_type)
 
         start_time = time.time()
         connection = netmiko_connect(device_type, device_name)
