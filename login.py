@@ -27,7 +27,6 @@ keyring set otp {{ MFA USERNAME }}
 """
 
 logins = typer.Typer(
-    add_completion=False,
     help="""
 Multi-function login helper. Can return Lastpass accounts,
 SSH/Telnet to devices via MFA, Backdoor, or CAS accounts, or
@@ -60,6 +59,7 @@ class LPChoices(str, Enum):
     oob = "OOB"
     cas = "CAS"
     tacacs = "TACACS"
+    snmp = "SNMP"
 
 
 def get_lp(account: str):
@@ -74,6 +74,7 @@ def get_lp(account: str):
         "OOB": bytes("CENIC Out-of-Band- OOB", "utf-8"),
         "CAS": bytes("CAS", "utf-8"),
         "TACACS": bytes("CENIC TACACS Key", "utf-8"),
+        "SNMP": bytes("ScienceLogic SNMP Credentials", "utf-8"),
     }
 
     cas_email = keyring.get_password("cas", "email")
@@ -85,41 +86,37 @@ def get_lp(account: str):
 
     for account in vault.accounts:
         if account.name == name:
+            if name == bytes("ScienceLogic SNMP Credentials", "utf-8"):
+                # print(account.notes)
+                user_re = re.compile(r"Username: \S+")
+                auth_re = re.compile(r"Auth Password: \S+")
+                priv_re = re.compile(r"Priv Password: \S+")
+                lp_username = user_re.search(str(account.notes, "utf-8")).group()
+                lp_password = auth_re.search(str(account.notes, "utf-8")).group()
+                lp_password2 = priv_re.search(str(account.notes, "utf-8")).group()
 
-            if account.name == bytes("CENIC Out-of-Band- OOB", "utf-8"):
-                # OOB account stored differently than usual logins
+            elif account.name == bytes("CENIC Out-of-Band- OOB", "utf-8"):
                 user_re = re.compile(r"Super User:\S+")
                 pass_re = re.compile(r"Password:\S+")
                 passthrough_re = re.compile(r"Passthrough:\S+")
 
-                lp_logon_url = str(account.url, "utf-8")
-                lp_logon_user = (
-                    user_re.search(str(account.notes, "utf-8"))
-                    .group()
-                    .lstrip("Super User:")
-                )
-                lp_logon_pass = (
-                    pass_re.search(str(account.notes, "utf-8"))
-                    .group()
-                    .lstrip("Password:")
-                )
-                lp_logon_passthrough = (
-                    passthrough_re.search(str(account.notes, "utf-8"))
-                    .group()
-                    .lstrip("Passthrough:")
-                )
+                lp_username = user_re.search(str(account.notes, "utf-8")).group()
+                lp_password = pass_re.search(str(account.notes, "utf-8")).group()
+                lp_password2 = passthrough_re.search(
+                    str(account.notes, "utf-8")
+                ).group()
 
             else:
-                lp_logon_url = str(account.url, "utf-8")
-                lp_logon_user = str(account.username, "utf-8")
-                lp_logon_pass = str(account.password, "utf-8")
-                lp_logon_passthrough = ""
+                lp_username = "Username: " + str(account.username, "utf-8")
+                lp_password = "Password: " + str(account.password, "utf-8")
+                lp_password2 = ""
 
-    return lp_logon_user, lp_logon_pass, lp_logon_passthrough, lp_logon_url
+    return lp_username, lp_password, lp_password2
 
 
 def netmiko_connect(device_type, device_name):
     mfa_user, first_factor, otp = mfa_default()
+
     connection = ConnectHandler(
         device_type=device_type,
         host=device_name,
@@ -202,6 +199,17 @@ def telnet_enable(hostname: str = typer.Argument(..., help="Device hostname")):
 
 
 @logins.command()
+def get_mfa():
+    mfa_user, password, otp = mfa_default()
+    print_account([f"Username: {mfa_user}", f"Password: {password+otp.now()}\n"])
+
+
+def print_account(args):
+    for i in args:
+        print(f"\t{i}")
+
+
+@logins.command()
 def lpass(
     account: LPChoices = typer.Argument(..., case_sensitive=False, help="Account")
 ):
@@ -209,14 +217,7 @@ def lpass(
 
     Account name is case-insensitive.
     """
-    account_name = account.value
-    output = get_lp(account_name)
-    print("\n\tURL:\t\t", output[3])
-    print("\tUsername:\t", output[0])
-    print("\tPassword:\t", output[1])
-    if output[2]:
-        print("\tPassthrough:\t", output[2])
-    print("\n")
+    print_account(get_lp(account.value))
 
 
 @logins.command()

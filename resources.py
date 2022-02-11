@@ -71,8 +71,7 @@ def check_ticket(jira: Jira, ticket: str) -> None:
     projects = jira.projects(included_archived=None)
 
     # create list of project keys
-    key_list = []
-    [key_list.append(project["key"]) for project in projects]
+    key_list = [project["key"] for project in projects]
 
     if ticket.split("-")[0] not in key_list:
         raise SystemExit(f"\nTicket Project Key must be one of {key_list}.\n")
