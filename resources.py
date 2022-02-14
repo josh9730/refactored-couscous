@@ -145,7 +145,7 @@ def create(
         parent_ticket, fields=["summary", "assignee", "project"]
     )["fields"]
 
-    jira.issue_create(
+    new_ticket = jira.issue_create(
         fields={
             "summary": f'{parent_fields["summary"]} - Resources',
             "description": "Task for resource allocation needs.",
@@ -160,11 +160,8 @@ def create(
             },
             "customfield_10401": epic,
         }
-    )
-
-    # Retrieve recently created tickets (limit=1) to update links
-    jql_request = 'project = "CENIC Core Projects"  and creator = jdickman and created >=  -1m order by created ASC'
-    issue_key = jira.jql(jql_request, limit=1, fields=["key"])["issues"][0]["key"]
+    )["key"]
+    print(f"{new_ticket=}")
 
     # create DependsOn / DependedOnBy linking
     jira.create_issue_link(
@@ -176,7 +173,7 @@ def create(
                 "key": parent_ticket,
             },
             "outwardIssue": {
-                "key": issue_key,
+                "key": new_ticket,
             },
         }
     )
