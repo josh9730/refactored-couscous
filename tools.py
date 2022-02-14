@@ -1,5 +1,5 @@
 import pickle
-import os.path
+import os
 import keyring
 import pygsheets
 import pandas as pd
@@ -20,11 +20,11 @@ class GCalTools:
 
         # If modifying these scopes, delete the file token.pickle.
         SCOPES = ["https://www.googleapis.com/auth/calendar.events"]
-
+        home_dir = os.getenv("HOME")
         creds = None
-        if os.path.exists("/Users/jdickman/Google Drive/My Drive/Scripts/token.pickle"):
+        if os.path.exists(f"{home_dir}/Google Drive/My Drive/Scripts/token.pickle"):
             with open(
-                "/Users/jdickman/Google Drive/My Drive/Scripts/token.pickle",
+                f"{home_dir}/Google Drive/My Drive/Scripts/token.pickle",
                 "rb",
             ) as token:
                 creds = pickle.load(token)
@@ -34,13 +34,13 @@ class GCalTools:
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    "/Users/jdickman/Google Drive/My Drive/Scripts/credentials.json",
+                    f"{home_dir}/Google Drive/My Drive/Scripts/credentials.json",
                     SCOPES,
                 )
                 creds = flow.run_local_server(port=0)
 
             with open(
-                "/Users/jdickman/Google Drive/My Drive/Scripts/token.pickle",
+                f"{home_dir}/Google Drive/My Drive/Scripts/token.pickle",
                 "wb",
             ) as token:
                 pickle.dump(creds, token)
@@ -64,12 +64,8 @@ class GCalTools:
             .execute()
         )
 
-        # filter out for just the names
+        # filter out for just the names from the gcal entry
         engrv_order = [i["summary"].split(" ")[0] for i in engrv_rotation["items"]]
-        # engrv_order = []
-        # for i in engrv_rotation["items"]:
-        #     engrv_order.append(i["summary"].split(" ")[0])
-
         return engrv_order
 
 
@@ -103,7 +99,10 @@ class JiraTools:
     def core_tickets_auth(self, wb_title: str):
         """Return pysheets object for Core Tickets sheet."""
         sheet_title = "Core Tickets"
-        client = pygsheets.authorize()
+        home_dir = os.getenv("HOME")
+        client = pygsheets.authorize(
+            client_secret=f"{home_dir}/Google Drive/My Drive/Scripts/client_secret.json"
+        )
         sheet = client.open(sheet_title).worksheet_by_title(wb_title)
         return sheet
 
