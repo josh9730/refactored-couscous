@@ -17,18 +17,17 @@ resources = typer.Typer(
     help="""
 Create ticket or updates ticket resource allocations.
 
+\b
 Both commands rely on keyring for Jira login (username, password, url):
-
     - keyring set jira url {{ URL }}
-
     - keyring set cas user
-
     - keyring set cas {{ USERNAME }}
 """,
 )
 
 
 def jira_login() -> Jira:
+    """Fetch Jira login params and return Jira object."""
     cas_user = keyring.get_password("cas", "user")
     cas_pass = keyring.get_password("cas", cas_user)
     jira_url = keyring.get_password("jira", "url")
@@ -38,7 +37,7 @@ def jira_login() -> Jira:
 
 
 def holidays_list() -> list:
-    """Return list of holidays for current and upcoming year"""
+    """Return list of holidays for current and upcoming year."""
     year = datetime.today().year
     ca_holidays = holidays.CountryHoliday(
         "US", prov=None, state="CA", years=[year, year + 1]
@@ -129,7 +128,7 @@ def create(
         ..., help="Parent Ticket, including project field"
     ),
     epic: str = typer.Option(None, help="Epic Ticket, including project field"),
-):
+) -> None:
     """Create and link a new ticket for resource tracking.
 
     Based on parent_ticket field (and optionally Epic ticket), creates a new ticket

@@ -32,20 +32,14 @@ Multi-function login helper. Can return Lastpass accounts,
 SSH/Telnet to devices via MFA, Backdoor, or CAS accounts, or
 send Netmiko commands to a list of devices.
 
+\b
 Requires Keyring:
-
     - keyring set cas email
-
     - keyring set lp_pass {{ EMAIL }}
-
     - keyring set lp_pass otp
-
     - keyring set cas user
-
     - mfa_user = cas_user + 'mfa'
-
     - keyring set mfa {{ MFA USERNAME }}
-
     - keyring set otp {{ MFA USERNAME }}
 """,
 )

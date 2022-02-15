@@ -65,8 +65,7 @@ class GCalTools:
         )
 
         # filter out for just the names from the gcal entry
-        engrv_order = [i["summary"].split(" ")[0] for i in engrv_rotation["items"]]
-        return engrv_order
+        return [i["summary"].split(" ")[0] for i in engrv_rotation["items"]]
 
 
 class ConflTools:
