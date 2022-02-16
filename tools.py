@@ -117,7 +117,7 @@ class GCalTools:
         # combine dfs and normalize
         df = pd.concat([maint_df, ic_df])
         df["end.dateTime"] = (
-            df["end.dateTime"].apply(lambda x: x[:-6]).apply(lambda x: x[11:])
+            df["end.dateTime"].apply(lambda x: x[11:-6])
         )  # trim to hours/minutes only
         df[["start_date", "start_time"]] = df["start.dateTime"].str.split(
             "T", expand=True
