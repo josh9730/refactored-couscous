@@ -11,7 +11,7 @@ from google.auth.transport.requests import Request
 
 
 """
-hide file paths
+Tools for Jira, Confluence, and Google Calendar.
 """
 
 
