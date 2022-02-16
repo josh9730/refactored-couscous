@@ -134,16 +134,11 @@ class GCalTools:
             r"((?:NOC|COR|SYS|ISO)-[0-9]{3,7})", expand=True
         )  # extract ticket from summary for creating link
 
-        (
-            assignee_list,
-            reporter_list,
-            ticket_sum_list,
-            comments_list,
-        ) = JiraTools().events_jira_outputs(list(df["ticket"]))
-        df["assignee"] = assignee_list
-        df["reporter"] = reporter_list
-        df["ticket_sum"] = ticket_sum_list
-        df["last_comment"] = comments_list
+        ticket_lists = JiraTools().events_jira_outputs(list(df["ticket"]))
+        df["assignee"] = ticket_lists[0]
+        df["reporter"] = ticket_lists[1]
+        df["ticket_sum"] = ticket_lists[2]
+        df["last_comment"] = ticket_lists[3]
 
         df["ticket"] = df["ticket"].apply(
             lambda x: f'=HYPERLINK("https://servicedesk.cenic.org/browse/{x}", "{x}")'
