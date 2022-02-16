@@ -2,7 +2,7 @@ import typer
 import yaml
 import datetime
 
-from tools import JiraTools
+from tools import JiraTools, GCalTools
 
 main = typer.Typer(
     add_completion=False,
@@ -35,10 +35,21 @@ def update_resource_buckets():
     EngRv: Rotates schedule based on gcal.
     Circuits: Updates hours based on active circuits, and updates start/end dates.
     """
-    jtools = JiraTools()
     data = open_yaml()
-    jtools.update_engrv(data["engrv_tickets"], data["engrv_hours"], data["engrv_url"])
+    jtools = JiraTools()
+    engineer_list = GCalTools().get_engrv(data["engrv_url"])
+    jtools.update_engrv(engineer_list, data["engrv_tickets"], data["engrv_hours"])
     jtools.update_circuit(data["circuit_hours"])
+
+
+@main.command()
+def calendar_pull():
+    """Pull previous week's maintenance & internal calendar events, create DF
+    and dump to gSheet
+    """
+    data = open_yaml()
+    gtools = GCalTools()
+    gtools.weekly_events(data["maint_url"], data["ic_url"])
 
 
 @main.command()

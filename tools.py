@@ -46,6 +46,16 @@ class GCalTools:
                 pickle.dump(creds, token)
         self.service = build("calendar", "v3", credentials=creds)
 
+    def cal_checks_auth(self, wb_title: str):
+        """Return pysheets object for Core Tickets sheet."""
+        sheet_title = "Calendar Checks"
+        home_dir = os.getenv("HOME")
+        client = pygsheets.authorize(
+            client_secret=f"{home_dir}/Google Drive/My Drive/Scripts/client_secret.json"
+        )
+        sheet = client.open(sheet_title).worksheet_by_title(wb_title)
+        return sheet
+
     def get_engrv(self, engrv_url: str) -> list:
         """Get engineer on EngRv, to be run each Monday"""
 
@@ -66,6 +76,100 @@ class GCalTools:
 
         # filter out for just the names from the gcal entry
         return [i["summary"].split(" ")[0] for i in engrv_rotation["items"]]
+
+    def return_calendar(self, date1: str, date2: str, cal_url: str) -> list:
+        """Returns list of event dicts from specified calendar"""
+        events = (
+            self.service.events()
+            .list(
+                calendarId=cal_url,
+                timeMin=date1,
+                timeMax=date2,
+                singleEvents=True,
+                orderBy="startTime",
+            )
+            .execute()
+        )
+        return events.get("items", [])
+
+    def weekly_events(self, maint_cal_url: str, internal_cal_url: str):
+        now = datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
+        d1 = (datetime.utcnow() - timedelta(days=7)).isoformat() + "Z"
+
+        # return maintenance calendar events and create DF
+        maint_events = self.return_calendar(d1, now, maint_cal_url)
+        maint_df = pd.json_normalize(maint_events)[
+            ["summary", "description", "start.dateTime", "end.dateTime"]
+        ]
+        maint_df = maint_df[
+            maint_df["summary"].str.contains("CENIC")
+        ]  # filter only CENIC Maintenance
+        # maint_df["summary"] = "NOC-" + maint_df["summary"]
+        maint_df["calendar"] = "Maint. Cal"
+
+        # return internal calendar events and create df
+        internal_cal = self.return_calendar(d1, now, internal_cal_url)
+        ic_df = pd.json_normalize(internal_cal)[
+            ["summary", "description", "start.dateTime", "end.dateTime"]
+        ]
+        ic_df["calendar"] = "Internal Cal"
+
+        # combine dfs and normalize
+        df = pd.concat([maint_df, ic_df])
+        df["end.dateTime"] = (
+            df["end.dateTime"].apply(lambda x: x[:-6]).apply(lambda x: x[11:])
+        )  # trim to hours/minutes only
+        df[["start_date", "start_time"]] = df["start.dateTime"].str.split(
+            "T", expand=True
+        )
+        df["start_time"] = df["start_time"].apply(
+            lambda x: x[:-6]
+        )  # extract hours/minutes only
+        df["summary"] = df["summary"].apply(
+            lambda x: "NOC-" + x
+            if not x.startswith(("NOC", "COR", "SYS", "ISO"))
+            else x
+        )  # Add NOC- if no Jira project defined
+        df["ticket"] = df["summary"].str.extract(
+            r"((?:NOC|COR|SYS|ISO)-[0-9]{3,7})", expand=True
+        )  # extract ticket from summary for creating link
+
+        (
+            assignee_list,
+            reporter_list,
+            ticket_sum_list,
+            comments_list,
+        ) = JiraTools().events_jira_outputs(list(df["ticket"]))
+        df["assignee"] = assignee_list
+        df["reporter"] = reporter_list
+        df["ticket_sum"] = ticket_sum_list
+        df["last_comment"] = comments_list
+
+        df["ticket"] = df["ticket"].apply(
+            lambda x: f'=HYPERLINK("https://servicedesk.cenic.org/browse/{x}", "{x}")'
+        )
+
+        df = df[
+            [
+                "ticket",
+                "assignee",
+                "reporter",
+                "ticket_sum",
+                "summary",
+                "calendar",
+                "description",
+                "start_date",
+                "start_time",
+                "end.dateTime",
+                "last_comment",
+            ]
+        ]
+
+        tickets_sheet = self.cal_checks_auth("2022")
+        first_row = len(tickets_sheet.get_col(1, include_tailing_empty=False)) + 1
+        tickets_sheet.set_dataframe(
+            df, start=(first_row, 1), copy_head=False, extend=True, nan=""
+        )
 
 
 class ConflTools:
@@ -94,6 +198,20 @@ class JiraTools:
         cas_pass = keyring.get_password("cas", cas_user)
         jira_url = keyring.get_password("jira", "url")
         self.jira = Jira(url=jira_url, username=cas_user, password=cas_pass)
+
+    def events_jira_outputs(self, tickets_list: list):
+        """Return several output lists based on input ticket list."""
+        assignee_list = []
+        reporter_list = []
+        ticket_sum_list = []
+        comments_list = []
+        for ticket in tickets_list:
+            output = self.jira.issue(ticket)
+            assignee_list.append(output["fields"]["assignee"]["name"])
+            reporter_list.append(output["fields"]["reporter"]["name"])
+            ticket_sum_list.append(output["fields"]["summary"])
+            comments_list.append(output["fields"]["comment"]["comments"][-1]["body"])
+        return assignee_list, reporter_list, ticket_sum_list, comments_list
 
     def core_tickets_auth(self, wb_title: str):
         """Return pysheets object for Core Tickets sheet."""
@@ -139,11 +257,9 @@ class JiraTools:
             full_df = pd.concat([full_df, df])
         tickets_sheet.set_dataframe(full_df, start=(1, 1), extend=True, nan="")
 
-    def update_engrv(self, bucket_dict: dict, hours: int, engrv_url: str):
+    def update_engrv(self, engineer_list: str, bucket_dict: dict, hours: int):
         """Update rotating buckets for EngRv. Allocation is per week, gets the upcoming month's order"""
         today = datetime.today()
-        engineer_list = GCalTools().get_engrv(engrv_url)
-
         for count, eng in enumerate(engineer_list):
             ticket = bucket_dict[eng]
             self.jira.issue_update(
