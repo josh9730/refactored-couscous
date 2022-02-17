@@ -160,7 +160,7 @@ class GCalTools:
             ]
         ]
 
-        tickets_sheet = self.cal_checks_auth("2022")
+        tickets_sheet = self.cal_checks_auth(str(datetime.now().year))
         first_row = len(tickets_sheet.get_col(1, include_tailing_empty=False)) + 1
         tickets_sheet.set_dataframe(
             df, start=(first_row, 1), copy_head=False, extend=True, nan=""
