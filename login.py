@@ -112,6 +112,7 @@ def get_lp(account: str):
 def netmiko_connect(device_type, device_name):
     mfa_user, first_factor, otp = mfa_default()
 
+    # ssh to hostname not working?? added hostname lookup to 'fix'
     bashCmd = ["host", f"{device_name}"]
     process = subprocess.Popen(bashCmd, stdout=subprocess.PIPE)
     output, error = process.communicate()
