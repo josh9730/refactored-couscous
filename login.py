@@ -109,15 +109,18 @@ def get_lp(account: str):
     return lp_username, lp_password, lp_password2
 
 
-def netmiko_connect(device_type, device_name):
-    mfa_user, first_factor, otp = mfa_default()
-
-    # ssh to hostname not working?? added hostname lookup to 'fix'
+def get_ip_from_host(device_name: str):
+    """ssh to hostname not working?? added hostname lookup to 'fix'"""
     bashCmd = ["host", f"{device_name}"]
     process = subprocess.Popen(bashCmd, stdout=subprocess.PIPE)
     output, error = process.communicate()
     output = str(output, "utf-8").split("\n")
-    ipv4_address = output[0].split()[3]
+    return output[0].split()[3]
+
+
+def netmiko_connect(device_type: str, device_name: str):
+    mfa_user, first_factor, otp = mfa_default()
+    ipv4_address = get_ip_from_host(device_name)
 
     connection = ConnectHandler(
         device_type=device_type,
@@ -136,7 +139,7 @@ def mfa_default():
     return mfa_user, first_factor, otp
 
 
-def ssh_default(hostname, username, password):
+def ssh_default(hostname: str, username: str, password: str):
     """Default actions for SSH. Returns CLI prompt."""
     child = pexpect.spawn(
         f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {username}@{hostname} | ct"'
@@ -146,7 +149,7 @@ def ssh_default(hostname, username, password):
     child.interact()
 
 
-def telnet_default(hostname, username, password):
+def telnet_default(hostname: str, username: str, password: str):
     """Default actions for Telnet. Returns CLI prompt."""
     child = pexpect.spawn(f'/bin/bash -c "telnet -4 {hostname} | ct"')
     child.expect("Username:")
@@ -205,7 +208,7 @@ def get_mfa():
     print_account([f"Username: {mfa_user}", f"Password: {password+otp.now()}\n"])
 
 
-def print_account(args):
+def print_account(args: list):
     for i in args:
         print(f"\t{i}")
 
@@ -245,7 +248,8 @@ def netmiko_pull(
     """
     device_list = devices.split(",")
     for counter, device in enumerate(device_list, 1):
-        device.strip()
+
+        device = device.strip()
         device_name, device_type = device.split("|")
 
         if device_type == "junos":
@@ -261,11 +265,12 @@ def netmiko_pull(
         print(f"COMMAND: '{command}")
         print(connection.send_command(command), "\n\n")
 
-        if counter != len(device):
-            if start_time < (abs(time.time() - start_time)):
-                time.sleep(30 - (time.time() - start_time))
-            else:
-                continue
+        if counter != len(device_list):
+            now = time.time()
+            if 30 > now - start_time:
+                sleep_time = 30 - (int(now - start_time))
+                print(f"Resetting OTP, sleep for {sleep_time}s.")
+                time.sleep(sleep_time)
 
 
 if __name__ == "__main__":
