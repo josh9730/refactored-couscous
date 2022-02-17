@@ -5,6 +5,7 @@ import keyring
 import pexpect
 import typer
 import time
+import subprocess
 
 from netmiko import ConnectHandler
 from lastpass import Vault
@@ -111,12 +112,17 @@ def get_lp(account: str):
 def netmiko_connect(device_type, device_name):
     mfa_user, first_factor, otp = mfa_default()
 
+    bashCmd = ["host", f"{device_name}"]
+    process = subprocess.Popen(bashCmd, stdout=subprocess.PIPE)
+    output, error = process.communicate()
+    output = str(output, "utf-8").split("\n")
+    ipv4_address = output[0].split()[3]
+
     connection = ConnectHandler(
         device_type=device_type,
-        host=device_name,
+        ip=ipv4_address,
         username=mfa_user,
         password=first_factor + otp.now(),
-        fast_cli=False,  # disabled for IOS-XRs
     )
     return connection
 
