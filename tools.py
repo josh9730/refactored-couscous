@@ -104,7 +104,6 @@ class GCalTools:
         maint_df = maint_df[
             maint_df["summary"].str.contains("CENIC")
         ]  # filter only CENIC Maintenance
-        # maint_df["summary"] = "NOC-" + maint_df["summary"]
         maint_df["calendar"] = "Maint. Cal"
 
         # return internal calendar events and create df
@@ -116,8 +115,8 @@ class GCalTools:
 
         # combine dfs and normalize
         df = pd.concat([maint_df, ic_df])
-        df["end.dateTime"] = (
-            df["end.dateTime"].apply(lambda x: x[11:-6])
+        df["end.dateTime"] = df["end.dateTime"].apply(
+            lambda x: x[11:-6]
         )  # trim to hours/minutes only
         df[["start_date", "start_time"]] = df["start.dateTime"].str.split(
             "T", expand=True
@@ -201,11 +200,20 @@ class JiraTools:
         ticket_sum_list = []
         comments_list = []
         for ticket in tickets_list:
-            output = self.jira.issue(ticket)
-            assignee_list.append(output["fields"]["assignee"]["name"])
-            reporter_list.append(output["fields"]["reporter"]["name"])
-            ticket_sum_list.append(output["fields"]["summary"])
-            comments_list.append(output["fields"]["comment"]["comments"][-1]["body"])
+            if isinstance(ticket, str):
+                # ticket will be float nan if no ticket is on event
+                output = self.jira.issue(ticket)
+                assignee_list.append(output["fields"]["assignee"]["name"])
+                reporter_list.append(output["fields"]["reporter"]["name"])
+                ticket_sum_list.append(output["fields"]["summary"])
+                comments_list.append(
+                    output["fields"]["comment"]["comments"][-1]["body"]
+                )
+            else:
+                assignee_list.append("")
+                reporter_list.append("")
+                ticket_sum_list.append("")
+                comments_list.append("")
         return assignee_list, reporter_list, ticket_sum_list, comments_list
 
     def core_tickets_auth(self, wb_title: str):

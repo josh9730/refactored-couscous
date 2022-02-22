@@ -65,6 +65,7 @@ def scheduled():
     day = datetime.datetime.now().strftime("%a")
     if day == "Mon":
         update_resource_buckets()
+        calendar_pull()
     if day == "Fri":
         dump_resouces_report()
 
