@@ -180,10 +180,10 @@ def create(
 
 @resources.command()
 def update(
+    ticket: str = typer.Argument(..., help="Ticket, including project field"),
     end_date: str = typer.Argument(
         ..., help="Ticket End Date, YYYY-MM-DD or MM/DD/YYYY"
     ),
-    ticket: str = typer.Argument(..., help="Ticket, including project field"),
     hours: int = typer.Argument(..., help="Hours from Today until End Date"),
     start_date: Optional[str] = typer.Option(
         None, help="Ticket Start Date, YYYY-MM-DD or MM/DD/YYYY"

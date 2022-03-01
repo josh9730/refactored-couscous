@@ -126,9 +126,9 @@ class GCalTools:
         )  # extract hours/minutes only
         df["summary"] = df["summary"].apply(
             lambda x: "NOC-" + x
-            if not x.startswith(("NOC", "COR", "SYS", "ISO"))
+            if x[0].isdigit()
             else x
-        )  # Add NOC- if no Jira project defined
+        )  # Add NOC- if starts with ticket number only
         df["ticket"] = df["summary"].str.extract(
             r"((?:NOC|COR|SYS|ISO)-[0-9]{3,7})", expand=True
         )  # extract ticket from summary for creating link
@@ -151,10 +151,10 @@ class GCalTools:
                 "ticket_sum",
                 "summary",
                 "calendar",
-                "description",
                 "start_date",
                 "start_time",
                 "end.dateTime",
+                "description",
                 "last_comment",
             ]
         ]
@@ -245,7 +245,7 @@ class JiraTools:
                     "customfield_10209",
                 ],
             )
-            df = pd.json_normalize(results["issues"])[
+            df = pd.json_normalize(results["issues"]).filter(
                 [
                     "fields.assignee.name",
                     "fields.summary",
@@ -254,7 +254,7 @@ class JiraTools:
                     "fields.updated",
                     "fields.customfield_10209.value",
                 ]
-            ]
+            )
             # trim to YYYY-MM-DD format
             df["fields.updated"] = df["fields.updated"].apply(lambda x: x[:10])
             full_df = pd.concat([full_df, df])
