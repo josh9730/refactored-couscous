@@ -78,8 +78,9 @@ def check_ticket(jira: Jira, *args: str) -> None:
 
 def check_date(date: str) -> None:
     """Check date string format."""
+    date = convert_date(date) if "/" in date else date
     try:
-        datetime.fromisoformat(date)
+        return datetime.fromisoformat(date)
     except ValueError:
         print("\nDate Error: Date must be in YYYY-MM-DD or MM/DD/YYYY format.\n")
 
@@ -88,7 +89,9 @@ def convert_date(date: str) -> str:
     """Convert MM/DD/YYYY -> YYYY-MM-DD."""
     try:
         month, day, year = date.split("/")
-        return f"{year}-{month}-{day}"
+        new_date = "{year}-{month}-{day}"
+        check_date(new_date)
+        return new_date
     except ValueError:
         print("\nDate Error: Date must be in YYYY-MM-DD or MM/DD/YYYY format.\n")
 
@@ -96,11 +99,12 @@ def convert_date(date: str) -> str:
 def get_ticket(jira: Jira, ticket: str) -> tuple[str, str]:
     """Return start_date, end_date, orginal_estimate from ticket."""
     ticket_return = jira.get_issue(
-        ticket, fields=["customfield_10410, customfield_10411"]
+        ticket, fields=["customfield_10410, customfield_10411", "timetracking"]
     )
     ticket_start = ticket_return["fields"]["customfield_10410"]
     ticket_end = ticket_return["fields"]["customfield_10411"]
-    return ticket_start, ticket_end
+    hours = ticket_return["fields"].get("timetracking")
+    return ticket_start, ticket_end, hours
 
 
 def update_ticket(
@@ -122,6 +126,18 @@ def update_ticket(
 
 
 @resources.command()
+def retrieve(
+    ticket: str = typer.Argument(..., help="Ticket, including project field")
+) -> None:
+    """Retrieve Start, End, and Hours from ticket."""
+    jira = jira_login()
+    check_ticket(jira, ticket)
+    output = get_ticket(jira, ticket)
+    hours = int(output[2].get("originalEstimateSeconds")) / 3600 if output[2] else None
+    print(f"\nstart_date: {output[0]}\nend_date: {output[1]}\nhours: {hours}\n")
+
+
+@resources.command()
 def create(
     parent_ticket: str = typer.Argument(
         ..., help="Parent Ticket, including project field"
@@ -136,9 +152,6 @@ def create(
     """
     jira = jira_login()
     check_ticket(jira, parent_ticket, epic)
-    # check_ticket(jira, parent_ticket)
-    # if epic:
-    #     check_ticket(jira, epic)
 
     # uses parent summary and assignee for new ticket
     parent_fields = jira.get_issue(
@@ -201,34 +214,34 @@ def update(
     Does not account for PTO or other variables. May also be used to add/change a start_date
     or extend end_date with no new hours.
     """
+    today = datetime.today().strftime("%Y-%m-%d")
     jira = jira_login()
     check_ticket(jira, ticket)
-    ticket_start, ticket_end = get_ticket(jira, ticket)
-
-    if "/" in end_date:
-        end_date = convert_date(end_date)
+    ticket_start, *args = get_ticket(jira, ticket)
     check_date(end_date)
+    rem_est = 0
 
-    if start_date:
-        # New ticket being tracked for resources or changing start date
-        if "/" in start_date:
-            start_date = convert_date(start_date)
-        check_date(start_date)
-        update_ticket(jira, ticket, start_date, end_date, hours, 0)
+    if hours > 0 and end_date >= today:
+        if start_date:
+            # New ticket being tracked for resources or changing start date
+            check_date(start_date)
+            org_est = (
+                hours
+                if start_date > ticket_start
+                else new_org_est(start_date, end_date, hours)
+            )
 
-    elif end_date > ticket_end and hours == 0:
-        # Adjust end date with same hours
-        update_ticket(jira, ticket, ticket_start, end_date, hours, 0)
-
-    elif hours > 0:
-        # Adjust hours, end date may/may not be same as ticket end date.
-        org_est = new_org_est(ticket_start, end_date, hours)
-        update_ticket(jira, ticket, ticket_start, end_date, org_est, 0)
+        else:
+            # Adjust hours, end date may/may not be same as ticket end date.
+            start_date = ticket_start
+            org_est = new_org_est(ticket_start, end_date, hours)
 
     else:
         raise SystemExit(
             "\nSupplied End Date must be >= Current End and Hours must be >= 0"
         )
+
+    update_ticket(jira, ticket, start_date, end_date, org_est, rem_est)
 
 
 if __name__ == "__main__":
