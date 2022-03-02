@@ -63,17 +63,17 @@ def new_org_est(ticket_start: str, end_date: str, new_hours: int) -> int:
     return int(hrs_remaining * total_days)
 
 
-def check_ticket(jira: Jira, ticket: str) -> None:
-    """Check project of user-supplied ticket against list of project keys."""
+def check_ticket(jira: Jira, *args: str) -> None:
+    """Check project of user-supplied ticket against list of project keys.
 
-    # returns list of dicts
-    projects = jira.projects(included_archived=None)
-
-    # create list of project keys
+    args: list of tickets
+    """
+    projects = jira.projects(included_archived=None)  # returns list of dicts
     key_list = [project["key"] for project in projects]
 
-    if ticket.split("-")[0] not in key_list:
-        raise SystemExit(f"\nTicket Project Key must be one of {key_list}.\n")
+    for ticket in args:
+        if ticket.split("-")[0] not in key_list:
+            raise SystemExit(f"\nTicket Project Key must be one of {key_list}.\n")
 
 
 def check_date(date: str) -> None:
@@ -88,10 +88,9 @@ def convert_date(date: str) -> str:
     """Convert MM/DD/YYYY -> YYYY-MM-DD."""
     try:
         month, day, year = date.split("/")
-        date = f"{year}-{month}-{day}"
+        return f"{year}-{month}-{day}"
     except ValueError:
         print("\nDate Error: Date must be in YYYY-MM-DD or MM/DD/YYYY format.\n")
-    return date
 
 
 def get_ticket(jira: Jira, ticket: str) -> tuple[str, str]:
@@ -128,6 +127,7 @@ def create(
         ..., help="Parent Ticket, including project field"
     ),
     epic: str = typer.Option(None, help="Epic Ticket, including project field"),
+    project: str = typer.Option(None, help="Set Project field"),
 ) -> None:
     """Create and link a new ticket for resource tracking.
 
@@ -135,9 +135,10 @@ def create(
     and links appropriately.
     """
     jira = jira_login()
-    check_ticket(jira, parent_ticket)
-    if epic:
-        check_ticket(jira, epic)
+    check_ticket(jira, parent_ticket, epic)
+    # check_ticket(jira, parent_ticket)
+    # if epic:
+    #     check_ticket(jira, epic)
 
     # uses parent summary and assignee for new ticket
     parent_fields = jira.get_issue(
@@ -152,7 +153,7 @@ def create(
                 "name": parent_fields["assignee"]["name"],
             },
             "project": {
-                "key": parent_fields["project"]["key"],
+                "key": project if project else parent_fields["project"]["key"],
             },
             "issuetype": {
                 "name": "Task",
@@ -163,10 +164,11 @@ def create(
     print(f"{new_ticket=}")
 
     # create DependsOn / DependedOnBy linking
+    link_name = "Members" if parent_ticket.startswith("NOC") else "DependsOn"
     jira.create_issue_link(
         data={
             "type": {
-                "name": "DependsOn",
+                "name": link_name,
             },
             "inwardIssue": {
                 "key": parent_ticket,

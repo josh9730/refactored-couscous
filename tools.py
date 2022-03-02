@@ -77,8 +77,8 @@ class GCalTools:
         # filter out for just the names from the gcal entry
         return [i["summary"].split(" ")[0] for i in engrv_rotation["items"]]
 
-    def return_calendar(self, date1: str, date2: str, cal_url: str) -> list:
-        """Returns list of event dicts from specified calendar"""
+    def return_calendar(self, date1: str, date2: str, cal_url: str) -> pd.DataFrame:
+        """Returns DF of events from specified calendar."""
         events = (
             self.service.events()
             .list(
@@ -89,32 +89,35 @@ class GCalTools:
                 orderBy="startTime",
             )
             .execute()
-        )
-        return events.get("items", [])
+        ).get("items", [])
+        return pd.json_normalize(events)[
+            [
+                "summary",
+                "creator.email",
+                "description",
+                "start.dateTime",
+                "end.dateTime",
+            ]
+        ]
 
     def weekly_events(self, maint_cal_url: str, internal_cal_url: str):
         now = datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
         d1 = (datetime.utcnow() - timedelta(days=7)).isoformat() + "Z"
 
         # return maintenance calendar events and create DF
-        maint_events = self.return_calendar(d1, now, maint_cal_url)
-        maint_df = pd.json_normalize(maint_events)[
-            ["summary", "description", "start.dateTime", "end.dateTime"]
-        ]
-        maint_df = maint_df[
-            maint_df["summary"].str.contains("CENIC")
+        maint_events_df = self.return_calendar(d1, now, maint_cal_url)
+        maint_events_df = maint_events_df[
+            maint_events_df["summary"].str.contains("CENIC")
         ]  # filter only CENIC Maintenance
-        maint_df["calendar"] = "Maint. Cal"
+        maint_events_df["calendar"] = "Maint. Cal"
 
         # return internal calendar events and create df
-        internal_cal = self.return_calendar(d1, now, internal_cal_url)
-        ic_df = pd.json_normalize(internal_cal)[
-            ["summary", "description", "start.dateTime", "end.dateTime"]
-        ]
-        ic_df["calendar"] = "Internal Cal"
+        internal_cal_df = self.return_calendar(d1, now, internal_cal_url)
+        internal_cal_df["calendar"] = "Internal Cal"
 
         # combine dfs and normalize
-        df = pd.concat([maint_df, ic_df])
+        df = pd.concat([maint_events_df, internal_cal_df])
+        df["creator"] = df["creator.email"].apply(lambda x: x.replace("@cenic.org", ""))
         df["end.dateTime"] = df["end.dateTime"].apply(
             lambda x: x[11:-6]
         )  # trim to hours/minutes only
@@ -125,14 +128,13 @@ class GCalTools:
             lambda x: x[:-6]
         )  # extract hours/minutes only
         df["summary"] = df["summary"].apply(
-            lambda x: "NOC-" + x
-            if x[0].isdigit()
-            else x
+            lambda x: "NOC-" + x if x[0].isdigit() else x
         )  # Add NOC- if starts with ticket number only
         df["ticket"] = df["summary"].str.extract(
             r"((?:NOC|COR|SYS|ISO)-[0-9]{3,7})", expand=True
         )  # extract ticket from summary for creating link
 
+        # Add columns from related Jira ticket
         ticket_lists = JiraTools().events_jira_outputs(list(df["ticket"]))
         df["assignee"] = ticket_lists[0]
         df["reporter"] = ticket_lists[1]
@@ -146,6 +148,7 @@ class GCalTools:
         df = df[
             [
                 "ticket",
+                "creator",
                 "assignee",
                 "reporter",
                 "ticket_sum",
@@ -195,10 +198,7 @@ class JiraTools:
 
     def events_jira_outputs(self, tickets_list: list):
         """Return several output lists based on input ticket list."""
-        assignee_list = []
-        reporter_list = []
-        ticket_sum_list = []
-        comments_list = []
+        assignee_list, reporter_list, ticket_sum_list, comments_list = [], [], [], []
         for ticket in tickets_list:
             if isinstance(ticket, str):
                 # ticket will be float nan if no ticket is on event
@@ -208,7 +208,7 @@ class JiraTools:
                 ticket_sum_list.append(output["fields"]["summary"])
                 comments_list.append(
                     output["fields"]["comment"]["comments"][-1]["body"]
-                )
+                )  # get most recent comment
             else:
                 assignee_list.append("")
                 reporter_list.append("")
