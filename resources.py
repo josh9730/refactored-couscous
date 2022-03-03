@@ -83,8 +83,8 @@ class Resources:
         project: Union[str, None],
         title: str,
     ) -> None:
+        """Create new resource ticket."""
         # uses parent summary and assignee for new ticket
-        self.check_project(parent_ticket, project)
         parent_fields = self.jira.get_issue(
             parent_ticket,
             fields=["summary", "assignee", "project", "customfield_10401"],
@@ -177,6 +177,7 @@ class Resources:
         new_start: Union[str, None],
         rem_est=0,
     ):
+        """Update resource ticket."""
         if hours > 0 and end_date >= self.today.strftime("%Y-%m-%d"):
             if new_start:
                 # New ticket being tracked for resources or changing start date
@@ -240,6 +241,7 @@ def create(
     """
     resources = Resources()
     resources.check_ticket(parent_ticket, epic)
+    resources.check_project(parent_ticket, epic)
     resources.create_new_resource(parent_ticket, epic, project, title)
 
 
