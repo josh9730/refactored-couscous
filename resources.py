@@ -1,6 +1,6 @@
 from datetime import datetime
 from atlassian import Jira
-from typing import Optional, Union
+from typing import Optional
 import numpy as np
 import keyring
 import typer
@@ -34,7 +34,7 @@ class Resources:
                     f"\nTicket Project Key must be one of {self.key_list}.\n"
                 )
 
-    def check_project(self, ticket: str, project: Union[str, None]) -> None:
+    def check_project(self, ticket: str, project: Optional[str]) -> None:
         """Check project, ticket for coherence."""
         self.parent_project = self.jira.project(ticket[:3])["projectTypeKey"]
         if self.parent_project == "service_desk" and not project:
@@ -79,8 +79,8 @@ class Resources:
     def create_new_resource(
         self,
         parent_ticket: str,
-        epic_ticket: Union[str, None],
-        project: Union[str, None],
+        epic_ticket: Optional[str],
+        project: Optional[str],
         title: str,
     ) -> None:
         """Create new resource ticket."""
@@ -174,7 +174,7 @@ class Resources:
         ticket: str,
         end_date: str,
         hours: int,
-        new_start: Union[str, None],
+        new_start: Optional[str],
         rem_est=0,
     ):
         """Update resource ticket."""
