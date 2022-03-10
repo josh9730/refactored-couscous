@@ -371,13 +371,10 @@ class JiraTools:
             org_est_list = [
                 int(i) / 3600 for i in df["fields.timetracking.originalEstimateSeconds"]
             ]
+            start_date_list = list(df["fields.customfield_10410"])
+            end_date_list = list(df["fields.customfield_10411"])
             df["weekly_hours"] = (
-                org_est_list
-                / np.busday_count(
-                    list(df["fields.customfield_10410"]),
-                    list(df["fields.customfield_10411"]),
-                )
-                * 5
+                org_est_list / np.busday_count(start_date_list, end_date_list) * 5
             )
             df["weekly_hours"] = df["weekly_hours"].apply(lambda x: round(x, 2))
 
