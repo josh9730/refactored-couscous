@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime
 from atlassian import Jira
 from typing import Optional
@@ -29,20 +30,23 @@ class Resources:
         projects = self.jira.projects(included_archived=None)  # returns list of dicts
         self.key_list = [project["key"] for project in projects]
         for ticket in args:
-            if ticket and ticket.split("-")[0] not in self.key_list:
-                raise SystemExit(
-                    f"\nTicket Project Key must be one of {self.key_list}.\n"
-                )
+            if ticket:
+                if ticket.split("-")[0] not in self.key_list:  # handle None defaults
+                    raise ValueError(
+                        f"\nTicket Project Key must be one of {self.key_list}.\n"
+                    )
+                if not ticket.split("-")[1].isdigit():
+                    raise ValueError(f"{ticket} must be a valid ticket number.")
 
     def check_project(self, ticket: str, project: Optional[str]) -> None:
         """Check project, ticket for coherence."""
         self.parent_project = self.jira.project(ticket[:3])["projectTypeKey"]
         if self.parent_project == "service_desk" and not project:
-            raise SystemExit(
+            raise ValueError(
                 "Project is in Service Desk, Software project must be defined for resource ticket."
             )
         if project and project not in self.key_list:
-            raise SystemExit(f"Project must be one of {self.key_list}.")
+            raise ValueError(f"Project must be one of {self.key_list}.")
 
     def check_date(self, date: str) -> None:
         """Check date string format."""
@@ -50,7 +54,7 @@ class Resources:
             date = self.convert_date(date) if "/" in date else date
             datetime.fromisoformat(date)
         except ValueError:
-            print("\nDate Error: Date must be in YYYY-MM-DD or MM/DD/YYYY format.\n")
+            sys.exit("\nDate Error: Date must be in YYYY-MM-DD or MM/DD/YYYY format.\n")
 
     def convert_date(self, date: str) -> str:
         """Convert MM/DD/YYYY -> YYYY-MM-DD."""

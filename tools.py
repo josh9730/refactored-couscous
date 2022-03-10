@@ -1,6 +1,7 @@
 import pickle
 import os
 import keyring
+import numpy as np
 import pygsheets
 import pandas as pd
 from datetime import datetime, timedelta
@@ -319,6 +320,85 @@ class JiraTools:
                 },
             )
 
-    def resources_reporting(self):
-        """Pull this week's report of resource allocations from BP."""
-        pass
+    def resources_reporting(self, engineers: list, jql_request: str):
+        """Pull this week's report of resource allocations from BP.
+
+        - get all In Progress tickets by engineer with org_est set
+        - start_date of monday, end_date of friday
+        - append to sheet
+        """
+        resources_sheet = self.core_tickets_auth("resources")
+        engineers.remove("jdickman")
+        engineers.remove("sshibley")
+
+        full_df = pd.DataFrame()
+        for i in engineers:
+            results = self.jira.jql(
+                jql_request.format(engineer=i),
+                limit=50,
+                fields=[
+                    "assignee",
+                    "key",
+                    "summary",
+                    "timetracking",
+                    "customfield_10410",
+                    "customfield_10411",
+                ],
+            )
+            df = pd.json_normalize(results["issues"]).filter(
+                [
+                    "fields.assignee.name",
+                    "fields.summary",
+                    "key",
+                    "fields.timetracking.originalEstimateSeconds",
+                    "fields.customfield_10410",
+                    "fields.customfield_10411",
+                ]
+            )
+            df = df.rename(
+                columns={
+                    "fields.assignee.name": "assignee",
+                    "fields.summary": "summary",
+                }
+            )
+            df["key"] = df["key"].apply(
+                lambda x: f'=HYPERLINK("https://servicedesk.cenic.org/browse/{x}", "{x}")'
+            )
+
+            # convert original estimate to hours
+            # get original hours / day, multiply by 5 and divide by number of business
+            # days to get hours allocated over the current week
+            org_est_list = [
+                int(i) / 3600 for i in df["fields.timetracking.originalEstimateSeconds"]
+            ]
+            df["weekly_hours"] = (
+                org_est_list
+                / np.busday_count(
+                    list(df["fields.customfield_10410"]),
+                    list(df["fields.customfield_10411"]),
+                )
+                * 5
+            )
+            df["weekly_hours"] = df["weekly_hours"].apply(lambda x: round(x, 2))
+
+            # get previous monday as datetime string
+            today = datetime.today()
+            df["week_start"] = (today - timedelta(days=today.weekday())).strftime(
+                "%Y-%m-%d"
+            )
+
+            df = df[
+                [
+                    "assignee",
+                    "summary",
+                    "key",
+                    "weekly_hours",
+                    "week_start",
+                ]
+            ]
+            full_df = pd.concat([full_df, df])
+
+        first_row = len(resources_sheet.get_col(1, include_tailing_empty=False)) + 1
+        resources_sheet.set_dataframe(
+            full_df, start=(first_row, 1), copy_head=False, extend=True, nan=""
+        )

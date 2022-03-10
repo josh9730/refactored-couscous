@@ -53,9 +53,12 @@ def calendar_pull():
 
 
 @main.command()
-def dump_resouces_report():
+def resources_report():
     """Pull weekly resources report and dump to sheet."""
-    pass
+    data = open_yaml()
+    jtools = JiraTools()
+    jql_string = 'assignee={engineer} and status = "In Progress" and originalEstimate > 0 and "End date" >= now() and "Start date" <= now()'
+    jtools.resources_reporting(data["engineer"], jql_string)
 
 
 @main.command()
@@ -67,7 +70,7 @@ def scheduled():
         update_resource_buckets()
         calendar_pull()
     if day == "Fri":
-        dump_resouces_report()
+        resources_report()
 
 
 if __name__ == "__main__":
