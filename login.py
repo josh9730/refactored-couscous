@@ -55,6 +55,7 @@ class LPChoices(str, Enum):
     cas = "CAS"
     tacacs = "TACACS"
     snmp = "SNMP"
+    crafter = "Crafter"
 
 
 def get_lp(account: str):
@@ -70,6 +71,7 @@ def get_lp(account: str):
         "CAS": bytes("CAS", "utf-8"),
         "TACACS": bytes("CENIC TACACS Key", "utf-8"),
         "SNMP": bytes("ScienceLogic SNMP Credentials", "utf-8"),
+        "Crafter": bytes("Crafter", "utf-8"),
     }
 
     cas_email = keyring.get_password("cas", "email")
