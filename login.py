@@ -5,7 +5,7 @@ import keyring
 import pexpect
 import typer
 import time
-import subprocess
+import socket
 
 from netmiko import ConnectHandler
 from lastpass import Vault
@@ -109,22 +109,12 @@ def get_lp(account: str):
     return lp_username, lp_password, lp_password2
 
 
-def get_ip_from_host(device_name: str):
-    """ssh to hostname not working?? added hostname lookup to 'fix'"""
-    bashCmd = ["host", f"{device_name}"]
-    process = subprocess.Popen(bashCmd, stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    output = str(output, "utf-8").split("\n")
-    return output[0].split()[3]
-
-
 def netmiko_connect(device_type: str, device_name: str):
     mfa_user, first_factor, otp = mfa_default()
-    ipv4_address = get_ip_from_host(device_name)
 
     connection = ConnectHandler(
         device_type=device_type,
-        ip=ipv4_address,
+        ip=socket.gethostbyname(device_name),
         username=mfa_user,
         password=first_factor + otp.now(),
     )
