@@ -53,13 +53,14 @@ class Resources:
         try:
             date = self.convert_date(date) if "/" in date else date
             datetime.fromisoformat(date)
+            return date
         except ValueError:
             sys.exit("\nDate Error: Date must be in YYYY-MM-DD or MM/DD/YYYY format.\n")
 
     def convert_date(self, date: str) -> str:
         """Convert MM/DD/YYYY -> YYYY-MM-DD."""
         month, day, year = date.split("/")
-        return "{year}-{month}-{day}"
+        return f"{year}-{month}-{day}"
 
     def get_ticket(self, ticket: str) -> None:
         """Return start_date, end_date, orginal_estimate from ticket."""
@@ -272,9 +273,9 @@ def update(
     """
     resources = Resources()
     resources.check_ticket(ticket)
-    resources.check_date(end_date)
+    end_date = resources.check_date(end_date)
     if start_date:
-        resources.check_date(start_date)
+        start_date = resources.check_date(start_date)
     resources.get_ticket(ticket)
     resources.update_resource(ticket, end_date, hours, start_date)
 

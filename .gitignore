@@ -5,3 +5,5 @@ __pycache__/
 *.yml
 venv/
 doc.txt
+.DS_Store
+.gitignore
