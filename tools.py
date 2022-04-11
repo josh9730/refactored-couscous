@@ -198,7 +198,10 @@ class JiraTools:
         self.jira = Jira(url=jira_url, username=cas_user, password=cas_pass)
 
     def events_jira_outputs(self, tickets_list: list):
-        """Return several output lists based on input ticket list."""
+        """Return several output lists based on input ticket list.
+        
+        Used for adding Jira data to gCal weekly reporting.
+        """
         assignee_list, reporter_list, ticket_sum_list, comments_list = [], [], [], []
         for ticket in tickets_list:
             if isinstance(ticket, str):
@@ -207,9 +210,12 @@ class JiraTools:
                 assignee_list.append(output["fields"]["assignee"]["name"])
                 reporter_list.append(output["fields"]["reporter"]["name"])
                 ticket_sum_list.append(output["fields"]["summary"])
-                comments_list.append(
-                    output["fields"]["comment"]["comments"][-1]["body"]
-                )  # get most recent comment
+                try:
+                    comments_list.append(
+                        output["fields"]["comment"]["comments"][-1]["body"]
+                    )  # get most recent comment
+                except IndexError:  # if no comments
+                    comments_list.append("")
             else:
                 assignee_list.append("")
                 reporter_list.append("")
