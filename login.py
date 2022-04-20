@@ -113,14 +113,12 @@ def get_lp(account: str):
 
 def netmiko_connect(device_type: str, device_name: str):
     mfa_user, first_factor, otp = mfa_default()
-
-    connection = ConnectHandler(
+    return ConnectHandler(
         device_type=device_type,
         ip=socket.gethostbyname(device_name),
         username=mfa_user,
         password=first_factor + otp.now(),
     )
-    return connection
 
 
 def mfa_default():
@@ -173,7 +171,6 @@ def cas(hostname: str = typer.Argument(..., help="Device hostname")):
     """Use CAS account to login to non-network devices with ssh."""
     username = keyring.get_password("cas", "user")
     password = keyring.get_password("cas", username)
-
     ssh_default(hostname, username, password)
 
 

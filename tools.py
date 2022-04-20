@@ -199,7 +199,6 @@ class JiraTools:
 
     def events_jira_outputs(self, tickets_list: list):
         """Return several output lists based on input ticket list.
-        
         Used for adding Jira data to gCal weekly reporting.
         """
         assignee_list, reporter_list, ticket_sum_list, comments_list = [], [], [], []
