@@ -1,9 +1,0 @@
-__pycache__/
-.vscode
-*.json
-*.pickle
-*.yml
-venv/
-doc.txt
-.DS_Store
-.gitignore
