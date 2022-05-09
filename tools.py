@@ -1,19 +1,26 @@
-import pickle
 import os
+from datetime import datetime, timedelta
+
 import keyring
 import numpy as np
-import pygsheets
 import pandas as pd
-from datetime import datetime, timedelta
-from atlassian import Jira, Confluence
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
+import pygsheets
+from atlassian import Confluence, Jira
 from google.auth.transport.requests import Request
-
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 """
 Tools for Jira, Confluence, and Google Calendar.
 """
+
+
+def open_gsheet(sheet_title: str, workbook_title: str, client_json: str):
+    """Open Google Sheet via pygsheets and return Sheet object."""
+    client = pygsheets.authorize(client_secret=client_json)
+    return client.open(sheet_title).worksheet_by_title(workbook_title)
 
 
 class GCalTools:
@@ -21,41 +28,33 @@ class GCalTools:
 
         # If modifying these scopes, delete the file token.pickle.
         SCOPES = ["https://www.googleapis.com/auth/calendar.events"]
-        home_dir = os.getenv("HOME")
+        self.creds_dir = os.getenv("HOME") + "/Google Drive/My Drive/Scripts"
         creds = None
-        if os.path.exists(f"{home_dir}/Google Drive/My Drive/Scripts/token.pickle"):
-            with open(
-                f"{home_dir}/Google Drive/My Drive/Scripts/token.pickle",
-                "rb",
-            ) as token:
-                creds = pickle.load(token)
 
+        if os.path.exists(f"{self.creds_dir}/gcal_token.json"):
+            creds = Credentials.from_authorized_user_file(
+                f"{self.creds_dir}/gcal_token.json", SCOPES
+            )
+        # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
+
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    f"{home_dir}/Google Drive/My Drive/Scripts/credentials.json",
-                    SCOPES,
+                    f"{self.creds_dir}/desktop_oauth_gcal.json", SCOPES
                 )
                 creds = flow.run_local_server(port=0)
 
-            with open(
-                f"{home_dir}/Google Drive/My Drive/Scripts/token.pickle",
-                "wb",
-            ) as token:
-                pickle.dump(creds, token)
-        self.service = build("calendar", "v3", credentials=creds)
+            # Save the credentials for the next run
+            with open(f"{self.creds_dir}/gcal_token.json", "w") as token:
+                token.write(creds.to_json())
 
-    def cal_checks_auth(self, wb_title: str):
-        """Return pysheets object for Core Tickets sheet."""
-        sheet_title = "Calendar Checks"
-        home_dir = os.getenv("HOME")
-        client = pygsheets.authorize(
-            client_secret=f"{home_dir}/Google Drive/My Drive/Scripts/client_secret.json"
-        )
-        sheet = client.open(sheet_title).worksheet_by_title(wb_title)
-        return sheet
+        try:
+            self.service = build("calendar", "v3", credentials=creds)
+
+        except HttpError as error:
+            print("An error occurred: %s" % error)
 
     def get_engrv(self, engrv_url: str) -> list:
         """Get engineer on EngRv, to be run each Monday"""
@@ -163,7 +162,11 @@ class GCalTools:
             ]
         ]
 
-        tickets_sheet = self.cal_checks_auth(str(datetime.now().year))
+        tickets_sheet = open_gsheet(
+            "Calendar Checks",
+            str(datetime.now().year),
+            f"{self.creds_dir}/desktop_oauth_gsheet.json",
+        )
         first_row = len(tickets_sheet.get_col(1, include_tailing_empty=False)) + 1
         tickets_sheet.set_dataframe(
             df, start=(first_row, 1), copy_head=False, extend=True, nan=""
@@ -196,6 +199,10 @@ class JiraTools:
         cas_pass = keyring.get_password("cas", cas_user)
         jira_url = keyring.get_password("jira", "url")
         self.jira = Jira(url=jira_url, username=cas_user, password=cas_pass)
+        self.gsheets_creds_dir = (
+            f"{os.getenv('HOME')}",
+            "/Google Drive/My Drive/Scripts/desktop_oauth_gsheet.json",
+        )
 
     def events_jira_outputs(self, tickets_list: list):
         """Return several output lists based on input ticket list.
@@ -222,19 +229,9 @@ class JiraTools:
                 comments_list.append("")
         return assignee_list, reporter_list, ticket_sum_list, comments_list
 
-    def core_tickets_auth(self, wb_title: str):
-        """Return pysheets object for Core Tickets sheet."""
-        sheet_title = "Core Tickets"
-        home_dir = os.getenv("HOME")
-        client = pygsheets.authorize(
-            client_secret=f"{home_dir}/Google Drive/My Drive/Scripts/client_secret.json"
-        )
-        sheet = client.open(sheet_title).worksheet_by_title(wb_title)
-        return sheet
-
     def core_tickets(self, engineer: list, jql_request: str):
         """Get all open tickets for engineers"""
-        tickets_sheet = self.core_tickets_auth("Bulk")
+        tickets_sheet = open_gsheet("Core Tickets", "Bulk", self.gsheets_creds_dir)
         tickets_sheet.clear()
 
         full_df = pd.DataFrame()
@@ -295,7 +292,7 @@ class JiraTools:
         - list of resource tickets for circuits, per engineer (named_range)
 
         """
-        circuit_sheet = self.core_tickets_auth("Tables")
+        circuit_sheet = open_gsheet("Core Tickets", "Tables", self.gsheets_creds_dir)
 
         # named range of active circuits / engineer, and range of engineer's tickets
         active_circuits = circuit_sheet.get_named_range("active_circuits")
@@ -332,7 +329,9 @@ class JiraTools:
         - start_date of monday, end_date of friday
         - append to sheet
         """
-        resources_sheet = self.core_tickets_auth("resources")
+        resources_sheet = open_gsheet(
+            "Core Tickets", "resources", self.gsheets_creds_dir
+        )
         engineers.remove("jdickman")
         engineers.remove("sshibley")
 
