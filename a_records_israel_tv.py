@@ -39,6 +39,7 @@ def get_a_records(url_list: list) -> list:
         "1.1.1.1",  # cloudflare
         "205.171.3.66",  # lumen
         "199.85.127.30",  # ultradns
+        "208.67.222.222",  # opendns
     ]
 
     # initialize list, giving the first value as today's date for the column header.
