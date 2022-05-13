@@ -66,7 +66,7 @@ def resources_report():
 def cor_updates():
     """Pull weekly COR Jira ticket updates."""
     jtools = JiraTools()
-    jql_tickets = 'project = "CENIC Core Projects" and updated > startOfWeek() order by updated ASC'
+    jql_tickets = 'project = "CENIC Core Projects" and (updated > startOfWeek() or createdDate > startOfWeek() or resolutiondate > startOfWeek()) ORDER BY updated ASC'
     eng_list = open_yaml()["engineer"]
     jtools.cor_project_updates(eng_list, jql_tickets)
 
