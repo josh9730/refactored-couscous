@@ -1,8 +1,9 @@
-import typer
-import yaml
 import datetime
 
-from tools import JiraTools, GCalTools
+import typer
+import yaml
+
+from tools import GCalTools, JiraTools
 
 main = typer.Typer(
     add_completion=False,
@@ -62,6 +63,15 @@ def resources_report():
 
 
 @main.command()
+def cor_updates():
+    """Pull weekly COR Jira ticket updates."""
+    jtools = JiraTools()
+    jql_tickets = 'project = "CENIC Core Projects" and updated > startOfWeek() order by updated ASC'
+    eng_list = open_yaml()["engineer"]
+    jtools.cor_project_updates(eng_list, jql_tickets)
+
+
+@main.command()
 def scheduled():
     """Main function for scheduled runs."""
     core_tickets()
@@ -71,6 +81,7 @@ def scheduled():
         calendar_pull()
     if day == "Fri":
         resources_report()
+        cor_updates()
 
 
 if __name__ == "__main__":

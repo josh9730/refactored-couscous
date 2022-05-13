@@ -118,18 +118,23 @@ class GCalTools:
         # combine dfs and normalize
         df = pd.concat([maint_events_df, internal_cal_df])
         df["creator"] = df["creator.email"].apply(lambda x: x.replace("@cenic.org", ""))
+
         df["end.dateTime"] = df["end.dateTime"].apply(
             lambda x: x[11:-6]
         )  # trim to hours/minutes only
+
         df[["start_date", "start_time"]] = df["start.dateTime"].str.split(
             "T", expand=True
         )
+
         df["start_time"] = df["start_time"].apply(
             lambda x: x[:-6]
         )  # extract hours/minutes only
+
         df["summary"] = df["summary"].apply(
             lambda x: "NOC-" + x if x[0].isdigit() else x
         )  # Add NOC- if starts with ticket number only
+
         df["ticket"] = df["summary"].str.extract(
             r"((?:NOC|COR|SYS|ISO)-[0-9]{3,7})", expand=True
         )  # extract ticket from summary for creating link
@@ -203,6 +208,48 @@ class JiraTools:
             f"{os.getenv('HOME')}",
             "/Google Drive/My Drive/Scripts/desktop_oauth_gsheet.json",
         )
+
+    def cor_project_updates(self, engineer: list, jql: str) -> None:
+        """Return ticket updates, creation, resolution from the COR Jira
+        Software project for the past 5 days. To be run each Friday.
+        """
+        ticket_updates = open_gsheet("Core Tickets", "updates", self.gsheets_creds_dir)
+        ticket_updates.clear()
+
+        results = self.jira.jql(
+            jql, limit=100, fields=["assignee", "key", "summary", "updated", "comment"]
+        )
+
+        columns = {
+            "key": "ticket",
+            "fields.assignee.name": "assignee",
+            "fields.summary": "summary",
+            "fields.updated": "updated",
+            "fields.comment.comments": "last_comment",
+        }
+
+        df = pd.json_normalize(results["issues"]).filter(list(columns.keys()))
+        df.rename(
+            columns,
+            axis=1,
+            inplace=True,
+        )
+
+        # filter for the body of the most recent comment
+        df["last_comment"] = df["last_comment"].apply(lambda x: x[-1:][0]["body"])
+
+        # remove rows with BP update comments, based on comment starts with 'Task COR-XXXX moved via...
+        df = df[~df["last_comment"].str.startswith("Task COR-")]
+
+        # create hyperlink for key
+        df["ticket"] = df["ticket"].apply(
+            lambda x: f'=HYPERLINK("https://servicedesk.cenic.org/browse/{x}", "{x}")'
+        )
+
+        # trim updated date to YYYY-MM-DD
+        df["updated"] = df["updated"].apply(lambda x: x.split("T")[0])
+
+        ticket_updates.set_dataframe(df, start=(2, 1), extend=True, nan="")
 
     def events_jira_outputs(self, tickets_list: list):
         """Return several output lists based on input ticket list.
@@ -403,3 +450,48 @@ class JiraTools:
         resources_sheet.set_dataframe(
             full_df, start=(first_row, 1), copy_head=False, extend=True, nan=""
         )
+
+
+# comment= { 'comments': [ { 'author': { 'active': True,
+# 'avatarUrls': { '16x16': 'https://servicedesk.cenic.org/secure/useravatar?size=xsmall&avatarId=10341',
+# '24x24': 'https://servicedesk.cenic.org/secure/useravatar?size=small&avatarId=10341',
+# '32x32': 'https://servicedesk.cenic.org/secure/useravatar?size=medium&avatarId=10341',
+# '48x48': 'https://servicedesk.cenic.org/secure/useravatar?avatarId=10341'},
+# 'displayName': 'Marcela '
+# 'Cardoso',
+# 'emailAddress': 'mcardoso@cenic.org',
+# 'key': 'mcardoso',
+# 'name': 'mcardoso',
+# 'self': 'https://servicedesk.cenic.org/rest/api/2/user?username=mcardoso',
+# 'timeZone': 'America/Los_Angeles'},
+# 'body': 'Task '
+# 'COR-2470 '
+# 'moved via '
+# 'bigpicture.\n'
+# 'ExecuteCommandJob '
+# 'for 1 '
+# 'commands\n'
+# 'Details: '
+# 'Task period '
+# 'changed to '
+# '2022-05-13 : '
+# '2022-05-13',
+# 'created': '2022-05-13T13:32:36.304-0700',
+# 'id': '8681960',
+# 'self': 'https://servicedesk.cenic.org/rest/api/2/issue/303357/comment/8681960',
+# 'updateAuthor': { 'active': True,
+# 'avatarUrls': { '16x16': 'https://servicedesk.cenic.org/secure/useravatar?size=xsmall&avatarId=10341',
+# '24x24': 'https://servicedesk.cenic.org/secure/useravatar?size=small&avatarId=10341',
+# '32x32': 'https://servicedesk.cenic.org/secure/useravatar?size=medium&avatarId=10341',
+# '48x48': 'https://servicedesk.cenic.org/secure/useravatar?avatarId=10341'},
+# 'displayName': 'Marcela '
+# 'Cardoso',
+# 'emailAddress': 'mcardoso@cenic.org',
+# 'key': 'mcardoso',
+# 'name': 'mcardoso',
+# 'self': 'https://servicedesk.cenic.org/rest/api/2/user?username=mcardoso',
+# 'timeZone': 'America/Los_Angeles'},
+# 'updated': '2022-05-13T13:32:36.304-0700'}],
+# 'maxResults': 1,
+# 'startAt': 0,
+# 'total': 1}
