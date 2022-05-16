@@ -43,8 +43,7 @@ def get_a_records(url_list: list) -> list:
     ]
 
     # initialize list, giving the first value as today's date for the column header.
-    # a_records = [datetime.today().strftime("%Y-%m-%d")]  # 2022-05-11
-    a_records = ['2022-05-12 INITIAL']
+    a_records = [datetime.today().strftime("%Y-%m-%d")]  # 2022-05-11
     for url in url_list:
         # trim to just the main url and strip leading/trailing whitespace
         url = url.split("/")[0].strip()
