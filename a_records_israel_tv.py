@@ -13,8 +13,8 @@ def open_gsheet(
     return client.open(sheet_title).worksheet_by_title(workbook_title)
 
 
-def return_urls_list(urls_sheet: pygsheets.worksheet.Worksheet, column: int) -> list:
-    """Return list of urls from gSheet."""
+def return_column(urls_sheet: pygsheets.worksheet.Worksheet, column: int) -> list:
+    """Return column from gSheet as list."""
     return urls_sheet.get_col(column, include_tailing_empty=False)
 
 
@@ -73,13 +73,13 @@ def main() -> None:
     urls_sheet = open_gsheet(
         "Israel TV Judgement", "Sheet1", "desktop_oauth_gsheet.json"
     )
-    urls_list = return_urls_list(urls_sheet, 1)
+    urls_list = return_column(urls_sheet, 1)
     next_col = get_next_col(urls_sheet)
 
     # check if initial run
     # return previous week's A Records list if not initial
     if next_col > 2:
-        previous_a_records = return_urls_list(urls_sheet, next_col - 1)
+        previous_a_records = return_column(urls_sheet, 2)
 
     # urls_list contains header, strip before passing to function
     a_records = get_a_records(urls_list[1:])
