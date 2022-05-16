@@ -2,7 +2,9 @@ from datetime import datetime
 from pprint import pprint
 
 import dns.resolver
+import googleapiclient
 import pygsheets
+from openpyxl.utils.cell import get_column_letter
 
 
 def open_gsheet(
@@ -13,14 +15,14 @@ def open_gsheet(
     return client.open(sheet_title).worksheet_by_title(workbook_title)
 
 
-def return_column(urls_sheet: pygsheets.worksheet.Worksheet, column: int) -> list:
+def return_column(gsheet, column: int) -> list:
     """Return column from gSheet as list."""
-    return urls_sheet.get_col(column, include_tailing_empty=False)
+    return gsheet.get_col(column, include_tailing_empty=False)
 
 
-def get_next_col(urls_sheet: pygsheets.worksheet.Worksheet) -> int:
+def get_next_col(gsheet) -> int:
     """Return integer for next free column."""
-    return len(urls_sheet.get_row(1, include_tailing_empty=False)) + 1
+    return len(gsheet.get_row(1, include_tailing_empty=False)) + 1
 
 
 def get_a_records(url_list: list) -> list:
@@ -34,6 +36,7 @@ def get_a_records(url_list: list) -> list:
     string.
     """
     resolver = dns.resolver.Resolver(configure=False)
+    resolver.timeout = 1
     resolver.nameservers = [
         "8.8.8.8",  # google
         "1.1.1.1",  # cloudflare
@@ -55,38 +58,69 @@ def get_a_records(url_list: list) -> list:
             url_string = ", ".join([i for i in output_list])
 
         except dns.exception.DNSException as err:
-            print(err)
+            print(f"\n{err}")
             url_string = "NO A RECORD"
 
         a_records.append(url_string)
     return a_records
 
 
-def upload_a_records(
-    urls_sheet: pygsheets.worksheet.Worksheet, a_records: list, next_col: int
-) -> None:
+def format_subsequent_list(gsheet, a_records: list) -> list:
+    """Update non-initial output lists for conditional formatting.
+
+    A new list is created that contains, for each item in the list, either 'NO CHANGE'
+    if the value has not changed since the first run, or the list of A Records if it has.
+    """
+    first_a_records = return_column(gsheet, 2)
+    return [j if i != j else "NO CHANGE" for i, j in zip(first_a_records, a_records)]
+
+
+def set_conditionals(gsheet, next_col: int, list_len: int) -> None:
+    """For any cells (items in list) that do NOT equal 'NO CHANGE', make those cells
+    color RED.
+
+    Args:
+        next_col (int): for translating numerical column IDs to A1, etc
+        list_len (int): length of a_records list for size of conditional formatting
+    """
+    col_letter = get_column_letter(next_col)
+    gsheet.add_conditional_formatting(
+        f"{col_letter}2",
+        f"{col_letter}{list_len}",
+        "TEXT_NOT_CONTAINS",
+        {"backgroundColor": {"red": 1}},
+        ["NO CHANGE"],
+    )
+
+
+def upload_a_records(gsheet, a_records: list, next_col: int) -> None:
     """Upload A Records list to next empty column."""
-    urls_sheet.update_col(next_col, a_records)
+    gsheet.update_col(next_col, a_records)
 
 
 def main() -> None:
-    urls_sheet = open_gsheet(
-        "Israel TV Judgement", "Sheet1", "desktop_oauth_gsheet.json"
-    )
-    urls_list = return_column(urls_sheet, 1)
-    next_col = get_next_col(urls_sheet)
-
-    # check if initial run
-    # return previous week's A Records list if not initial
-    if next_col > 2:
-        previous_a_records = return_column(urls_sheet, 2)
+    gsheet = open_gsheet("Israel TV Judgement", "Sheet1", "desktop_oauth_gsheet.json")
+    urls_list = return_column(gsheet, 1)
+    next_col = get_next_col(gsheet)
+    initial_run = False if next_col > 2 else True
 
     # urls_list contains header, strip before passing to function
     a_records = get_a_records(urls_list[1:])
+    if not initial_run:
+        a_records = format_subsequent_list(gsheet, a_records)
 
-    # only upload to gSheets if lengths match, otherwise only print A Records
     if len(a_records) == len(urls_list):
-        upload_a_records(urls_sheet, a_records, next_col)
+        # check if another column needs to be added
+        try:
+            gsheet.get_col(next_col)
+        except googleapiclient.errors.HttpError as err:
+            print(f"\n{err}")
+            gsheet.add_cols(1)
+        finally:
+            upload_a_records(gsheet, a_records, next_col)
+            if not initial_run:
+                set_conditionals(gsheet, next_col, len(a_records) - 1)
+
     else:
         print("\nA Records list not equal to URLs list.\n\nA Records list: \n")
         pprint(a_records)
