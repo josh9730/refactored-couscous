@@ -53,13 +53,15 @@ def get_a_records(url_list: list) -> list:
 
         try:
             output = resolver.resolve(url, "A")
-            output_list = [i.to_text() for i in output]
-            output_list.sort()
-            url_string = ", ".join([i for i in output_list])
 
         except dns.exception.DNSException as err:
             print(f"\n{err}")
             url_string = "NO A RECORD"
+        
+        else:
+            output_list = [i.to_text() for i in output]
+            output_list.sort()
+            url_string = ", ".join([i for i in output_list])
 
         a_records.append(url_string)
     return a_records
