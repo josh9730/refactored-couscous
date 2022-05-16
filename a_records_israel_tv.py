@@ -57,7 +57,7 @@ def get_a_records(url_list: list) -> list:
         except dns.exception.DNSException as err:
             print(f"\n{err}")
             url_string = "NO A RECORD"
-        
+
         else:
             output_list = [i.to_text() for i in output]
             output_list.sort()
@@ -115,9 +115,11 @@ def main() -> None:
         # check if another column needs to be added
         try:
             gsheet.get_col(next_col)
+
         except googleapiclient.errors.HttpError as err:
             print(f"\n{err}")
             gsheet.add_cols(1)
+
         finally:
             upload_a_records(gsheet, a_records, next_col)
             if not initial_run:
