@@ -123,7 +123,7 @@ def main() -> None:
         finally:
             upload_a_records(gsheet, a_records, next_col)
             if not initial_run:
-                set_conditionals(gsheet, next_col, len(a_records) - 1)
+                set_conditionals(gsheet, next_col, len(a_records))
 
     else:
         print("\nA Records list not equal to URLs list.\n\nA Records list: \n")
