@@ -258,11 +258,17 @@ class JiraTools:
         assignee_list, reporter_list, ticket_sum_list, comments_list = [], [], [], []
         for ticket in tickets_list:
             if isinstance(ticket, str):
+                print(ticket)
                 # ticket will be float nan if no ticket is on event
                 output = self.jira.issue(ticket)
                 assignee_list.append(output["fields"]["assignee"]["name"])
-                reporter_list.append(output["fields"]["reporter"]["name"])
                 ticket_sum_list.append(output["fields"]["summary"])
+
+                try:
+                    reporter_list.append(output["fields"]["reporter"]["name"])
+                except TypeError:  # no reporter
+                    reporter_list.append("")
+
                 try:
                     comments_list.append(
                         output["fields"]["comment"]["comments"][-1]["body"]
