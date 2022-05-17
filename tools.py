@@ -25,8 +25,7 @@ def open_gsheet(sheet_title: str, workbook_title: str, client_json: str):
 
 class GCalTools:
     def __init__(self):
-
-        # If modifying these scopes, delete the file token.pickle.
+        # If modifying these scopes, delete the file token.json.
         SCOPES = ["https://www.googleapis.com/auth/calendar.events"]
         self.creds_dir = os.getenv("HOME") + "/Google Drive/My Drive/Scripts"
         creds = None
@@ -58,7 +57,6 @@ class GCalTools:
 
     def get_engrv(self, engrv_url: str) -> list:
         """Get engineer on EngRv, to be run each Monday"""
-
         now = (datetime.utcnow() - timedelta(days=2)).isoformat() + "Z"
         d1 = (datetime.utcnow() + timedelta(weeks=4)).isoformat() + "Z"
         engrv_rotation = (
@@ -101,6 +99,12 @@ class GCalTools:
         ]
 
     def weekly_events(self, maint_cal_url: str, internal_cal_url: str):
+        """Push DF of the previous week's maintenance and Internal Calendar events.
+
+        Args:
+            maint_cal_url (str): URL of Maintenance Calendar
+            internal_cal_url (str): URL of Internal Change Calendar
+        """
         now = datetime.utcnow().isoformat() + "Z"  # 'Z' indicates UTC time
         d1 = (datetime.utcnow() - timedelta(days=7)).isoformat() + "Z"
 
