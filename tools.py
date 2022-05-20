@@ -240,7 +240,14 @@ class JiraTools:
         )
 
         # filter for the body of the most recent comment
-        df["last_comment"] = df["last_comment"].apply(lambda x: x[-1:][0]["body"])
+        def get_last_comment(comments):
+            """Try/Except for returning last comment to handle IndexError if no comments."""
+            try:
+                return comments[-1:][0]["body"]
+            except IndexError:
+                return ""
+
+        df["last_comment"] = df["last_comment"].apply(lambda x: get_last_comment(x))
 
         # remove rows with BP update comments, based on comment starts with 'Task COR-XXXX moved via...
         df = df[~df["last_comment"].str.startswith("Task COR-")]
