@@ -5,6 +5,7 @@ import keyring
 import numpy as np
 import pandas as pd
 import pygsheets
+import requests
 from atlassian import Confluence, Jira
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -182,12 +183,20 @@ class GCalTools:
         )
 
 
-class ConflTools:
+class AtlassianBase:
     def __init__(self):
-        cas_user = keyring.get_password("cas", "user")
-        cas_pass = keyring.get_password("cas", cas_user)
-        confl_url = keyring.get_password("confl", "url")
-        self.confl = Confluence(url=confl_url, username=cas_user, password=cas_pass)
+        self.cas_user = keyring.get_password("cas", "user")
+        self.cas_pass = keyring.get_password("cas", self.cas_user)
+        self.confl_url = keyring.get_password("confl", "url")
+        self.jira_url = keyring.get_password("jira", "url")
+
+
+class ConflTools(AtlassianBase):
+    def __init__(self):
+        super().__init__()
+        self.confl = Confluence(
+            url=self.confl_url, username=self.cas_user, password=self.cas_pass
+        )
 
     def push_new_page(self, parent_page_id: str, page_title: str):
         """Push Wiki formatted .txt file to Confluence as a new page.
@@ -202,12 +211,12 @@ class ConflTools:
         )
 
 
-class JiraTools:
+class JiraTools(AtlassianBase):
     def __init__(self):
-        cas_user = keyring.get_password("cas", "user")
-        cas_pass = keyring.get_password("cas", cas_user)
-        jira_url = keyring.get_password("jira", "url")
-        self.jira = Jira(url=jira_url, username=cas_user, password=cas_pass)
+        super().__init__()
+        self.jira = Jira(
+            url=self.jira_url, username=self.cas_user, password=self.cas_pass
+        )
         self.gsheets_creds_dir = (
             f"{os.getenv('HOME')}",
             "/Google Drive/My Drive/Scripts/desktop_oauth_gsheet.json",
@@ -217,6 +226,14 @@ class JiraTools:
         """Return ticket updates, creation, resolution from the COR Jira
         Software project for the past 5 days. To be run each Friday.
         """
+
+        def get_last_comment(comments):
+            """Try/Except for returning last comment to handle IndexError if no comments."""
+            try:
+                return comments[-1:][0]["body"]
+            except IndexError:
+                return ""
+
         ticket_updates = open_gsheet("Core Tickets", "updates", self.gsheets_creds_dir)
         ticket_updates.clear()
 
@@ -240,13 +257,6 @@ class JiraTools:
         )
 
         # filter for the body of the most recent comment
-        def get_last_comment(comments):
-            """Try/Except for returning last comment to handle IndexError if no comments."""
-            try:
-                return comments[-1:][0]["body"]
-            except IndexError:
-                return ""
-
         df["last_comment"] = df["last_comment"].apply(lambda x: get_last_comment(x))
 
         # remove rows with BP update comments, based on comment starts with 'Task COR-XXXX moved via...
@@ -467,3 +477,64 @@ class JiraTools:
         resources_sheet.set_dataframe(
             full_df, start=(first_row, 1), copy_head=False, extend=True, nan=""
         )
+
+    def get_cpe_tracker_info(self, sheet_key: str) -> None:
+        """Used for the CPE Hardware Tracker, for each active deployment ticket the milestones and
+        purchase ticket statuses are updated.
+        """
+        def get_milestone(ticket):
+            try:
+                return self.jira.issue_field_value(ticket, "customfield_10209")["value"]
+            except requests.exceptions.HTTPError:
+                return ""
+
+        def get_delivered(ticket):
+            if ticket:
+                ticket_data = self.jira.issue(ticket)["fields"]
+                status = ticket_data["status"]["name"]
+                assignee = ticket_data["assignee"]["name"]
+                reporter = ticket_data["reporter"]["name"]
+                last_comment = ticket_data["comment"]["comments"][-1]["body"].upper()
+
+                if status == "Withdrawn":
+                    return "Withdrawn"
+                elif (assignee == reporter) or (status == "Resolved"):
+                    return "Delivered"
+                elif "PARTIAL" in last_comment:
+                    return "Partial Delivery"
+                else:
+                    return "Not Delivered"
+            else:
+                return ""
+
+        active_sheet = open_gsheet(
+            "CPE Hardware Tracker", "Active", self.gsheets_creds_dir
+        )
+        resolved_sheet = open_gsheet(
+            "CPE Hardware Tracker", "Resolved", self.gsheets_creds_dir
+        )
+        active_df = active_sheet.get_as_df(start="A2", include_tailing_empty=False)
+        resolved_df = resolved_sheet.get_as_df(include_tailing_empty=False)
+
+        # get status and trim resolved; drop unneeded Status
+        active_df['Status'] = active_df['Deployment Ticket'].apply(
+            lambda x: self.jira.get_issue_status(x)
+        )
+        new_resolved_df = active_df[active_df['Status'] == 'Resolved']
+        active_df = active_df[active_df['Status'] != 'Resolved']
+        active_df = active_df.drop("Status", axis=1)
+        resolved_df = resolved_df.drop("Status", axis=1)
+
+        # Get Milestones and hardware delivery data
+        active_df["Ticket Milestone"] = active_df["Deployment Ticket"].apply(
+            lambda x: get_milestone(x)
+        )
+        for col in ('CPE', 'Modem', 'Dark Fiber Equip.'):
+            active_df[f'{col} Delivered'] = active_df[f'{col} Purchase Ticket'].apply(lambda x: get_delivered(x))
+
+        # combine resolved DFs
+        resolved_df = pd.concat([resolved_df, new_resolved_df])
+        active_sheet.clear(start='A3')
+        resolved_sheet.clear(start='A2')
+        active_sheet.set_dataframe(active_df, start="A3", copy_head=False, extend=True, nan="")
+        resolved_sheet.set_dataframe(resolved_df, start="A2", copy_head=False, extend=True, nan="")

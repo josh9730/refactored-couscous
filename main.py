@@ -23,7 +23,6 @@ def open_yaml():
 @main.command()
 def core_tickets():
     """Return all tickets for designated engineers and dumps as pd to gsheet."""
-    jtools = JiraTools()
     jql_tickets = "assignee={engineer} and status not in (Resolved, Deleted, Done, Merged) order by project ASC"
     eng_list = open_yaml()["engineer"]
     jtools.core_tickets(eng_list, jql_tickets)
@@ -37,7 +36,6 @@ def update_resource_buckets():
     Circuits: Updates hours based on active circuits, and updates start/end dates.
     """
     data = open_yaml()
-    jtools = JiraTools()
     engineer_list = GCalTools().get_engrv(data["engrv_url"])
     jtools.update_engrv(engineer_list, data["engrv_tickets"], data["engrv_hours"])
     jtools.update_circuit(data["circuit_hours"])
@@ -57,7 +55,6 @@ def calendar_pull():
 def resources_report():
     """Pull weekly resources report and dump to sheet."""
     data = open_yaml()
-    jtools = JiraTools()
     jql_string = 'assignee={engineer} and status = "In Progress" and originalEstimate > 0 and "End date" >= now() and "Start date" <= now()'
     jtools.resources_reporting(data["engineer"], jql_string)
 
@@ -65,16 +62,23 @@ def resources_report():
 @main.command()
 def cor_updates():
     """Pull weekly COR Jira ticket updates."""
-    jtools = JiraTools()
     jql_tickets = 'project = "CENIC Core Projects" and (updated > startOfWeek() or createdDate > startOfWeek() or resolutiondate > startOfWeek()) ORDER BY updated ASC'
     eng_list = open_yaml()["engineer"]
     jtools.cor_project_updates(eng_list, jql_tickets)
 
 
 @main.command()
+def cpe_tracker():
+    """Update CPE Hardware Tracker data."""
+    data = open_yaml()
+    jtools.get_cpe_tracker_info(data['cpe_tracker_key'])
+
+
+@main.command()
 def scheduled():
     """Main function for scheduled runs."""
     core_tickets()
+    cpe_tracker()
     day = datetime.datetime.now().strftime("%a")
     if day == "Mon":
         update_resource_buckets()
@@ -85,4 +89,5 @@ def scheduled():
 
 
 if __name__ == "__main__":
+    jtools = JiraTools()
     main()
