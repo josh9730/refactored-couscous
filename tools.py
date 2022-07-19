@@ -527,7 +527,7 @@ class JiraTools(AtlassianBase):
         new_resolved_df = active_df[active_df['Status'] == 'Resolved']
         active_df = active_df[active_df['Status'] != 'Resolved']
         active_df = active_df.drop("Status", axis=1)
-        resolved_df = resolved_df.drop("Status", axis=1)
+        new_resolved_df = new_resolved_df.drop("Status", axis=1)
 
         # Get Milestones and hardware delivery data
         active_df["Ticket Milestone"] = active_df["Deployment Ticket"].apply(
