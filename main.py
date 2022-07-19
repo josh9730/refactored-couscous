@@ -70,8 +70,7 @@ def cor_updates():
 @main.command()
 def cpe_tracker():
     """Update CPE Hardware Tracker data."""
-    data = open_yaml()
-    jtools.get_cpe_tracker_info(data['cpe_tracker_key'])
+    jtools.get_cpe_tracker_info()
 
 
 @main.command()

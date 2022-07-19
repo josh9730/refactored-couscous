@@ -478,9 +478,13 @@ class JiraTools(AtlassianBase):
             full_df, start=(first_row, 1), copy_head=False, extend=True, nan=""
         )
 
-    def get_cpe_tracker_info(self, sheet_key: str) -> None:
+    def get_cpe_tracker_info(self) -> None:
         """Used for the CPE Hardware Tracker, for each active deployment ticket the milestones and
         purchase ticket statuses are updated.
+
+          - Removes tickets that are resolved from Active and places them in the Resolved tab
+          - Updates Milestone 
+          - For CPE, Modem, DF purchase tickets, adds text to indicate delivery status
         """
         def get_milestone(ticket):
             try:
