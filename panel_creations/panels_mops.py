@@ -5,6 +5,7 @@
     - create panel install yaml mop
     - create jumper install yaml mop
 """
+import re
 from collections import Counter
 from datetime import datetime
 
@@ -60,10 +61,25 @@ class PanelsNautobot(Data):
         self.remote_panel = self.nautobot.extras.relationships.get(name="remote_panel")
 
     def _next_cable_id(self):
-        cables = tuple(self.nautobot.dcim.cables.filter(label__re=".*--C[0-9]{4}"))
-        last_cable_label = sorted(tuple(map(lambda x: x.label, cables)))[-1]
-        last_id = last_cable_label.split("--C")[-1]
-        return "C" + str(int(last_id) + 1).rjust(4, "0")
+        # cables = tuple(self.nautobot.dcim.cables.filter(label__re=".*--C[0-9]{4}"))  # this is not working in nautobot-stage for some reason
+        # last_cable_label = sorted(tuple(map(lambda x: x.label, cables)))[-1]
+        # last_id = last_cable_label.split("--C")[-1]
+
+        cables = self.nautobot.dcim.cables.all()
+        cable_labels = tuple(map(lambda x: x.label, cables))
+        trunk_cables = []
+        for i in cable_labels:
+            if i:
+                label = re.search("--C[0-9]{4}$", i)
+                try:
+                    label.group()
+                except AttributeError:
+                    pass
+                else:
+                    trunk_cables.append(label.group())
+        trunk_cables.sort()
+
+        return "C" + str(int(trunk_cables[-1].split("--C")[1]) + 1).rjust(4, "0")
 
     def _relate_panels(self, panels):
         self.nautobot.extras.relationship_associations.create(
@@ -86,17 +102,20 @@ class PanelsNautobot(Data):
         )
 
     def _create_trunk(self):
-        # nautobot-stage is not working with the filter ??????
-        # self.nautobot.dcim.cables.create(
-        #     type="smf",
-        #     termination_a_type="dcim.rearport",
-        #     termination_b_type="dcim.rearport",
-        #     termination_a_id=self.trunk_list[1].id,
-        #     termination_b_id=self.trunk_list[0].id,
-        #     status="connected",
-        #     label=f"COM--{self.new_panel_list[0].name}--{self.new_panel_list[1].name}--{self._next_cable_id()}",
-        # )
-        print(f"CREATE MANUALLY: COM--{self.new_panel_list[0].name}--{self.new_panel_list[1].name}--CXXXX")
+        try:
+            self.nautobot.dcim.cables.create(
+                type="smf",
+                termination_a_type="dcim.rearport",
+                termination_b_type="dcim.rearport",
+                termination_a_id=self.trunk_list[1].id,
+                termination_b_id=self.trunk_list[0].id,
+                status="connected",
+                label=f"COM--{self.new_panel_list[0].name}--{self.new_panel_list[1].name}--{self._next_cable_id()}",
+            )
+        except ValueError:
+            print(
+                f"CREATE MANUALLY: COM--{self.new_panel_list[0].name}--{self.new_panel_list[1].name}--CXXXX"
+            )
 
     def create_panels(self):
         for panel_pair in self.panels_list:
