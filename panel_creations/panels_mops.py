@@ -1,9 +1,11 @@
 """
-    - list of paired panels and names for a site
-    - create in Nautobot
-    - create shipping list
-    - create panel install yaml mop
-    - create jumper install yaml mop
+    - create panels, cassettes, ports, trunk cables in Nautobot based on data.yaml input
+    - print shipping items for pasting panels shipment into shipping spreadsheet
+    - create shipping ticket for panels with shipping info
+    - update master ticket with panel pairs in the Description
+    - create panels install MOP ticket and MOP YAML (for input to the MOPs program)
+    - create shipping ticket for jumpers (and print to screen for the spreadsheet)
+    - create jumpers install MOP ticket and MOP YAML (for input to the MOPs program)
 """
 import re
 from collections import Counter
