@@ -1,0 +1,46 @@
+repository: /Users/jdickman/Google Drive/My Drive/MOPs/YAML/
+page_title: {{ title }}
+parent_page_id: 45428825
+ticket: {{ ticket }}
+
+summary:
+- {{ summary }}
+level: 0
+executing_dep: NOC
+rh: {{ site }}
+approval: COR-1696
+impact:
+- 
+escalation: Deploying Engineer
+
+partial_rollback: True
+rollback_steps:
+-
+pre_maint:
+-
+
+tech_equip:
+- Labeler
+shipping:
+{{ shipping_ticket }}:
+    - Pending
+    - Pending
+
+sections: 
+    "Run MPO-24 Jumpers":
+        - rh: Several MPO-24 jumpers were shipped to connect the new modular paneling that was installed in a recent maintenance. 
+        - jumper: 
+            - Run the following SMF MPO-24 jumpers
+            {%- for panels in panels_list %}
+            - arack: {{ fac_hub_rack }}
+              adevice: {{ panels[0] }}
+              aport: Slot 1 Rear
+              acable: {{ panels[3] }}m MPO-24 SMF
+              aterm: 'Yes'
+              alabel: {{ panels[0] }} -- {{ panels[1] }}
+              zrack: {{ panels[1].split("-")[2].split(".")[1] }}.{{ panels[1].split("-")[2].split(".")[2] }}
+              zdevice: {{ panels[1] }}
+              zport: Slot 1 Rear 
+              zlabel: {{ panels[0] }} -- {{ panels[1] }}
+              zterm: 'Yes'
+            {%- endfor %}

@@ -1,0 +1,12 @@
+* Date of Request: {{ date }}
+* Site Contact: {{ contact }}
+* Company: {{ company }}
+* Ship To address: {{ address }}
+* Site Phone Number: {{ phone }}
+* Quantity, Item, & Serial Numbers:
+{% for i in items_list -%}
+{{ i }}
+{% endfor -%}
+* Shipping speed: Default
+* PO number (if applicable): PUR-187
+* Insurance amount (if needed): N/A

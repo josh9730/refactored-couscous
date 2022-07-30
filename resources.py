@@ -88,8 +88,7 @@ class Resources:
         project: Optional[str],
         title: str,
     ) -> None:
-        """Create new resource ticket."""
-        # uses parent summary and assignee for new ticket
+        """Create new resource ticket, uses parent summary and assignee for new ticket"""
         parent_fields = self.jira.get_issue(
             parent_ticket,
             fields=["summary", "assignee", "project", "customfield_10401"],
