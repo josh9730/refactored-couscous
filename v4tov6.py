@@ -5,9 +5,9 @@ Args:
     hpr/dc - HPR link or DC link
 """
 
-import netaddr
 import argparse
 
+import netaddr
 
 parser = argparse.ArgumentParser(description="Convert IPv4 to IPv6 address.")
 parser.add_argument(
@@ -22,7 +22,7 @@ parser.add_argument(
 parser.add_argument(
     "network",
     metavar="NetworkType",
-    help=f'Network Options: "hpr" or "dc"',
+    help='Network Options: "hpr" or "dc"',
     choices=["hpr", "dc"],
 )
 args = parser.parse_args()

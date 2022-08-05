@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime, timedelta
 
 import keyring
@@ -483,9 +484,10 @@ class JiraTools(AtlassianBase):
         purchase ticket statuses are updated.
 
           - Removes tickets that are resolved from Active and places them in the Resolved tab
-          - Updates Milestone 
+          - Updates Milestone
           - For CPE, Modem, DF purchase tickets, adds text to indicate delivery status
         """
+
         def get_milestone(ticket):
             try:
                 return self.jira.issue_field_value(ticket, "customfield_10209")["value"]
@@ -521,11 +523,11 @@ class JiraTools(AtlassianBase):
         resolved_df = resolved_sheet.get_as_df(include_tailing_empty=False)
 
         # get status and trim resolved; drop unneeded Status
-        active_df['Status'] = active_df['Deployment Ticket'].apply(
+        active_df["Status"] = active_df["Deployment Ticket"].apply(
             lambda x: self.jira.get_issue_status(x)
         )
-        new_resolved_df = active_df[active_df['Status'] == 'Resolved']
-        active_df = active_df[active_df['Status'] != 'Resolved']
+        new_resolved_df = active_df[active_df["Status"] == "Resolved"]
+        active_df = active_df[active_df["Status"] != "Resolved"]
         active_df = active_df.drop("Status", axis=1)
         new_resolved_df = new_resolved_df.drop("Status", axis=1)
 
@@ -533,12 +535,139 @@ class JiraTools(AtlassianBase):
         active_df["Ticket Milestone"] = active_df["Deployment Ticket"].apply(
             lambda x: get_milestone(x)
         )
-        for col in ('CPE', 'Modem', 'Dark Fiber Equip.'):
-            active_df[f'{col} Delivered'] = active_df[f'{col} Purchase Ticket'].apply(lambda x: get_delivered(x))
+        for col in ("CPE", "Modem", "Dark Fiber Equip."):
+            active_df[f"{col} Delivered"] = active_df[f"{col} Purchase Ticket"].apply(
+                lambda x: get_delivered(x)
+            )
 
         # combine resolved DFs
         resolved_df = pd.concat([resolved_df, new_resolved_df])
-        active_sheet.clear(start='A3')
-        resolved_sheet.clear(start='A2')
-        active_sheet.set_dataframe(active_df, start="A3", copy_head=False, extend=True, nan="")
-        resolved_sheet.set_dataframe(resolved_df, start="A2", copy_head=False, extend=True, nan="")
+        active_sheet.clear(start="A3")
+        resolved_sheet.clear(start="A2")
+        active_sheet.set_dataframe(
+            active_df, start="A3", copy_head=False, extend=True, nan=""
+        )
+        resolved_sheet.set_dataframe(
+            resolved_df, start="A2", copy_head=False, extend=True, nan=""
+        )
+
+    def purchases_tracking(self, core: list) -> None:
+        """Update Purchase Tracker, run each week.
+
+        - Pulls all active purchase tickets by engineer as df
+        - Updates certain columns, including extracting PO
+        - Drop unneeded columns and push to sheet
+        - Manually consolidate Justification and other fields towards the table on gSheet
+        """
+
+        def get_po(comments: list[dict], date: bool = False) -> str:
+            """Return either PO number or PO Date.
+
+            Not sure how to run Series.apply() on one column to return two
+            new columns, this could be simplified.
+            """
+            for i in comments:
+                po = re.search(r"PO.{0,3}[0-9]{5}", i["body"])
+                if po:
+                    if date:
+                        return i["created"].split("T")[0]
+                    else:
+                        return re.findall(r"\d+", po.group())[0]
+                    break
+
+        def check_status(
+            comments: list[dict], status: str, assignee: str, reporter: str
+        ) -> str:
+            """Tries to guess ticket status based on critiera below. Should not
+            be viewed as authoritative.
+            """
+            try:
+                last_comment = comments[-1]["body"].upper()
+            except IndexError:
+                return ""
+            else:
+                if status == "Withdrawn":
+                    return "Withdrawn"
+                elif (assignee == reporter) or (status == "Resolved"):
+                    return "Delivered"
+                elif "PARTIAL" in last_comment:
+                    return "Partial Delivery"
+                else:
+                    return "Not Delivered"
+
+        JUSTIFICATION = "customfield_11102"
+        SEGMENT = "customfield_11004"
+
+        jql = f"""project = Purchasing and
+            status not in (Resolved, Denied, "Pending Core Approval", "Pending Director Approval", "Pending Finance Approval")
+            and reporter in ({", ".join(map(str, core))})
+        """
+
+        results = self.jira.jql(
+            re.sub(r"\s+", " ", jql),
+            limit=200,
+            fields=[
+                "assignee",
+                "reporter",
+                "key",
+                "summary",
+                "status",
+                JUSTIFICATION,
+                SEGMENT,
+                "comment",
+            ],
+        )
+
+        df = pd.json_normalize(results["issues"]).filter(
+            [
+                "fields.assignee.name",
+                "fields.reporter.name",
+                "fields.summary",
+                "key",
+                "fields.status.name",
+                f"fields.{JUSTIFICATION}",
+                f"fields.{SEGMENT}.value",
+                "fields.comment.comments",
+            ]
+        )
+        df.rename(
+            columns={
+                "key": "Key",
+                "fields.assignee.name": "assignee",
+                "fields.reporter.name": "Reporter",
+                "fields.summary": "Summary",
+                "fields.status.name": "Ticket Status",
+                f"fields.{JUSTIFICATION}": "Justification",
+                f"fields.{SEGMENT}.value": "Segment",
+                "fields.comment.comments": "comments",
+            },
+            inplace=True,
+        )
+
+        df["PO"] = df["comments"].apply(get_po)
+        df["PO Date"] = df["comments"].apply(lambda x: get_po(x, date=True))
+        df["HW Status"] = df.apply(
+            lambda x: check_status(
+                x["comments"], x["Ticket Status"], x["assignee"], x["Reporter"]
+            ),
+            axis=1,
+        )
+
+        df = df[
+            [
+                "Key",
+                "Reporter",
+                "Segment",
+                "PO",
+                "PO Date",
+                "HW Status",
+                "Summary",
+                "Justification",
+            ]
+        ]
+
+        data_sheet = open_gsheet(
+            "Core Purchase Tracking", "data", self.gsheets_creds_dir
+        )
+        data_sheet.clear()
+        data_sheet.set_dataframe(df, start=(1, 1), extend=True, nan="")

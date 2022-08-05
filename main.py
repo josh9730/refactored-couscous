@@ -74,6 +74,12 @@ def cpe_tracker():
 
 
 @main.command()
+def purchasing_tracker():
+    core_list = open_yaml()["core_all"]
+    jtools.purchases_tracking(core_list)
+
+
+@main.command()
 def scheduled():
     """Main function for scheduled runs."""
     core_tickets()
@@ -82,7 +88,11 @@ def scheduled():
     if day == "Mon":
         update_resource_buckets()
         calendar_pull()
-    if day == "Fri":
+
+    elif day == "Tue":
+        purchasing_tracker()
+
+    elif day == "Fri":
         resources_report()
         cor_updates()
 
