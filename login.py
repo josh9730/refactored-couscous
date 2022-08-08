@@ -1,14 +1,15 @@
-from enum import Enum
 import re
-import pyotp
+import socket
+import time
+from enum import Enum
+from typing import cast
+
 import keyring
 import pexpect
+import pyotp
 import typer
-import time
-import socket
-
-from netmiko import ConnectHandler
 from lastpass import Vault
+from netmiko import ConnectHandler
 
 """
 keyring set cas email
@@ -74,38 +75,52 @@ def get_lp(account: str):
         "Crafter": bytes("Crafter", "utf-8"),
     }
 
-    cas_email = keyring.get_password("cas", "email")
-    lp_pass = keyring.get_password("lp_pass", cas_email)
-    lp_otp = pyotp.TOTP(keyring.get_password("lp_pass", "otp"))
+    cas_email = cast(str, keyring.get_password("cas", "email"))
+    lp_pass = cast(str, keyring.get_password("lp_pass", cas_email))
+    lp_otp = pyotp.TOTP(cast(str, keyring.get_password("lp_pass", "otp")))
 
     name = _shorthand[account]
+
     vault = Vault.open_remote(cas_email, lp_pass, lp_otp.now())
 
-    for account in vault.accounts:
-        if account.name == name:
-            if name == bytes("ScienceLogic SNMP Credentials", "utf-8"):
-                # print(account.notes)
-                user_re = re.compile(r"Username: \S+")
-                auth_re = re.compile(r"Auth Password: \S+")
-                priv_re = re.compile(r"Priv Password: \S+")
-                lp_username = user_re.search(str(account.notes, "utf-8")).group()
-                lp_password = auth_re.search(str(account.notes, "utf-8")).group()
-                lp_password2 = priv_re.search(str(account.notes, "utf-8")).group()
+    for lp_account in vault.accounts:
+        # print(lp_account)
+        if lp_account.name == name:
+            # if account == any(('SNMP', 'OOB')):
+            if account == "SNMP" or account == "OOB":
+                if account == "SNMP":
+                    user_re = re.compile(r"Username: \S+").search(
+                        str(lp_account.notes, "utf-8")
+                    )
+                    auth_re = re.compile(r"Auth Password: \S+").search(
+                        str(lp_account.notes, "utf-8")
+                    )
+                    priv_re = re.compile(r"Priv Password: \S+").search(
+                        str(lp_account.notes, "utf-8")
+                    )
+                else:
+                    user_re = re.compile(r"Super User:\S+").search(
+                        str(lp_account.notes, "utf-8")
+                    )
+                    auth_re = re.compile(r"Password:\S+").search(
+                        str(lp_account.notes, "utf-8")
+                    )
+                    priv_re = re.compile(r"Passthrough:\S+").search(
+                        str(lp_account.notes, "utf-8")
+                    )
 
-            elif account.name == bytes("CENIC Out-of-Band- OOB", "utf-8"):
-                user_re = re.compile(r"Super User:\S+")
-                pass_re = re.compile(r"Password:\S+")
-                passthrough_re = re.compile(r"Passthrough:\S+")
+                # can't use all() to suppress mypy
+                assert user_re
+                assert auth_re
+                assert priv_re
 
-                lp_username = user_re.search(str(account.notes, "utf-8")).group()
-                lp_password = pass_re.search(str(account.notes, "utf-8")).group()
-                lp_password2 = passthrough_re.search(
-                    str(account.notes, "utf-8")
-                ).group()
+                lp_username = user_re.group()
+                lp_password = auth_re.group()
+                lp_password2 = priv_re.group()
 
             else:
-                lp_username = "Username: " + str(account.username, "utf-8")
-                lp_password = "Password: " + str(account.password, "utf-8")
+                lp_username = "Username: " + str(lp_account.username, "utf-8")
+                lp_password = "Password: " + str(lp_account.password, "utf-8")
                 lp_password2 = ""
 
     return lp_username, lp_password, lp_password2
@@ -169,8 +184,8 @@ def enable(hostname: str = typer.Argument(..., help="Device hostname")):
 @logins.command()
 def cas(hostname: str = typer.Argument(..., help="Device hostname")):
     """Use CAS account to login to non-network devices with ssh."""
-    username = keyring.get_password("cas", "user")
-    password = keyring.get_password("cas", username)
+    username = cast(str, keyring.get_password("cas", "user"))
+    password = cast(str, keyring.get_password("cas", username))
     ssh_default(hostname, username, password)
 
 

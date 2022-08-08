@@ -22,14 +22,14 @@ pre_maint:
 tech_equip:
 - Labeler
 shipping:
-{{ shipping_ticket }}:
-    - Pending
-    - Pending
+    {{ shipping_ticket }}:
+        - Pending
+        - Pending
 
 sections: 
     "Summary":
         - noc: New paneling is being installed. Documentation is still WIP, but please review *[HERE|https://documentation.cenic.org/display/~jdickman/Patch+Panel+Usage]* for details
-        - note: [MPO-LC cassettes|https://www.fs.com/products/57023.html] and [Cat6 cassettes|https://www.fs.com/products/66602.html] with RJ45 jacks pre-installed were shipped. A 48 port LC SMF panel was shipped as well as a 24 port Cat6 panel.
+        - note: A 48 port LC SMF panel was shipped as well as a 24 port Cat6 panel. [MPO-LC cassettes|https://www.fs.com/products/57023.html] and [Cat6 cassettes|https://www.fs.com/products/66602.html] with RJ45 jacks pre-installed were shipped.
         - rh: Multiple patch panels and cassettes were shipped. Please remove all items from the individual boxes before proceeding.
         - note: On the back of the cassettes with LC connectors, note that there are labels for 'Type A' and 'Type AF'. Please be aware of the cassette types when installing. All cassettes installed into the hub rack ({{ fac_hub_rack }}) *must* be of Type AF.
         - rh: Rack {{ fac_hub_rack }} (the 'hub') rack will get ({{ panel_list|length }}) 4-slot panels (each with one Type AF cassette and one 6-port Cat6 module), (1) 48-port LC panel, and (1) 24-port Cat6 panels

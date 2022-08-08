@@ -12,8 +12,8 @@ from collections import Counter
 from datetime import datetime
 
 import keyring
-import requests
 import typer
+import urllib3
 import yaml
 from atlassian import Jira
 from jinja2 import Environment, FileSystemLoader
@@ -23,7 +23,7 @@ main = typer.Typer(
     add_completion=False,
 )
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class Data:
@@ -216,7 +216,7 @@ class Panels(Data):
         template = env.get_template(f"{template_name}.j2")
         return template.render(data)
 
-    def create_panels_shipment(self):
+    def create_panels_shipment(self, render: bool = True):
         panels = {
             "Modular Panels": 2 * len(self.panels_list),
             "MPO-LC Type A Cassettes": len(self.panels_list),
@@ -230,6 +230,7 @@ class Panels(Data):
             "items_list": [f"** ({j}) {i}" for i, j in panels.items()],
         }
 
+        print()
         print("\nFOR SHIPPING SPREADSHEET\n\nQUANTITIES\n")
         [print(i) for i in panels.values()]
         print("\nITEMS\n")
@@ -314,6 +315,12 @@ class Panels(Data):
         mop = Panels._load_template(template, input_dict)
         with open(f"mops/{self.site}_{mop_name}", "w") as f:
             f.write(mop)
+
+
+@main.command()
+def print_shipping():
+    """Print only the shipping spreadsheet list."""
+    Panels().create_panels_shipment(render=False)
 
 
 @main.command()

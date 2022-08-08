@@ -573,7 +573,7 @@ class JiraTools(AtlassianBase):
                         return i["created"].split("T")[0]
                     else:
                         return re.findall(r"\d+", po.group())[0]
-                    break
+            return "PO not found"
 
         def check_status(
             comments: list[dict], status: str, assignee: str, reporter: str
@@ -583,7 +583,7 @@ class JiraTools(AtlassianBase):
             """
             try:
                 last_comment = comments[-1]["body"].upper()
-            except IndexError:
+            except IndexError:  # no comments
                 return ""
             else:
                 if status == "Withdrawn":
@@ -598,6 +598,7 @@ class JiraTools(AtlassianBase):
         JUSTIFICATION = "customfield_11102"
         SEGMENT = "customfield_11004"
 
+        # return in-progress purchases
         jql = f"""project = Purchasing and
             status not in (Resolved, Denied, "Pending Core Approval", "Pending Director Approval", "Pending Finance Approval")
             and reporter in ({", ".join(map(str, core))})
@@ -655,6 +656,7 @@ class JiraTools(AtlassianBase):
 
         df = df[
             [
+                "Ticket Status",
                 "Key",
                 "Reporter",
                 "Segment",
@@ -669,5 +671,49 @@ class JiraTools(AtlassianBase):
         data_sheet = open_gsheet(
             "Core Purchase Tracking", "data", self.gsheets_creds_dir
         )
+        data_sheet.clear(start="A8")
+        data_sheet.set_dataframe(df, start=(8, 1), extend=True, nan="")
+
+        # add tickets pending manager approval
+        mgr_jql = f"""project = Purchasing and status in
+            ("Pending Core Approval") and reporter in ({", ".join(map(str, core))})
+        """
+
+        mgr_results = self.jira.jql(
+            re.sub(r"\s+", " ", mgr_jql),
+            limit=200,
+            fields=[
+                "key",
+                "reporter",
+                SEGMENT,
+                "summary",
+                JUSTIFICATION,
+            ],
+        )
+
+        mgr_df = pd.json_normalize(mgr_results["issues"]).filter(
+            [
+                "key",
+                "fields.reporter.name",
+                f"fields.{SEGMENT}.value",
+                "fields.summary",
+                f"fields.{JUSTIFICATION}",
+            ]
+        )
+
+        mgr_df.rename(
+            columns={
+                "key": "Key",
+                "fields.reporter.name": "Reporter",
+                "fields.summary": "Summary",
+                f"fields.{JUSTIFICATION}": "Justification",
+                f"fields.{SEGMENT}.value": "Segment",
+            },
+            inplace=True,
+        )
+
+        data_sheet = open_gsheet(
+            "Core Purchase Tracking", "mgr_approval", self.gsheets_creds_dir
+        )
         data_sheet.clear()
-        data_sheet.set_dataframe(df, start=(1, 1), extend=True, nan="")
+        data_sheet.set_dataframe(mgr_df, start=(1, 1), extend=True, nan="")

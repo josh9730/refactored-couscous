@@ -88,8 +88,6 @@ def scheduled():
     if day == "Mon":
         update_resource_buckets()
         calendar_pull()
-
-    elif day == "Tue":
         purchasing_tracker()
 
     elif day == "Fri":
