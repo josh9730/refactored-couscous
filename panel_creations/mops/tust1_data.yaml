@@ -1,0 +1,56 @@
+site: TUST1
+hub_rack: "10.01.02"
+fac_hub_rack: "1.002"
+xcp_ru: 39
+c6_ru: 38
+shipping_info :
+    contact: "Lumen"
+    company: "Lumen"
+    address: "14452 Franklin Avenue, Tustin, CA 92780"
+    phone: "877-453-8353"
+  
+panels_list:
+    - hub_ru: U37
+      spoke: 10.01.04-U39
+      cat6: True
+      jumper: 100
+    - hub_ru: U36
+      spoke: 10.01.05-U39
+      cat6: True
+      jumper: 100
+    - hub_ru: U35
+      spoke: 10.01.06-U39
+      cat6: True
+      jumper: 100
+    - hub_ru: U34
+      spoke: 10.01.07-U42
+      cat6: True
+      jumper: 100
+    - hub_ru: U33
+      spoke: 10.01.08-U42
+      cat6: True
+      jumper: 100
+    - hub_ru: U32
+      spoke: 10.03.03-U40
+      cat6: True
+      jumper: 100
+    - hub_ru: U31
+      spoke: 10.03.04-U40
+      cat6: True
+      jumper: 100
+    - hub_ru: U30
+      spoke: 10.03.05-U37
+      cat6: True
+      jumper: 100
+    - hub_ru: U29
+      spoke: 10.03.06-U40
+      cat6: True
+      jumper: 100
+    - hub_ru: U19
+      spoke: 10.03.07-U40
+      cat6: True
+      jumper: 100
+    - hub_ru: U18
+      spoke: 10.03.02-U40
+      cat6: False
+      jumper: 100

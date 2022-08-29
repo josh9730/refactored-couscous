@@ -221,12 +221,16 @@ class Panels(Data):
             "Modular Panels": 2 * len(self.panels_list),
             "MPO-LC Type A Cassettes": len(self.panels_list),
             "MPO-LC Type AF Cassettes": len(self.panels_list),
-            "Cat6 Cassettes": len([i for i in self.panels_list if i[2] == 1]),
+            "Cat6 Cassettes": 2 * len([i for i in self.panels_list if i[2] == 1]),
             "48-port LC Panel": 1,
             "24-port Cat6 Panel": 1,
         }
         shipping_list = {
             "date": datetime.today().strftime("%m/%d/%y"),
+            "contact": self.shipping_info['contact'],
+            'company': self.shipping_info['company'],
+            'address': self.shipping_info['address'],
+            'phone': self.shipping_info['phone'],
             "items_list": [f"** ({j}) {i}" for i, j in panels.items()],
         }
 
@@ -278,9 +282,7 @@ class Panels(Data):
                 "issuetype": {
                     "name": "CENIC Request",
                 },
-                "customfield_10002": {
-                    "name": "[-Core Projects-] [CENIC-INT] Core Projects",
-                },
+                "customfield_10002": [8],
             }
         )["key"]
         self.jira.create_issue_link(

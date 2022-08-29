@@ -86,12 +86,12 @@ def scheduled():
     cpe_tracker()
     day = datetime.datetime.now().strftime("%a")
     if day == "Mon":
-        update_resource_buckets()
+        # update_resource_buckets()
         calendar_pull()
         purchasing_tracker()
 
     elif day == "Fri":
-        resources_report()
+        # resources_report()
         cor_updates()
 
 
