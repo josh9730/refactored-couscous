@@ -47,14 +47,14 @@ class Data:
             ]
             for i in data["panels_list"]
         ]
-        self.jumpers_list = [f'{i["jumper"]}m LC-LC SMF' for i in data["panels_list"]]
+        self.jumpers_list = [f'{i["jumper"]}m OS2 MPO-24' for i in data["panels_list"]]
 
 
 class PanelsNautobot(Data):
     def __init__(self):
         super().__init__()
         self.nautobot = api(
-            url="https://nautobot-1-staging.svl.cenic.org",
+            url=keyring.get_password("nautobot_stage", "url"),
             token=keyring.get_password("nautobot-stage", self.assignee + "mfa"),
         )
 
@@ -227,10 +227,10 @@ class Panels(Data):
         }
         shipping_list = {
             "date": datetime.today().strftime("%m/%d/%y"),
-            "contact": self.shipping_info['contact'],
-            'company': self.shipping_info['company'],
-            'address': self.shipping_info['address'],
-            'phone': self.shipping_info['phone'],
+            "contact": self.shipping_info["contact"],
+            "company": self.shipping_info["company"],
+            "address": self.shipping_info["address"],
+            "phone": self.shipping_info["phone"],
             "items_list": [f"** ({j}) {i}" for i, j in panels.items()],
         }
 
@@ -255,6 +255,10 @@ class Panels(Data):
         jumpers = Counter(self.jumpers_list)
         shipping_list = {
             "date": datetime.today().strftime("%m/%d/%y"),
+            "contact": self.shipping_info["contact"],
+            "company": self.shipping_info["company"],
+            "address": self.shipping_info["address"],
+            "phone": self.shipping_info["phone"],
             "items_list": [f"** ({j}) {i}" for i, j in list(jumpers.items())],
         }
         print("\nFOR SHIPPING SPREADSHEET\n\nQUANTITIES\n")

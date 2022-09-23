@@ -1,0 +1,24 @@
+site: SFRA1
+hub_rack: '303.10.04'
+fac_hub_rack: '10-04'
+xcp_ru: 29
+c6_ru: 28
+shipping_info :
+    contact: "Digital Realty"
+    company: "Digital Realty"
+    address: "200 Paul Ave, 3rd Floor, San Francisco CA 94124-3100"
+    phone: "888-835-9832"
+  
+panels_list:
+    - hub_ru: U27
+      spoke: 303.10.01-U26
+      cat6: True
+      jumper: 15
+    - hub_ru: U26
+      spoke: 303.10.02-U20
+      cat6: True
+      jumper: 15
+    - hub_ru: U25
+      spoke: 303.10.03-U40
+      cat6: True
+      jumper: 5

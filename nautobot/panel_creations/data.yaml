@@ -1,0 +1,24 @@
+site: SOLE1
+hub_rack: '00.02.09'
+fac_hub_rack: '420.09'
+xcp_ru: 34
+c6_ru: 33
+shipping_info :
+    contact: "Lumen"
+    company: "Lumen"
+    address: 
+    phone: "877-453-8353"
+  
+panels_list:
+    - hub_ru: U32
+      spoke: 00.02.08-U27
+      cat6: True
+      jumper: 5
+    - hub_ru: U31
+      spoke: 00.02.10-U27
+      cat6: True
+      jumper: 5
+    - hub_ru: U30
+      spoke: 00.02.11-U27
+      cat6: True
+      jumper: 15
