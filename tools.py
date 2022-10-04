@@ -491,7 +491,7 @@ class JiraTools(AtlassianBase):
         def get_milestone(ticket):
             try:
                 return self.jira.issue_field_value(ticket, "customfield_10209")["value"]
-            except requests.exceptions.HTTPError:
+            except (requests.exceptions.HTTPError, TypeError):
                 return ""
 
         def get_delivered(ticket):
