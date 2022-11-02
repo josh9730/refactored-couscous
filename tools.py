@@ -126,7 +126,7 @@ class GCalTools:
         df["creator"] = df["creator.email"].apply(lambda x: x.replace("@cenic.org", ""))
 
         df["end.dateTime"] = df["end.dateTime"].apply(
-            lambda x: x[11:-6]
+            lambda x: x[11:-6] if pd.notnull(x) else ""
         )  # trim to hours/minutes only
 
         df[["start_date", "start_time"]] = df["start.dateTime"].str.split(
@@ -134,7 +134,7 @@ class GCalTools:
         )
 
         df["start_time"] = df["start_time"].apply(
-            lambda x: x[:-6]
+            lambda x: x[:-6] if pd.notnull(x) else ""
         )  # extract hours/minutes only
 
         df["summary"] = df["summary"].apply(
