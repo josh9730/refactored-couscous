@@ -7,26 +7,10 @@ from typing import cast
 import keyring
 import pexpect
 import pyotp
+import pyperclip
 import typer
 from lastpass import Vault
 from netmiko import ConnectHandler
-
-"""
-keyring set cas email
-    {{ EMAIL}}
-keyring set lp_pass {{ EMAIL }}
-    {{ PASSWORD }}
-keyring set lp_pass otp
-    {{ OTP TOKEN }}
-
-keyring set cas user
-    {{ CAS USERNAME }}
-mfa_user = cas_user + 'mfa'
-keyring set mfa {{ MFA USERNAME }}
-    {{ MFA FIRST FACTOR }}
-keyring set otp {{ MFA USERNAME }}
-    {{ OTP TOKEN }}
-"""
 
 logins = typer.Typer(
     help="""
@@ -48,47 +32,43 @@ Requires Keyring:
 
 
 class LPChoices(str, Enum):
-    """Enum choices for return_lp command"""
+    """Enum choices for return_lp command
 
-    optical = "Optical"
-    enable = "Enable"
-    oob = "OOB"
-    cas = "CAS"
-    tacacs = "TACACS"
-    snmp = "SNMP"
-    crafter = "Crafter"
+    - Use '_' to replace space
+    - Use '__' to replace '-'
+    """
+
+    Optical = "optical"
+    CENIC_Enable_Account = "enable"
+    CENIC_Out__of__Band___OOB = "oob"
+    CAS = "cas"
+    CENIC_TACACS_Key = "tacacs"
+    ScienceLogic_SNMP_Credentials = "snmp"
+    core_eng = "core-eng"
+    core_ext = "core-ext"
 
 
 def get_lp(account: str):
     """Return account info for supplied LastPass account name.
 
-    Additional accounts can be added by updating _shorthand (and
-    LPChoices Enum for the return_lp function)
+    Additional accounts can be added by updating LPChoices Enum.
     """
-    _shorthand = {
-        "Optical": bytes("Optical", "utf-8"),
-        "Enable": bytes("CENIC Enable Account", "utf-8"),
-        "OOB": bytes("CENIC Out-of-Band- OOB", "utf-8"),
-        "CAS": bytes("CAS", "utf-8"),
-        "TACACS": bytes("CENIC TACACS Key", "utf-8"),
-        "SNMP": bytes("ScienceLogic SNMP Credentials", "utf-8"),
-        "Crafter": bytes("Crafter", "utf-8"),
-    }
 
     cas_email = cast(str, keyring.get_password("cas", "email"))
     lp_pass = cast(str, keyring.get_password("lp_pass", cas_email))
     lp_otp = pyotp.TOTP(cast(str, keyring.get_password("lp_pass", "otp")))
 
-    name = _shorthand[account]
+    account = account.replace("__", "-")
+    account = account.replace("_", " ")
+    name = bytes(account, "utf-8")
 
     vault = Vault.open_remote(cas_email, lp_pass, lp_otp.now())
 
     for lp_account in vault.accounts:
         # print(lp_account)
         if lp_account.name == name:
-            # if account == any(('SNMP', 'OOB')):
-            if account == "SNMP" or account == "OOB":
-                if account == "SNMP":
+            if "SNMP" in account or "OOB" in account:
+                if "SNMP" in account:
                     user_re = re.compile(r"Username: \S+").search(
                         str(lp_account.notes, "utf-8")
                     )
@@ -99,13 +79,13 @@ def get_lp(account: str):
                         str(lp_account.notes, "utf-8")
                     )
                 else:
-                    user_re = re.compile(r"Super User:\S+").search(
+                    user_re = re.compile(r"Super User: \S+").search(
                         str(lp_account.notes, "utf-8")
                     )
-                    auth_re = re.compile(r"Password:\S+").search(
+                    auth_re = re.compile(r"Password: \S+").search(
                         str(lp_account.notes, "utf-8")
                     )
-                    priv_re = re.compile(r"Passthrough:\S+").search(
+                    priv_re = re.compile(r"Passthrough: \S+").search(
                         str(lp_account.notes, "utf-8")
                     )
 
@@ -209,7 +189,26 @@ def telnet_enable(hostname: str = typer.Argument(..., help="Device hostname")):
 @logins.command()
 def get_mfa():
     mfa_user, password, otp = mfa_default()
-    print_account([f"Username: {mfa_user}", f"Password: {password+otp.now()}\n"])
+    pyperclip.copy(password + otp.now())
+    print_account(
+        [
+            f"Username: {mfa_user}",
+            f"Password: {password+otp.now()} -- sent to clipboard\n",
+        ]
+    )
+
+
+@logins.command()
+def get_cas():
+    user = keyring.get_password("cas", "user")
+    password = keyring.get_password("cas", "password")
+    pyperclip.copy(password)
+    print_account(
+        [
+            f"Username: {user}",
+            f"Password: {password} -- sent to clipboard\n",
+        ]
+    )
 
 
 def print_account(args: list):
@@ -225,7 +224,7 @@ def lpass(
 
     Account name is case-insensitive.
     """
-    print_account(get_lp(account.value))
+    print_account(get_lp(account.name))
 
 
 @logins.command()

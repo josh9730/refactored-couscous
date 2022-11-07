@@ -90,7 +90,7 @@ class NBTools:
         )
         print("Created CPE Rack")
 
-    def upgrade_simplex_panel(
+    def update_simplex_panel(
         self,
         site_code: str,
         name: str,
@@ -176,7 +176,7 @@ def update_simplex_panel(
 ):
     """Update a patch panel with simplex ports, i.e. 'Port 1/2 Front'."""
     nautobot = NBTools()
-    nautobot.upgrade_simplex_panel(
+    nautobot.update_simplex_panel(
         site_code, name, num_ports, port_type.value, jumper_type.value
     )
 
