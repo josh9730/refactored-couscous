@@ -32,23 +32,27 @@ Requires Keyring:
 
 
 class LPChoices(str, Enum):
-    """Enum choices for return_lp command
+    def __new__(cls, value, full_name):
+        """Enum value is used for Typer options, but LastPass names are too
+        inconvenient to type. Added a full_name attribute here."""
+        obj = str.__new__(cls, [value])
+        obj._value_ = value
+        obj.full_name = full_name
+        return obj
 
-    - Use '_' to replace space
-    - Use '__' to replace '-'
-    """
-
-    Optical = "optical"
-    CENIC_Enable_Account = "enable"
-    CENIC_Out__of__Band___OOB = "oob"
-    CAS = "cas"
-    CENIC_TACACS_Key = "tacacs"
-    ScienceLogic_SNMP_Credentials = "snmp"
-    core_eng = "core-eng"
-    core_ext = "core-ext"
+    # optical = ("optical", "Optical")  # no longer used, Duo
+    enable = ("enable", "CENIC Enable Account")
+    oob = ("oob", "CENIC Out-of-Band- OOB")
+    tacacs = ("tacacs", "CENIC TACACS Key")
+    snmp = ("snmp", "ScienceLogic SNMP Credentials")
+    core_eng = ("core-eng", "lists.cenic.org - core-eng Admin")
+    core_ext = ("core-ext", "lists.cenic.org - core-ext Admin")
+    eve_ng = ("eve-ng", "EVE-NG Admin")
+    duo_optical = ("optical", "CENIC Optical user/PW - Duo Migration ")
+    duo_optical_tacacs = ("duo-optical-tacacs", "CENIC Optical TACACS Key")
 
 
-def get_lp(account: str):
+def get_lp(account: Enum):
     """Return account info for supplied LastPass account name.
 
     Additional accounts can be added by updating LPChoices Enum.
@@ -58,17 +62,15 @@ def get_lp(account: str):
     lp_pass = cast(str, keyring.get_password("lp_pass", cas_email))
     lp_otp = pyotp.TOTP(cast(str, keyring.get_password("lp_pass", "otp")))
 
-    account = account.replace("__", "-")
-    account = account.replace("_", " ")
-    name = bytes(account, "utf-8")
+    name = bytes(account.full_name, "utf-8")  # type: ignore -- custom __new__ for Enum
 
     vault = Vault.open_remote(cas_email, lp_pass, lp_otp.now())
 
     for lp_account in vault.accounts:
-        # print(lp_account)
+        # print(lp_account.name)
         if lp_account.name == name:
-            if "SNMP" in account or "OOB" in account:
-                if "SNMP" in account:
+            if account.value == "snmp" or account.value == "oob":
+                if account.value == "snmp":
                     user_re = re.compile(r"Username: \S+").search(
                         str(lp_account.notes, "utf-8")
                     )
@@ -99,8 +101,10 @@ def get_lp(account: str):
                 lp_password2 = priv_re.group()
 
             else:
+                password = str(lp_account.password, "utf-8")
+                pyperclip.copy(password)
                 lp_username = "Username: " + str(lp_account.username, "utf-8")
-                lp_password = "Password: " + str(lp_account.password, "utf-8")
+                lp_password = f"Password: {password} -- sent to clipboard"
                 lp_password2 = ""
 
     return lp_username, lp_password, lp_password2
@@ -224,7 +228,7 @@ def lpass(
 
     Account name is case-insensitive.
     """
-    print_account(get_lp(account.name))
+    print_account(get_lp(account))
 
 
 @logins.command()
