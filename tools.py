@@ -19,6 +19,14 @@ Tools for Jira, Confluence, and Google Calendar.
 """
 
 
+def get_last_comment(comments: list) -> str:
+    """Try/Except for returning last comment to handle IndexError if no comments."""
+    try:
+        return comments[-1:][0]["body"]
+    except IndexError:
+        return ""
+
+
 def open_gsheet(sheet_title: str, workbook_title: str, client_json: str):
     """Open Google Sheet via pygsheets and return Sheet object."""
     client = pygsheets.authorize(client_secret=client_json)
@@ -228,13 +236,6 @@ class JiraTools(AtlassianBase):
         Software project for the past 5 days. To be run each Friday.
         """
 
-        def get_last_comment(comments):
-            """Try/Except for returning last comment to handle IndexError if no comments."""
-            try:
-                return comments[-1:][0]["body"]
-            except IndexError:
-                return ""
-
         ticket_updates = open_gsheet("Core Tickets", "updates", self.gsheets_creds_dir)
         ticket_updates.clear()
 
@@ -283,7 +284,10 @@ class JiraTools(AtlassianBase):
                 print(ticket)
                 # ticket will be float nan if no ticket is on event
                 output = self.jira.issue(ticket)
-                assignee_list.append(output["fields"]["assignee"]["name"])
+                try:
+                    assignee_list.append(output["fields"]["assignee"]["name"])
+                except TypeError:
+                    assignee_list.append("Unassigned")
                 ticket_sum_list.append(output["fields"]["summary"])
 
                 try:
@@ -717,3 +721,38 @@ class JiraTools(AtlassianBase):
         )
         data_sheet.clear()
         data_sheet.set_dataframe(mgr_df, start=(1, 1), extend=True, nan="")
+
+    def la2_migration_status(self):
+        tickets_sheet = open_gsheet(
+            "LA2 Migration - Deployment Tracker", "Sheet1", self.gsheets_creds_dir
+        )
+        tickets_list = tickets_sheet.get_col(
+            1, include_tailing_empty=False, returnas="cell"
+        )
+        tickets_list.pop(0)  # remove header
+
+        for ticket in tickets_list:
+            ticket_data = self.jira.issue(ticket.value)["fields"]
+
+            comments = ticket_data["comment"]["comments"]
+            if len(comments) > 0:
+                for i, comment in enumerate(comments):
+                    if "moved via" in comment["body"]:
+                        comments.pop(i)
+
+            if len(comments) > 0:  # if still comments after removing BP updates
+                last_comment = comments[-1:][0]["body"]
+                updated = comments[-1:][0]["updated"].split("T")[0]
+                author = comments[-1:][0]["author"]["displayName"]
+            else:
+                last_comment, updated, author = "", "", ""
+
+            update_vals = [
+                ticket_data["assignee"]["displayName"],
+                ticket_data["status"]["name"],
+                ticket_data["customfield_10411"],
+                last_comment,
+                updated,
+                author,
+            ]
+            tickets_sheet.update_row(ticket.row, update_vals, col_offset=7)

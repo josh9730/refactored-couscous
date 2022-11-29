@@ -2,7 +2,6 @@ import datetime
 
 import typer
 import yaml
-
 from tools import GCalTools, JiraTools
 
 main = typer.Typer(
@@ -80,10 +79,17 @@ def purchasing_tracker():
 
 
 @main.command()
+def la2_tracker():
+    """LA2 status tracker for the migration."""
+    jtools.la2_migration_status()
+
+
+@main.command()
 def scheduled():
     """Main function for scheduled runs."""
     core_tickets()
     cpe_tracker()
+    la2_tracker()
     day = datetime.datetime.now().strftime("%a")
     if day == "Mon":
         # update_resource_buckets()

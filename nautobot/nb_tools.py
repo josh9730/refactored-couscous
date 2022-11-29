@@ -1,5 +1,6 @@
 import re
 from enum import Enum
+from typing import Any
 
 import keyring
 import typer
@@ -48,8 +49,31 @@ class NBTools:
         )
         self.nautobot.http_session.verify = False
 
-    def _next_cable_id(self):
-        """Get"""
+    def guess_port_type(self, port_name: str, port_device_id: str) -> tuple[Any, str]:
+        """Determine if given port is FrontPort, RearPort, or Interface. None is returned if not found
+        from the nautobot get method.
+
+        Return:
+            port: Nautobot port object, one of Front, RearPort, Interface
+            port_type: type of Nautobot port for the api
+        """
+        if port := self.nautobot.dcim.front_ports.get(
+            device_id=port_device_id, name=port_name
+        ):
+            return port, "dcim.frontport"
+        elif port := self.nautobot.dcim.rear_ports.get(
+            device_id=port_device_id, name=port_name
+        ):
+            return port, "dcim.rearport"
+        elif port := self.nautobot.dcim.interfaces.get(
+            device_id=port_device_id, name=port_name
+        ):
+            return port, "dcim.interface"
+        else:
+            raise Exception("No matching Front/RearPort or Interface was found.")
+
+    def _next_cable_id(self) -> int:
+        """Get last used cabled ID (i.e. CLR increment)."""
         cables = self.nautobot.dcim.cables.all()
         cable_labels = tuple(map(lambda x: x.label, cables))
         trunk_cables = []
@@ -68,7 +92,7 @@ class NBTools:
 
     def create_new_site(
         self, site_code: str, site_name: str, address: str, tenant: str
-    ):
+    ) -> None:
         tenant_id = self.nautobot.tenancy.tenants.get(slug=tenant.lower()).id
         new_site = self.nautobot.dcim.sites.create(
             name=site_code,
@@ -97,7 +121,7 @@ class NBTools:
         num_ports: int,
         port_type: str,
         jumper_type: str,
-    ):
+    ) -> None:
         site = self.nautobot.dcim.sites.get(name=site_code.upper())
         device = self.nautobot.dcim.devices.get(name=name, site=site.slug)
 
@@ -122,7 +146,7 @@ class NBTools:
 
     def connect_rear_ports(
         self, site_code: str, device_1_name: str, device_2_name: str, jumper_type: str
-    ):
+    ) -> None:
         site = self.nautobot.dcim.sites.get(name=site_code.upper())
         device_1 = self.nautobot.dcim.devices.get(name=device_1_name, site=site.slug)
         device_2 = self.nautobot.dcim.devices.get(name=device_2_name, site=site.slug)
@@ -146,6 +170,37 @@ class NBTools:
                 label=cable_label,
             )
             print(f"Created new cable: {cable_label}")
+
+    def create_jumper(
+        self,
+        site_code: str,
+        device_1: str,
+        device_1_port: str,
+        device_2: str,
+        device_2_port: str,
+        label: str,
+        jumper_type: Enum,
+    ) -> None:
+        site = self.nautobot.dcim.sites.get(name=site_code.upper())
+        term_a_device = self.nautobot.dcim.devices.get(name=device_1, site=site.slug)
+        term_b_device = self.nautobot.dcim.devices.get(name=device_2, site=site.slug)
+        term_a_port, term_a_port_type = self.guess_port_type(
+            device_1_port, term_a_device.id
+        )
+        term_b_port, term_b_port_type = self.guess_port_type(
+            device_2_port, term_b_device.id
+        )
+
+        self.nautobot.dcim.cables.create(
+            termination_a_id=term_a_port.id,
+            termination_b_id=term_b_port.id,
+            termination_a_type=term_a_port_type,
+            termination_b_type=term_b_port_type,
+            type=jumper_type.value,
+            status="connected",
+            label=label,
+        )
+        print(f"Created new cable: {label}")
 
 
 @main.command()
@@ -191,6 +246,23 @@ def connect_rear_ports(
     """Connect rear ports of a linked panel pair."""
     nautobot = NBTools()
     nautobot.connect_rear_ports(site_code, device_1, device_2, jumper_type.value)
+
+
+@main.command()
+def create_jumper(
+    site_code: str = typer.Option(..., prompt="Site Code"),
+    device_1: str = typer.Option(..., prompt="Device 1"),
+    device_1_port: str = typer.Option(..., prompt="Device 1 Port"),
+    device_2: str = typer.Option(..., prompt="Device 2"),
+    device_2_port: str = typer.Option(..., prompt="Device 2 Port"),
+    label: str = typer.Option(..., prompt="Cable Label"),
+    jumper_type: JumperType = typer.Option(
+        "smf", prompt="Jumper Type", case_sensitive=False
+    ),
+):
+    args = locals()
+    nautobot = NBTools()
+    nautobot.create_jumper(*list(args.values()))
 
 
 if __name__ == "__main__":
