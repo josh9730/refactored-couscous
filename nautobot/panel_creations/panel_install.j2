@@ -28,11 +28,11 @@ shipping:
 
 sections: 
     "Summary":
-        - noc: New paneling is being installed. Documentation is still WIP, but please review *[HERE|https://documentation.cenic.org/display/~jdickman/Patch+Panel+Usage]* for details
+        - noc: New paneling is being installed. Please review the documentation *[HERE|https://documentation.cenic.org/display/Core/Patch+Panel+Usage]* for details
         - note: A 48 port LC SMF panel was shipped as well as a 24 port Cat6 panel. [MPO-LC cassettes|https://www.fs.com/products/57023.html] and [Cat6 cassettes|https://www.fs.com/products/66602.html] with RJ45 jacks pre-installed were shipped.
         - rh: Multiple patch panels and cassettes were shipped. Please remove all items from the individual boxes before proceeding.
         - note: On the back of the cassettes with LC connectors, note that there are labels for 'Type A' and 'Type AF'. Please be aware of the cassette types when installing. All cassettes installed into the hub rack ({{ fac_hub_rack }}) *must* be of Type AF.
-        - rh: Rack {{ fac_hub_rack }} (the 'hub') rack will get ({{ panel_list|length }}) 4-slot panels (each with one Type AF cassette and one 6-port Cat6 module), (1) 48-port LC panel, and (1) 24-port Cat6 panels
+        - rh: Rack {{ fac_hub_rack }} (the 'hub') rack will get ({{ panels_list|length }}) 4-slot panels (each with one Type AF cassette and one 6-port Cat6 module), (1) 48-port LC panel, and (1) 24-port Cat6 panels
         - rh: Non-hub racks will each get one of the 4-slot panels with one Type A cassette and one 6-port Cat6 module
         - rh: Each panel in {{ fac_hub_rack }} will pair with one panel in the other racks. We will need approximate lengths between the panels for later shipment.
 

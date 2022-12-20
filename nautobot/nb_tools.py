@@ -1,6 +1,7 @@
 import re
 from enum import Enum
-from typing import Any
+from typing import Any, Union
+import yaml 
 
 import keyring
 import typer
@@ -24,6 +25,11 @@ class Tenants(str, Enum):
     CAS = "CAS"
     Health = "Health"
     Independent = "Independent"
+
+
+class Status(str, Enum):
+    connected = "connected"
+    planned = "planned"
 
 
 class JumperType(str, Enum):
@@ -78,14 +84,9 @@ class NBTools:
         cable_labels = tuple(map(lambda x: x.label, cables))
         trunk_cables = []
         for i in cable_labels:
-            if i:
-                label = re.search("--C[0-9]{4}$", i)
-                try:
-                    label.group()
-                except AttributeError:
-                    pass
-                else:
-                    trunk_cables.append(label.group())
+            label = re.search("--C[0-9]{4}$", i)
+            if label:
+                trunk_cables.append(label.group())
         trunk_cables.sort()
 
         return int(trunk_cables[-1].split("--C")[1]) + 1
@@ -179,7 +180,8 @@ class NBTools:
         device_2: str,
         device_2_port: str,
         label: str,
-        jumper_type: Enum,
+        jumper_type: str,
+        status: str,
     ) -> None:
         site = self.nautobot.dcim.sites.get(name=site_code.upper())
         term_a_device = self.nautobot.dcim.devices.get(name=device_1, site=site.slug)
@@ -196,8 +198,8 @@ class NBTools:
             termination_b_id=term_b_port.id,
             termination_a_type=term_a_port_type,
             termination_b_type=term_b_port_type,
-            type=jumper_type.value,
-            status="connected",
+            type=jumper_type,
+            status=status,
             label=label,
         )
         print(f"Created new cable: {label}")
@@ -250,19 +252,31 @@ def connect_rear_ports(
 
 @main.command()
 def create_jumper(
-    site_code: str = typer.Option(..., prompt="Site Code"),
-    device_1: str = typer.Option(..., prompt="Device 1"),
-    device_1_port: str = typer.Option(..., prompt="Device 1 Port"),
-    device_2: str = typer.Option(..., prompt="Device 2"),
-    device_2_port: str = typer.Option(..., prompt="Device 2 Port"),
-    label: str = typer.Option(..., prompt="Cable Label"),
-    jumper_type: JumperType = typer.Option(
-        "smf", prompt="Jumper Type", case_sensitive=False
-    ),
+    yaml_input: bool = typer.Option(False, help='Pull variables from cable.yaml. No validation is performed.'),
+    # site_code: str = typer.Option(..., prompt="Site Code"),
+    # device_1: str = typer.Option(..., prompt="Device 1"),
+    # device_1_port: str = typer.Option(..., prompt="Device 1 Port"),
+    # device_2: str = typer.Option(..., prompt="Device 2"),
+    # device_2_port: str = typer.Option(..., prompt="Device 2 Port"),
+    # label: str = typer.Option(..., prompt="Cable Label"),
+    # jumper_type: JumperType = typer.Option(
+    #     "smf", prompt="Jumper Type", case_sensitive=False
+    # ),
+    # status: str = typer.Option(
+    #     "connected", prompt="Cable Status", case_sensitive=False
+    # ),
 ):
-    args = locals()
+    cable = locals()
+    cable.pop('yaml_input')
     nautobot = NBTools()
-    nautobot.create_jumper(*list(args.values()))
+
+    if yaml_input:
+        with open('cable.yaml', 'r') as f:
+            cables = yaml.safe_load(f)
+        for cable in cables:
+            nautobot.create_jumper(**cable)
+    else:
+        nautobot.create_jumper(*list(cable.values()))
 
 
 if __name__ == "__main__":

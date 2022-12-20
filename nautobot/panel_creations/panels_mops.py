@@ -138,6 +138,7 @@ class PanelsNautobot(Data):
                     status="active",
                     tenant=self.tenant,
                 )
+                print(f"Created panel: {new_panel.name}")
                 self.new_panel_list.append(new_panel)
 
                 # create ports
@@ -170,7 +171,7 @@ class PanelsNautobot(Data):
 
                 if panel_pair[2]:
                     c6_cassette = self._create_cassettes(
-                        new_panel, 4, "fhd-6xcopper-adapter", "Cat6"
+                        new_panel, 4, "fhd-6xcat6-adapter", "Cat6"
                     )
                     c6_list.append(c6_cassette)
 
@@ -338,13 +339,15 @@ def create_panels():
 @main.command()
 def install_panels(parent_ticket: str):
     panels = Panels()
-    panels.upload_pairings(parent_ticket)
+    # panels.upload_pairings(parent_ticket)
 
-    shipment_form = panels.create_panels_shipment()
-    shipping_ticket = panels.create_ticket(
-        parent_ticket, "Panels Shipping", shipment_form
-    )
-    rh_ticket = panels.create_ticket(parent_ticket, "Panels Install", "")
+    # shipment_form = panels.create_panels_shipment()
+    # shipping_ticket = panels.create_ticket(
+    #     parent_ticket, "Panels Shipping", shipment_form
+    # )
+    # rh_ticket = panels.create_ticket(parent_ticket, "Panels Install", "")
+    rh_ticket = 'NOC-692426'
+    shipping_ticket = 'NOC-683847'
     panels.create_mop("panel_install", "mop_panel.yml", rh_ticket, shipping_ticket)
 
 

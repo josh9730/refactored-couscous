@@ -74,6 +74,7 @@ def cpe_tracker():
 
 @main.command()
 def purchasing_tracker():
+    """Purchasing Tracker for all Core purchasing. """
     core_list = open_yaml()["core_all"]
     jtools.purchases_tracking(core_list)
 

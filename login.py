@@ -52,10 +52,14 @@ class LPChoices(str, Enum):
     duo_optical_tacacs = ("duo-optical-tacacs", "CENIC Optical TACACS Key")
 
 
-def get_lp(account: Enum):
+def get_lp(account: Enum, passthrough: bool = False):
     """Return account info for supplied LastPass account name.
 
     Additional accounts can be added by updating LPChoices Enum.
+
+    passthrough: account will be passed-through to a login script
+                 rather than printed to screen. Strips formatting
+                 and returns only the username and password.
     """
 
     cas_email = cast(str, keyring.get_password("cas", "email"))
@@ -102,10 +106,14 @@ def get_lp(account: Enum):
 
             else:
                 password = str(lp_account.password, "utf-8")
-                pyperclip.copy(password)
-                lp_username = "Username: " + str(lp_account.username, "utf-8")
-                lp_password = f"Password: {password} -- sent to clipboard"
-                lp_password2 = ""
+                username = str(lp_account.username, "utf-8")
+                if passthrough:
+                    return username, password
+                else:
+                    pyperclip.copy(password)
+                    lp_username = f"Username: {username}"
+                    lp_password = f"Password: {password} -- sent to clipboard"
+                    lp_password2 = ""
 
     return lp_username, lp_password, lp_password2
 
@@ -133,7 +141,7 @@ def ssh_default(hostname: str, username: str, password: str):
     child = pexpect.spawn(
         f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {username}@{hostname} | ct"'
     )
-    child.expect("assword:")
+    child.expect(["assword:", "Local password:"])
     child.sendline(password)
     child.interact()
 
@@ -161,7 +169,7 @@ def enable(hostname: str = typer.Argument(..., help="Device hostname")):
 
     Account is retrieved via LastPass API.
     """
-    username, password, *args = get_lp("Enable")
+    username, password, *args = get_lp(LPChoices("enable"), passthrough=True)
     ssh_default(hostname, username, password)
 
 
@@ -186,7 +194,7 @@ def telnet_enable(hostname: str = typer.Argument(..., help="Device hostname")):
 
     Account is retrieved via LastPass API.
     """
-    username, password, *args = get_lp("Enable")
+    username, password, *args = get_lp(LPChoices("enable"), passthrough=True)
     telnet_default(hostname, username, password)
 
 
