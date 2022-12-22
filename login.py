@@ -32,7 +32,7 @@ Requires Keyring:
 
 
 class LPChoices(str, Enum):
-    def __new__(cls, value, full_name):
+    def __new__(cls, value: str, full_name: str):
         """Enum value is used for Typer options, but LastPass names are too
         inconvenient to type. Added a full_name attribute here."""
         obj = str.__new__(cls, [value])
@@ -52,7 +52,7 @@ class LPChoices(str, Enum):
     duo_optical_tacacs = ("duo-optical-tacacs", "CENIC Optical TACACS Key")
 
 
-def get_lp(account: Enum, passthrough: bool = False):
+def get_lp(account: Enum, passthrough: bool = False) -> tuple:
     """Return account info for supplied LastPass account name.
 
     Additional accounts can be added by updating LPChoices Enum.
@@ -66,7 +66,7 @@ def get_lp(account: Enum, passthrough: bool = False):
     lp_pass = cast(str, keyring.get_password("lp_pass", cas_email))
     lp_otp = pyotp.TOTP(cast(str, keyring.get_password("lp_pass", "otp")))
 
-    name = bytes(account.full_name, "utf-8")  # type: ignore -- custom __new__ for Enum
+    name = bytes(account.full_name, "utf-8")
 
     vault = Vault.open_remote(cas_email, lp_pass, lp_otp.now())
 
@@ -105,8 +105,8 @@ def get_lp(account: Enum, passthrough: bool = False):
                 lp_password2 = priv_re.group()
 
             else:
-                password = str(lp_account.password, "utf-8")
                 username = str(lp_account.username, "utf-8")
+                password = str(lp_account.password, "utf-8")
                 if passthrough:
                     return username, password
                 else:
@@ -203,10 +203,10 @@ def get_mfa():
     mfa_user, password, otp = mfa_default()
     pyperclip.copy(password + otp.now())
     print_account(
-        [
+        (
             f"Username: {mfa_user}",
             f"Password: {password+otp.now()} -- sent to clipboard\n",
-        ]
+        )
     )
 
 
@@ -216,14 +216,14 @@ def get_cas():
     password = keyring.get_password("cas", "password")
     pyperclip.copy(password)
     print_account(
-        [
+        (
             f"Username: {user}",
             f"Password: {password} -- sent to clipboard\n",
-        ]
+        )
     )
 
 
-def print_account(args: list):
+def print_account(args: tuple):
     for i in args:
         print(f"\t{i}")
 

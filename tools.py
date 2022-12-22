@@ -261,7 +261,7 @@ class JiraTools(AtlassianBase):
         # filter for the body of the most recent comment
         df["last_comment"] = df["last_comment"].apply(lambda x: get_last_comment(x))
 
-        # remove rows with BP update comments, based on comment starts with 'Task COR-XXXX moved via...
+        # remove rows with BP update comments, based on comment starts with 'Task COR-XXXX moved via...'
         df = df[~df["last_comment"].str.startswith("Task COR-")]
 
         # create hyperlink for key
