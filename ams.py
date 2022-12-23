@@ -17,12 +17,10 @@ class AMS:
 
     def _get_location(self) -> str:
         """Get location field from AMS for given serial number."""
-
-        # ex. Los Angeles (WilTel:LSANCA1W:Los Angeles County)
-        location = self.soup.find("strong", text=re.compile(r":"))
+        location = self.soup.find("a", href=re.compile(r"(location)"))
 
         try:
-            return location.text.split("(")[0]
+            return location.next_element.text.split("(")[0]
         except AttributeError:
             return "No Location found"
 
