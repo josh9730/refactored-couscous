@@ -1,10 +1,14 @@
+"""
+Tool to scrape important data for a given serial number. Input is a text file, outputs as csv.
+"""
+
 import csv
 import re
-
-import requests
-import keyring
-from bs4 import BeautifulSoup
 from datetime import datetime
+
+import keyring
+import requests
+from bs4 import BeautifulSoup
 
 
 def normalize_datetime(date: str) -> str:
