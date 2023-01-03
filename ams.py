@@ -101,18 +101,23 @@ class AMS:
         )
         self.soup = BeautifulSoup(resp.text, "html.parser")
 
-        if location:
-            serial_info.append(self._get_location())
-        if segment:
-            serial_info.append(self._get_segment())
-        if host:
-            serial_info.append(self._get_host())
-        if po:
-            serial_info.append(self._get_po())
-        if rx_date:
-            serial_info.append(self._get_receive_date())
+        # if serial number not found, skip
+        if self.soup.find(text=" No matching assets found "):
+            return serial_info
 
-        return serial_info
+        else:
+            if location:
+                serial_info.append(self._get_location())
+            if segment:
+                serial_info.append(self._get_segment())
+            if host:
+                serial_info.append(self._get_host())
+            if po:
+                serial_info.append(self._get_po())
+            if rx_date:
+                serial_info.append(self._get_receive_date())
+
+            return serial_info
 
 
 def main(input_file: str = "serials.txt"):
