@@ -31,63 +31,80 @@ class AMS:
 
     def __init__(self):
         self.soup = None
+        self.po_elem = None
+
+    def _get_model(self) -> str:
+        """Get model type from AMS for given serial."""
+        model = self.soup.find("a", href=re.compile(r"(field=part)"))
+
+        if model:
+            return model.find("strong").text
+        return "No Model Found"
 
     def _get_location(self) -> str:
         """Get location field from AMS for given serial number."""
         location = self.soup.find("a", href=re.compile(r"(location)"))
 
-        try:
+        if location:
             return location.next_element.text.split("(")[0].strip()
-        except AttributeError:
-            return "No Location found"
+        return "No Location found"
 
-    def _get_segment(self):
+    def _get_segment(self) -> str:
         """Return AMS project from serial."""
         project = self.soup.find("td", text="project")
 
-        try:
+        if project:
             return project.find_next_sibling("td").text
-        except AttributeError:
-            return "No Segment found"
+        return "No Segment found"
 
-    def _get_host(self):
+    def _get_host(self) -> str:
         """Return hostname from serial."""
         host = self.soup.find("td", text="host info")
 
-        try:
+        if host:
             return host.find_next_sibling("td").next_element.text.strip()
-        except AttributeError:
-            return "No Hostname found"
+        return "No Hostname found"
 
-    def _get_po(self):
+    def _get_po(self) -> str:
         """Return Purchase Order from serial."""
-        po_elem = self.soup.find("td", text="purchase order")
-        po = po_elem.find_next_sibling("td").find("strong")
+        self.po_elem = self.soup.find("td", text="purchase order")
+        po = self.po_elem.find_next_sibling("td").find("strong")
 
-        try:
+        if po:
             return po.text
-        except AttributeError:
-            return "No PO found"
+        return "No PO found"
 
-    def _get_receive_date(self):
+    def _get_ticket(self) -> str:
+        """Return Purchase Ticket if present."""
+        next_element = self.po_elem.find_next_sibling("td")
+        ticket_elem = next_element.find("a", href=re.compile(r"(servicedesk)"))
+
+        if ticket_elem:
+            ticket = ticket_elem.text.split()[-1]
+            if ticket[0].isdigit():
+                ticket = "NOC-" + ticket
+            return ticket
+        return "No Ticket Found"
+
+    def _get_receive_date(self) -> str:
         """Return asset Receive Date from serial."""
         rx_date_elem = self.soup.find("td", text="status")
         rx_date = rx_date_elem.find_next_sibling("td").find("br")
 
-        try:
+        if rx_date_elem:
             rx_date = rx_date.next_element
-        except AttributeError:
-            return "No Receive Date Found"
-        else:
             return normalize_datetime(rx_date.split()[-1])
+        return "No Receive Date Found"
 
     def get_serial_info(
         self,
         serial: str,
+        model: bool = True,
         location: bool = True,
         segment: bool = True,
         host: bool = True,
         po: bool = True,
+        po_ticket: bool = True,
         rx_date: bool = True,
     ) -> list:
         """Return list of data for given serial."""
@@ -105,19 +122,22 @@ class AMS:
         if self.soup.find(text=" No matching assets found "):
             return serial_info
 
-        else:
-            if location:
-                serial_info.append(self._get_location())
-            if segment:
-                serial_info.append(self._get_segment())
-            if host:
-                serial_info.append(self._get_host())
-            if po:
-                serial_info.append(self._get_po())
-            if rx_date:
-                serial_info.append(self._get_receive_date())
+        if model:
+            serial_info.append(self._get_model())
+        if location:
+            serial_info.append(self._get_location())
+        if segment:
+            serial_info.append(self._get_segment())
+        if host:
+            serial_info.append(self._get_host())
+        if po:
+            serial_info.append(self._get_po())
+        if po_ticket:
+            serial_info.append(self._get_ticket())
+        if rx_date:
+            serial_info.append(self._get_receive_date())
 
-            return serial_info
+        return serial_info
 
 
 def main(input_file: str = "serials.txt"):
