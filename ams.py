@@ -4,6 +4,19 @@ import re
 import requests
 import keyring
 from bs4 import BeautifulSoup
+from datetime import datetime
+
+
+def normalize_datetime(date: str) -> str:
+    """Output isoformatted datetime from DD-Month-YYYY
+
+    Ex:
+        01-May-2008 -> 2008-05-01
+    """
+    try:
+        return datetime.strptime(date, "%d-%b-%Y").strftime("%Y-%m-%d")
+    except ValueError:
+        return date
 
 
 class AMS:
@@ -20,7 +33,7 @@ class AMS:
         location = self.soup.find("a", href=re.compile(r"(location)"))
 
         try:
-            return location.next_element.text.split("(")[0]
+            return location.next_element.text.split("(")[0].strip()
         except AttributeError:
             return "No Location found"
 
@@ -38,7 +51,7 @@ class AMS:
         host = self.soup.find("td", text="host info")
 
         try:
-            return host.find_next_sibling("td").next_element.text
+            return host.find_next_sibling("td").next_element.text.strip()
         except AttributeError:
             return "No Hostname found"
 
@@ -52,6 +65,18 @@ class AMS:
         except AttributeError:
             return "No PO found"
 
+    def _get_receive_date(self):
+        """Return asset Receive Date from serial."""
+        rx_date_elem = self.soup.find("td", text="status")
+        rx_date = rx_date_elem.find_next_sibling("td").find("br")
+
+        try:
+            rx_date = rx_date.next_element
+        except AttributeError:
+            return "No Receive Date Found"
+        else:
+            return normalize_datetime(rx_date.split()[-1])
+
     def get_serial_info(
         self,
         serial: str,
@@ -59,6 +84,7 @@ class AMS:
         segment: bool = True,
         host: bool = True,
         po: bool = True,
+        ams: bool = True,
     ) -> list:
         """Return list of data for given serial."""
         serial_info = [serial]
@@ -78,6 +104,8 @@ class AMS:
             serial_info.append(self._get_host())
         if po:
             serial_info.append(self._get_po())
+        if ams:
+            serial_info.append(self._get_receive_date())
 
         return serial_info
 
