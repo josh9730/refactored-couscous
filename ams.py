@@ -88,7 +88,7 @@ class AMS:
         segment: bool = True,
         host: bool = True,
         po: bool = True,
-        ams: bool = True,
+        rx_date: bool = True,
     ) -> list:
         """Return list of data for given serial."""
         serial_info = [serial]
@@ -97,6 +97,7 @@ class AMS:
             self.url,
             auth=self._auth,
             params={"serialnum": serial, "step": "SUBMIT"},
+            timeout=30,
         )
         self.soup = BeautifulSoup(resp.text, "html.parser")
 
@@ -108,15 +109,22 @@ class AMS:
             serial_info.append(self._get_host())
         if po:
             serial_info.append(self._get_po())
-        if ams:
+        if rx_date:
             serial_info.append(self._get_receive_date())
 
         return serial_info
 
 
-def main():
+def main(input_file: str = "serials.txt"):
+    """Expects input_file to be single serial per-line text file, ex:
+        1234
+        5678
+
+    Ouputs csv with the following by default:
+        serial, location, segment, hostname, purchase_order, rx_date
+    """
     ams = AMS()
-    with open("serials.txt", "r") as f:
+    with open(input_file, "r") as f:
         serials = f.read().split("\n")
 
     with open("serial_loc.csv", "w") as f:
