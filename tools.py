@@ -18,6 +18,12 @@ from googleapiclient.errors import HttpError
 Tools for Jira, Confluence, and Google Calendar.
 """
 
+MILESTONE = "customfield_10209"
+START_DATE = "customfield_10410"
+END_DATE = "customfield_10411"
+JUSTIFICATION = "customfield_11102"
+SEGMENT = "customfield_11004"
+
 
 def get_last_comment(comments: list) -> str:
     """Try/Except for returning last comment to handle IndexError if no comments."""
@@ -324,7 +330,7 @@ class JiraTools(AtlassianBase):
                     "status",
                     "summary",
                     "updated",
-                    "customfield_10209",
+                    MILESTONE,
                 ],
             )
             df = pd.json_normalize(results["issues"]).filter(
@@ -334,7 +340,7 @@ class JiraTools(AtlassianBase):
                     "key",
                     "fields.status.name",
                     "fields.updated",
-                    "fields.customfield_10209.value",
+                    f"fields.{MILESTONE}.value",
                 ]
             )
             # trim to YYYY-MM-DD format
@@ -351,12 +357,12 @@ class JiraTools(AtlassianBase):
                 ticket,
                 {
                     "timetracking": {"originalEstimate": str(hours) + "h"},
-                    "customfield_10410": (today + timedelta(days=count * 7)).strftime(
+                    START_DATE: (today + timedelta(days=count * 7)).strftime(
                         "%Y-%m-%d"
                     ),
-                    "customfield_10411": (
-                        today + timedelta(days=count * 7 + 4)
-                    ).strftime("%Y-%m-%d"),
+                    END_DATE: (today + timedelta(days=count * 7 + 4)).strftime(
+                        "%Y-%m-%d"
+                    ),
                 },
             )
 
@@ -396,8 +402,8 @@ class JiraTools(AtlassianBase):
                 ticket,
                 {
                     "timetracking": {"originalEstimate": hours_list[i]},
-                    "customfield_10410": new_start,
-                    "customfield_10411": new_end,
+                    START_DATE: new_start,
+                    END_DATE: new_end,
                 },
             )
 
@@ -424,8 +430,8 @@ class JiraTools(AtlassianBase):
                     "key",
                     "summary",
                     "timetracking",
-                    "customfield_10410",
-                    "customfield_10411",
+                    START_DATE,
+                    END_DATE,
                 ],
             )
             df = pd.json_normalize(results["issues"]).filter(
@@ -434,8 +440,8 @@ class JiraTools(AtlassianBase):
                     "fields.summary",
                     "key",
                     "fields.timetracking.originalEstimateSeconds",
-                    "fields.customfield_10410",
-                    "fields.customfield_10411",
+                    f"fields.{START_DATE}",
+                    f"fields.{END_DATE}",
                 ]
             )
             df = df.rename(
@@ -454,8 +460,8 @@ class JiraTools(AtlassianBase):
             org_est_list = [
                 int(i) / 3600 for i in df["fields.timetracking.originalEstimateSeconds"]
             ]
-            start_date_list = list(df["fields.customfield_10410"])
-            end_date_list = list(df["fields.customfield_10411"])
+            start_date_list = list(df[f"fields.{START_DATE}"])
+            end_date_list = list(df[f"fields.{END_DATE}"])
             df["weekly_hours"] = (
                 org_est_list / np.busday_count(start_date_list, end_date_list) * 5
             )
@@ -494,7 +500,7 @@ class JiraTools(AtlassianBase):
 
         def get_milestone(ticket):
             try:
-                return self.jira.issue_field_value(ticket, "customfield_10209")["value"]
+                return self.jira.issue_field_value(ticket, MILESTONE)["value"]
             except (requests.exceptions.HTTPError, TypeError):
                 return ""
 
@@ -598,9 +604,6 @@ class JiraTools(AtlassianBase):
                     return "Partial Delivery"
                 else:
                     return "Not Delivered"
-
-        JUSTIFICATION = "customfield_11102"
-        SEGMENT = "customfield_11004"
 
         # return in-progress purchases
         jql = f"""project = Purchasing and
@@ -750,7 +753,7 @@ class JiraTools(AtlassianBase):
             update_vals = [
                 ticket_data["assignee"]["displayName"],
                 ticket_data["status"]["name"],
-                ticket_data["customfield_10411"],
+                ticket_data[END_DATE],
                 last_comment,
                 updated,
                 author,

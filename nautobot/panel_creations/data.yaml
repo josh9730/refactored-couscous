@@ -1,8 +1,8 @@
-site: SNVL2
-hub_rack: "154.03.03"
-fac_hub_rack: "003.003"
-xcp_ru: 34
-c6_ru: 35
+site: ENTLAM
+hub_rack: "Rack 2"
+fac_hub_rack:
+xcp_ru: 20
+c6_ru: 21
 shipping_info:
     contact: "Lumen"
     company: "Lumen"
@@ -10,79 +10,7 @@ shipping_info:
     phone: "877-453-8353"
   
 panels_list:
-    - hub_ru: U31
-      spoke: 154.03.10-U39
-      cat6: True
-      jumper: 100
-    - hub_ru: U30
-      spoke: 154.03.07-U36
-      cat6: True
-      jumper: 100
-    - hub_ru: U29
-      spoke: 154.03.06-U36
-      cat6: True
-      jumper: 100
-    - hub_ru: U38
-      spoke: 154.03.05-U36
-      cat6: True
-      jumper: 100
-    - hub_ru: U27
-      spoke: 154.03.04-U36
-      cat6: True
-      jumper: 100
-    - hub_ru: U22
-      spoke: 154.03.03-U37
-      cat6: True
-      jumper: 100
-    - hub_ru: U21
-      spoke: 154.03.02-U36
-      cat6: True
-      jumper: 100
-    - hub_ru: U20
-      spoke: 154.02.09-U36
-      cat6: True
-      jumper: 100
-    - hub_ru: U19
-      spoke: 154.02.08-U38
-      cat6: True
-      jumper: 100
-    - hub_ru: U18
-      spoke: 154.02.07-U18
-      cat6: True
-      jumper: 100
-    - hub_ru: U17
-      spoke: 154.02.07-U30
-      cat6: True
-      jumper: 100
-    - hub_ru: U16
-      spoke: 154.02.05-U40
-      cat6: False
-      jumper: 100
-    - hub_ru: U15
-      spoke: 154.02.04-U40
-      cat6: False
-      jumper: 100
-    - hub_ru: U14
-      spoke: 154.02.03-U30
-      cat6: True
-      jumper: 50
-    - hub_ru: U13
-      spoke: 154.02.02-U37
-      cat6: True
-      jumper: 100
-    - hub_ru: U12
-      spoke: 154.02.01-U10
-      cat6: True
-      jumper: 100
-    - hub_ru: U11
-      spoke: 154.01.05-U25
-      cat6: True
-      jumper: 100
     - hub_ru: U10
-      spoke: 154.01.04-U36
-      cat6: True
-      jumper: 100
-    - hub_ru: U09
-      spoke: 154.01.03-U36
+      spoke: "Rack 3-U05"
       cat6: True
       jumper: 10

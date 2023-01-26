@@ -93,7 +93,7 @@ class PanelsNautobot(Data):
         )
 
     def _create_cassettes(self, panel, slot, cassette_type, name):
-        return self.nautobot.dcim.devices.create(
+        cassette = self.nautobot.dcim.devices.create(
             name=panel.name + f" -- Slot {slot} {name}",
             site={"slug": self.site.lower()},
             rack={"name": panel.name.split("-")[2], "site__slug": self.site.lower()},
@@ -101,6 +101,15 @@ class PanelsNautobot(Data):
             device_role={"slug": "modular-panel-cassettes"},
             status="active",
             tenant=self.tenant,
+        )
+        self._assign_bays(panel, slot, cassette)
+        return cassette
+    
+    def _assign_bays(self, panel, slot, cassette):
+        self.nautobot.dcim.device_bays.create(
+            device=panel.id,
+            name=f'Slot {slot}',
+            installed_device=cassette.id,
         )
 
     def _create_trunk(self):
@@ -153,7 +162,7 @@ class PanelsNautobot(Data):
                 for i in range(1, 13):
                     self.nautobot.dcim.front_ports.create(
                         device=new_panel.id,
-                        name=f"Slot 1 Port {i} Front",
+                        name=f"Slot 1 Port {2 * i - 1}/{2 * i} Front",
                         type="lc",
                         rear_port=trunk.id,
                         rear_port_position=i,
@@ -307,11 +316,16 @@ class Panels(Data):
         return new_ticket
 
     def create_mop(self, template, mop_name, rh_ticket, shipping_ticket):
+        if template == 'panel_install':
+            title = f"{self.site} Panels Install"
+        else:
+            title = f"{self.site} Panel Jumpers Install"
+
         input_dict = {
             "site": self.site,
-            "title": f"{self.site} Panels Install",
+            "title": title,
             "ticket": rh_ticket,
-            "summary": f"Install new patch paneling at {self.site}",
+            "summary": f"Install new patch paneling/cabling at {self.site}",
             "shipping_ticket": shipping_ticket,
             "fac_hub_rack": self.fac_hub_rack,
             "hub_rack": self.hub_rack,

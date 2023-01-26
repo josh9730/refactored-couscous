@@ -55,6 +55,8 @@ class NBTools:
         )
         self.nautobot.http_session.verify = False
 
+        self.LAST_CABLE_ID = None
+
     def guess_port_type(self, port_name: str, port_device_id: str) -> tuple[Any, str]:
         """Determine if given port is FrontPort, RearPort, or Interface. None is returned if not found
         from the nautobot get method.
@@ -90,6 +92,14 @@ class NBTools:
         trunk_cables.sort()
 
         return int(trunk_cables[-1].split("--C")[1]) + 1
+
+    def _create_com_label(self, device_1_name, device_2_name) -> str:
+        if not self.LAST_CABLE_ID:
+            self.LAST_CABLE_ID = self._next_cable_id()
+        else:
+            self.LAST_CABLE_ID += 1
+        cable_id = "C" + str(self.LAST_CABLE_ID).rjust(4, "0")
+        return f"COM--{device_1_name}--{device_2_name}--{cable_id}"
 
     def create_new_site(
         self, site_code: str, site_name: str, address: str, tenant: str
@@ -155,11 +165,8 @@ class NBTools:
         device_1_rp = self.nautobot.dcim.rear_ports.filter(device_id=device_1.id)
         device_2_rp = self.nautobot.dcim.rear_ports.filter(device_id=device_2.id)
 
-        LAST_CABLE_ID = self._next_cable_id()
         for i in zip(device_1_rp, device_2_rp):
-            cable_id = "C" + str(LAST_CABLE_ID).rjust(4, "0")
-            cable_label = f"COM--{device_1.name}--{device_2.name}--{cable_id}"
-            LAST_CABLE_ID += 1
+            cable_label = self._create_com_label(device_1.name, device_2.name)
 
             self.nautobot.dcim.cables.create(
                 termination_a_id=i[0].id,
@@ -192,6 +199,9 @@ class NBTools:
         term_b_port, term_b_port_type = self.guess_port_type(
             device_2_port, term_b_device.id
         )
+
+        if label == 'next_trunk':
+            label = self._create_com_label(term_a_device.name, term_b_device.name)
 
         self.nautobot.dcim.cables.create(
             termination_a_id=term_a_port.id,
