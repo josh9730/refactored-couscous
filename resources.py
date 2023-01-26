@@ -13,6 +13,10 @@ Uses Typer, see 'resources.py --help'
 
 """
 
+START_DATE = "customfield_10410"
+END_DATE = "customfield_10411"
+EPIC_TICKET = "customfield_10401"
+
 
 class Resources:
     def __init__(self):
@@ -65,10 +69,10 @@ class Resources:
     def get_ticket(self, ticket: str) -> None:
         """Return start_date, end_date, orginal_estimate from ticket."""
         ticket_return = self.jira.get_issue(
-            ticket, fields=["customfield_10410, customfield_10411", "timetracking"]
+            ticket, fields=[f"{START_DATE}, {END_DATE}", "timetracking"]
         )
-        self.ticket_start = ticket_return["fields"]["customfield_10410"]
-        self.ticket_end = ticket_return["fields"]["customfield_10411"]
+        self.ticket_start = ticket_return["fields"][START_DATE]
+        self.ticket_end = ticket_return["fields"][END_DATE]
         self.ticket_hours = ticket_return["fields"].get("timetracking")
 
     def print_ticket_return(self) -> None:
@@ -91,9 +95,9 @@ class Resources:
         """Create new resource ticket, uses parent summary and assignee for new ticket"""
         parent_fields = self.jira.get_issue(
             parent_ticket,
-            fields=["summary", "assignee", "project", "customfield_10401"],
+            fields=["summary", "assignee", "project", EPIC_TICKET],
         )["fields"]
-        epic = epic_ticket if epic_ticket else parent_fields["customfield_10401"]
+        epic = epic_ticket if epic_ticket else parent_fields[EPIC_TICKET]
         new_ticket = self.jira.issue_create(
             fields={
                 "summary": f'{parent_fields["summary"]} - {title}',
@@ -107,7 +111,7 @@ class Resources:
                 "issuetype": {
                     "name": "Task",
                 },
-                "customfield_10401": epic,
+                EPIC_TICKET: epic,
             }
         )["key"]
         print(f"{new_ticket=}")
@@ -163,8 +167,8 @@ class Resources:
         self.jira.issue_update(
             ticket,
             {
-                "customfield_10410": start_date,
-                "customfield_10411": end_date,
+                START_DATE: start_date,
+                END_DATE: end_date,
                 "timetracking": {
                     "originalEstimate": str(self.org_est) + "h",
                     "remainingEstimate": str(rem_est) + "h",
