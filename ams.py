@@ -4,6 +4,7 @@ Tool to scrape important data for a given serial number. Input is a text file, o
 
 import csv
 import re
+import time
 from datetime import datetime
 
 import keyring
@@ -96,6 +97,22 @@ class AMS:
             return normalize_datetime(rx_date.split()[-1])
         return "No Receive Date Found"
 
+    def _get_status(self) -> str:
+        """Return In-Service Date if present, else return status."""
+        status_elem = self.soup.find("td", text="status")
+        if status_elem:
+            status = status_elem.find_next_sibling("td").find("strong").text.strip()
+
+            if status == "IN-SERVICE":
+                in_service_date = (
+                    status_elem.find_next_sibling("td")
+                    .find("br")
+                    .next_element.next_element.text.split()[-1]
+                )
+                return normalize_datetime(in_service_date)
+            return status
+        return ""
+
     def get_serial_info(
         self,
         serial: str,
@@ -106,6 +123,7 @@ class AMS:
         po: bool = True,
         po_ticket: bool = True,
         rx_date: bool = True,
+        status: bool = True,
     ) -> list:
         """Return list of data for given serial."""
         serial_info = [serial]
@@ -136,6 +154,8 @@ class AMS:
             serial_info.append(self._get_ticket())
         if rx_date:
             serial_info.append(self._get_receive_date())
+        if status:
+            serial_info.append(self._get_status())
 
         return serial_info
 
@@ -156,6 +176,7 @@ def main(input_file: str = "serials.txt"):
         writer = csv.writer(f)
         for serial in serials:
             writer.writerow(ams.get_serial_info(serial))
+            time.sleep(1)
 
 
 if __name__ == "__main__":

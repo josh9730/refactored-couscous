@@ -1,34 +1,516 @@
 ---
-- site_code: SNVL2
-  device_1: SPK-SNVL2-154.02.02-U09
-  device_1_port: Slot 4 Port 1 Rear
-  device_2: HUB-SNVL2-154.03.03-U12
-  device_2_port: Slot 4 Port 1 Rear
-  label: next_trunk
-  jumper_type: cat6
+- site_code: ECEN1
+  device_1: 12-Port SC Simplex Panel
+  device_1_port: 
+  device_2: ecen1-52-dci-02
+  device_2_port: 
+  label: CLR-21053
+  length: 
   status: connected
-- site_code: SNVL2
-  device_1: SPK-SNVL2-154.02.02-U09
-  device_1_port: Slot 4 Port 2 Rear
-  device_2: HUB-SNVL2-154.03.03-U12
-  device_2_port: Slot 4 Port 2 Rear
-  label: next_trunk
-  jumper_type: cat6
+  jumper_type: smf
+- site_code: ECEN1
+  device_1: ecen1-52-dci-02
+  device_1_port: 
+  device_2: 00.01.05-MD40-U38
+  device_2_port: Channel 23 / 1547.72nm / 193.7THz
+  label: CLR-21011
+  length: 
   status: connected
-- site_code: SNVL2
-  device_1: SPK-SNVL2-154.02.02-U09
-  device_1_port: Slot 4 Port 3 Rear
-  device_2: HUB-SNVL2-154.03.03-U12
-  device_2_port: Slot 4 Port 3 Rear
-  label: next_trunk
-  jumper_type: cat6
+  jumper_type: smf
+- site_code: RIVE1
+  device_1: rive1ca52o - Shelf 2 MD40 facing Banning
+  device_1_port: Channel 23 / 1547.72nm / 193.7THz
+  device_2: rive1-dci-ols-01
+  device_2_port: 
+  label: CLR-21011
+  length: 
   status: connected
-- site_code: SNVL2
-  device_1: SPK-SNVL2-154.02.02-U09
-  device_1_port: Slot 4 Port 4 Rear
-  device_2: HUB-SNVL2-154.03.03-U12
-  device_2_port: Slot 4 Port 4 Rear
-  label: next_trunk
-  jumper_type: cat6
+  jumper_type: smf
+- site_code: RIVE1
+  device_1: rive1-dci-ols-01
+  device_1_port: 
+  device_2: riv-agg8
+  device_2_port: Hu0/0/0/5
+  label: CLR-21053
+  length: 
   status: connected
+  jumper_type: smf
 
+##
+
+- site_code: ECEN1
+  device_1: 12-Port SC Simplex Panel
+  device_1_port: 
+  device_2: ecen1-52-dci-02
+  device_2_port: 
+  label: CLR-20993
+  length: 
+  status: connected
+  jumper_type: smf
+- site_code: ECEN1
+  device_1: ecen1-52-dci-02
+  device_1_port: 
+  device_2: 00.01.04-MD40-U39
+  device_2_port: Channel 22 / 1546.92nm / 193.8THz
+  label: CLR-21043
+  length: 
+  status: connected
+  jumper_type: smf
+- site_code: SAND1
+  device_1: 
+  device_1_port: Channel 22 / 1546.92nm / 193.8THz
+  device_2: sand1ca52ws
+  device_2_port: 
+  label: CLR-21043
+  length: 
+  status: connected
+  jumper_type: smf
+- site_code: SAND1
+  device_1: sand1ca52ws
+  device_1_port: 
+  device_2: riv-agg8
+  device_2_port: Hu0/0/0/5
+  label: CLR-20993
+  length: 
+  status: connected
+  jumper_type: smf
+
+##
+
+- site_code: SAND1
+  device_1: uci1-87-dci-01
+  device_1_port: 
+  device_2: UCI1CA87O - Shelf 1 MD40
+  device_2_port: Channel 21 / 1546.12nm / 193.9THz
+  label: CLR-21044
+  length: 
+  status: connected
+  jumper_type: smf
+- site_code: TUST1
+  device_1: tust1ca87ta1 - Shelf 1 MD40
+  device_1_port: Channel 23 / 1546.12nm / 193.9THz
+  device_2: tust1-52-dci-03
+  device_2_port: 
+  label: CLR-21044
+  length: 
+  status: connected
+  jumper_type: smf
+- site_code: TUST1
+  device_1: tust1-52-dci-03
+  device_1_port: 
+  device_2: TUS-AGG8-PP#2 - LC
+  device_2_port: D3
+  label: CLR-21044
+  length: 
+  status: connected
+  jumper_type: smf
+
+
+# # 16254
+# - arack: C12.02
+#   adevice: fres1-agg-sw-01
+#   aport: e1/17
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-16254
+#   aterm: "Yes"
+#   zrack: C12.02
+#   zdevice: 00.12.02-BULK-LOWER
+#   zport: Port 17/18 Front
+#   zlabel: CLR-16254
+#   zterm: "Yes"
+# - arack: C09.05
+#   adevice: 00.09.05-BULK-UPPER
+#   aport: Port 17/18 Front
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-16254
+#   aterm: "Yes"
+#   zrack: C09.05
+#   zdevice: HUB-FRES1-00.09.05-U32
+#   zport: Slot 2 Port 3/4 Front
+#   zlabel: CLR-16254
+#   zterm: "Yes"
+# - arack: C09.15
+#   adevice: SPK-FRES1-00.09.15-U11
+#   aport: Slot 2 Port 3/4 Front
+#   acable: 2/3m LC-LC SMF
+#   alabel: CLR-16254
+#   aterm: "Yes"
+#   zrack: C09.15
+#   zdevice: Shelf 2 Slot 3 Port 1
+#   zport: CVIN-00317-B4D3-10G
+#   zlabel: CLR-16254
+#   zterm: "No"
+
+# # 16684
+# - arack: C12.02
+#   adevice: fres1-agg-sw-01
+#   aport: e1/18
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-16684
+#   aterm: "Yes"
+#   zrack: C12.02
+#   zdevice: 00.12.02-BULK-LOWER
+#   zport: Port 17/18 Front
+#   zlabel: CLR-16684
+#   zterm: "Yes"
+# - arack: C09.05
+#   adevice: 00.09.05-BULK-UPPER
+#   aport: Port 17/18 Front
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-16684
+#   aterm: "Yes"
+#   zrack: C09.05
+#   zdevice: HUB-FRES1-00.09.05-U31
+#   zport: Slot 1 Port 5/6 Front
+#   zlabel: CLR-16684
+#   zterm: "Yes"
+# - arack: C09.15
+#   adevice: SPK-FRES1-00.09.03-U40
+#   aport: Slot 1 Port 5/6 Front
+#   acable: 2/3m LC-LC SMF
+#   alabel: CLR-16684
+#   aterm: "Yes"
+#   zrack: C09.15
+#   zdevice: virtual edge jack panel, pos 9&10
+#   zport: 88/KGFS/505490/PT
+#   zlabel: CLR-16684
+#   zterm: "No"
+
+# # 6947
+# - arack: C12.02
+#   adevice: fres1-agg-sw-01
+#   aport: e1/19
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-6947
+#   aterm: "Yes"
+#   zrack: C12.02
+#   zdevice: 00.12.02-BULK-LOWER
+#   zport: Port 19/20 Front
+#   zlabel: CLR-6947
+#   zterm: "Yes"
+# - arack: C09.05
+#   adevice: 00.09.05-BULK-UPPER
+#   aport: Port 19/20 Front
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-6947
+#   aterm: "Yes"
+#   zrack: C09.05
+#   zdevice: HUB-FRES1-00.09.05-U32
+#   zport: Slot 2 Port 21/22 Front
+#   zlabel: CLR-6947
+#   zterm: "Yes"
+# - arack: C09.15
+#   adevice: SPK-FRES1-00.09.15-U11
+#   aport: Slot 2 Port 21/22 Front
+#   acable: 2/3m LC-LC SMF
+#   alabel: CLR-6947
+#   aterm: "Yes"
+#   zrack: C09.15
+#   zdevice: CVIN Handoff - 00.09.15
+#   zport: CVIN-00156-S10D3-10G
+#   zlabel: CLR-6947
+#   zterm: "No"
+
+# # 16365
+# - arack: C12.02
+#   adevice: fres1-agg-sw-01
+#   aport: e1/20
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-16365
+#   aterm: "Yes"
+#   zrack: C12.02
+#   zdevice: 00.12.02-BULK-LOWER
+#   zport: Port 21/22 Front
+#   zlabel: CLR-16365
+#   zterm: "Yes"
+# - arack: C09.05
+#   adevice: 00.09.05-BULK-UPPER
+#   aport: Port 21/22 Front
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-16365
+#   aterm: "Yes"
+#   zrack: C09.05
+#   zdevice: HUB-FRES1-00.09.05-U32
+#   zport: Slot 2 Port 7/8 Front
+#   zlabel: CLR-16365
+#   zterm: "Yes"
+# - arack: C09.15
+#   adevice: SPK-FRES1-00.09.15-U11
+#   aport: Slot 2 Port 7/8 Front
+#   acable: 2/3m LC-LC SMF
+#   alabel: CLR-16365
+#   aterm: "Yes"
+#   zrack: C09.15
+#   zdevice: CVIN Handoff - 00.09.15
+#   zport: CVIN-00320-B2D3
+#   zlabel: CLR-16365
+#   zterm: "No"
+
+# # 6286
+# - arack: C12.02
+#   adevice: fres1-agg-sw-01
+#   aport: e1/21
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-6286
+#   aterm: "Yes"
+#   zrack: C12.02
+#   zdevice: 00.12.02-BULK-LOWER
+#   zport: Port 23/24 Front
+#   zlabel: CLR-6286
+#   zterm: "Yes"
+# - arack: C09.05
+#   adevice: 00.09.05-BULK-UPPER
+#   aport: Port 23/24 Front
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-6286
+#   aterm: "Yes"
+#   zrack: C09.05
+#   zdevice: HUB-FRES1-00.09.05-U32
+#   zport: Slot 2 Port 9/10 Front
+#   zlabel: CLR-6286
+#   zterm: "Yes"
+# - arack: C09.15
+#   adevice: SPK-FRES1-00.09.15-U11
+#   aport: Slot 2 Port 9/10 Front
+#   acable: 2/3m LC-LC SMF
+#   alabel: CLR-6286
+#   aterm: "Yes"
+#   zrack: C09.15
+#   zdevice: CVIN Handoff - 00.09.15
+#   zport: CVIN-00188-S21D3-10G
+#   zlabel: CLR-6286
+#   zterm: "No"
+
+# # 16364
+# - arack: C12.02
+#   adevice: fres1-agg-sw-01
+#   aport: e1/22
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-16364
+#   aterm: "Yes"
+#   zrack: C12.02
+#   zdevice: 00.12.02-BULK-LOWER
+#   zport: Port 29/30 Front
+#   zlabel: CLR-16364
+#   zterm: "Yes"
+# - arack: C09.05
+#   adevice: 00.09.05-BULK-UPPER
+#   aport: Port 29/30 Front
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-16364
+#   aterm: "Yes"
+#   zrack: C09.05
+#   zdevice: HUB-FRES1-00.09.05-U31
+#   zport: Slot 1 Port 7/8 Front
+#   zlabel: CLR-16364
+#   zterm: "Yes"
+# - arack: C09.03
+#   adevice: SPK-FRES1-00.09.03-U40
+#   aport: Slot 1 Port 7/8 Front
+#   acable: 2/3m LC-LC SMF
+#   alabel: CLR-16364
+#   aterm: "Yes"
+#   zrack: C09.03
+#   zdevice: AT&T Handoff - 00.09.03
+#   zport: 88/KGFS/505476/PT
+#   zlabel: CLR-16364
+#   zterm: "No"
+
+# # 16184
+# - arack: C12.02
+#   adevice: fres1-agg-sw-01
+#   aport: e1/23
+#   acable:  1m LC-LC SMF
+#   alabel: CLR-16184
+#   aterm: "Yes"
+#   zrack: C09.12
+#   zdevice: 00.12.02-BULK-LOWER
+#   zport: Port 31/32 Front
+#   zlabel: CLR-16184
+#   zterm: "Yes"
+# - arack: C09.05
+#   adevice: 00.09.05-BULK-UPPER
+#   aport: Port 31/32 Front
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-16184
+#   aterm: "Yes"
+#   zrack: C09.05
+#   zdevice: XCP-FRES1-00.09.05-U38
+#   zport: Port 3 Front
+#   zlabel: CLR-16184
+#   zterm: "Yes"
+
+# # 6240
+# - arack: C12.02
+#   adevice: fres1-agg-sw-01
+#   aport: e1/24
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-6240
+#   aterm: "Yes"
+#   zrack: C12.02
+#   zdevice: 00.12.02-BULK-UPPER
+#   zport: Port 29/30 Front
+#   zlabel: CLR-6240
+#   zterm: "Yes"
+# - arack: C09.05
+#   adevice: 00.09.05-BULK-LOWER
+#   aport: Port 29/30 Front
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-6240
+#   aterm: "Yes"
+#   zrack: C09.05
+#   zdevice: HUB-FRES1-00.09.05-U32
+#   zport: Slot 2 Port 11/12 Front
+#   zlabel: CLR-6240
+#   zterm: "Yes"
+# - arack: C09.15
+#   adevice: SPK-FRES1-00.09.15-U11
+#   aport: Slot 2 Port 11/12 Front
+#   acable: 2/3m LC-LC SMF
+#   alabel: CLR-6240
+#   aterm: "Yes"
+#   zrack: C09.15
+#   zdevice: CVIN Handoff - 00.09.15
+#   zport: CVIN-00160-S12D3-10G
+#   zlabel: CLR-6240
+#   zterm: "No"
+
+# # 6399
+# - arack: C12.02
+#   adevice: fres1-agg-sw-01
+#   aport: e1/25
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-6399
+#   aterm: "Yes"
+#   zrack: C12.02
+#   zdevice: 00.12.02-BULK-UPPER
+#   zport: Port 31/32 Front
+#   zlabel: CLR-6399
+#   zterm: "Yes"
+# - arack: C09.05
+#   adevice: 00.09.05-BULK-LOWER
+#   aport: Port 31/32 Front
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-6399
+#   aterm: "Yes"
+#   zrack: C09.05
+#   zdevice: HUB-FRES1-00.09.05-U32
+#   zport: Slot 2 Port 13/14 Front
+#   zlabel: CLR-6399
+#   zterm: "Yes"
+# - arack: C09.15
+#   adevice: SPK-FRES1-00.09.15-U11
+#   aport: Slot 2 Port 13/14 Front
+#   acable: 2/3m LC-LC SMF
+#   alabel: CLR-6399
+#   aterm: "Yes"
+#   zrack: C09.15
+#   zdevice: CVIN Handoff - 00.09.15
+#   zport: CVIN-00176-S18D3-10G
+#   zlabel: CLR-6399
+#   zterm: "No"
+
+# # 16659
+# - arack: C12.02
+#   adevice: fres1-agg-sw-01
+#   aport: e1/26
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-16659
+#   aterm: "Yes"
+#   zrack: C12.02
+#   zdevice: 00.12.02-BULK-UPPER
+#   zport: Port 7/8 Front
+#   zlabel: CLR-16659
+#   zterm: "Yes"
+# - arack: C09.05
+#   adevice: 00.09.05-BULK-LOWER
+#   aport: Port 7/8 Front
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-16659
+#   aterm: "Yes"
+#   zrack: C09.05
+#   zdevice: HUB-FRES1-00.09.05-U32
+#   zport: Slot 2 Port 15/16 Front
+#   zlabel: CLR-16659
+#   zterm: "Yes"
+# - arack: C09.15
+#   adevice: SPK-FRES1-00.09.15-U11
+#   aport: Slot 2 Port 15/16 Front
+#   acable: 2/3m LC-LC SMF
+#   alabel: CLR-16659
+#   aterm: "Yes"
+#   zrack: C09.15
+#   zdevice: CVIN Handoff - 00.09.15
+#   zport: CVIN-00323-S13D03-PTP
+#   zlabel: CLR-16659
+#   zterm: "No"
+
+# # 17557
+# - arack: C12.02
+#   adevice: fres1-agg-sw-01
+#   aport: e1/27
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-17557
+#   aterm: "Yes"
+#   zrack: C12.02
+#   zdevice: 00.12.02-BULK-UPPER
+#   zport: Port 25/26 Front
+#   zlabel: CLR-17557
+#   zterm: "Yes"
+# - arack: C09.05
+#   adevice: 00.09.05-BULK-LOWER
+#   aport: Port 25/26 Front
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-17557
+#   aterm: "Yes"
+#   zrack: C09.05
+#   zdevice: HUB-FRES1-00.09.05-U32
+#   zport: Slot 2 Port 17/18 Front
+#   zlabel: CLR-17557
+#   zterm: "Yes"
+# - arack: C09.15
+#   adevice: SPK-FRES1-00.09.15-U11
+#   aport: Slot 2 Port 17/18 Front
+#   acable: 2/3m LC-LC SMF
+#   alabel: CLR-17557
+#   aterm: "Yes"
+#   zrack: C09.15
+#   zdevice: CVIN Handoff - 00.09.15
+#   zport: CVIN-00328-LIT-PTP
+#   zlabel: CLR-17557
+#   zterm: "No"
+
+# # 16066
+# - arack: C12.02
+#   adevice: fres1-agg-sw-01
+#   aport: e1/28
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-16066
+#   aterm: "Yes"
+#   zrack: C12.02
+#   zdevice: 00.12.02-BULK-UPPER
+#   zport: Port 27/28 Front
+#   zlabel: CLR-16066
+#   zterm: "Yes"
+# - arack: C09.05
+#   adevice: 00.09.05-BULK-LOWER
+#   aport: Port 27/28 Front
+#   acable: 1m LC-LC SMF
+#   alabel: CLR-16066
+#   aterm: "Yes"
+#   zrack: C09.05
+#   zdevice: HUB-FRES1-00.09.05-U32
+#   zport: Slot 2 Port 19/20 Front
+#   zlabel: CLR-16066
+#   zterm: "Yes"
+# - arack: C09.15
+#   adevice: SPK-FRES1-00.09.15-U11
+#   aport: Slot 2 Port 19/20 Front
+#   acable: 2/3m LC-LC SMF
+#   alabel: CLR-16066
+#   aterm: "Yes"
+#   zrack: C09.15
+#   zdevice: CVIN Handoff - 00.09.15
+#   zport: CVIN-00165-S13D2-10G
+#   zlabel: CLR-16066
+#   zterm: "No"

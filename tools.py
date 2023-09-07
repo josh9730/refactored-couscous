@@ -1,6 +1,6 @@
-import os
 import re
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import keyring
 import numpy as np
@@ -23,6 +23,7 @@ START_DATE = "customfield_10410"
 END_DATE = "customfield_10411"
 JUSTIFICATION = "customfield_11102"
 SEGMENT = "customfield_11004"
+CREDENTIALS_DIR = Path("~/Google Drive/My Drive/Scripts").expanduser()
 
 
 def get_last_comment(comments: list) -> str:
@@ -33,9 +34,9 @@ def get_last_comment(comments: list) -> str:
         return ""
 
 
-def open_gsheet(sheet_title: str, workbook_title: str, client_json: str):
+def open_gsheet(sheet_title: str, workbook_title: str):
     """Open Google Sheet via pygsheets and return Sheet object."""
-    client = pygsheets.authorize(client_secret=client_json)
+    client = pygsheets.authorize(credentials_directory=CREDENTIALS_DIR, local=True)
     return client.open(sheet_title).worksheet_by_title(workbook_title)
 
 
@@ -43,26 +44,24 @@ class GCalTools:
     def __init__(self):
         # If modifying these scopes, delete the file token.json.
         SCOPES = ["https://www.googleapis.com/auth/calendar.events"]
-        self.creds_dir = os.getenv("HOME") + "/Google Drive/My Drive/Scripts"
         creds = None
 
-        if os.path.exists(f"{self.creds_dir}/gcal_token.json"):
+        if CREDENTIALS_DIR.exists():
             creds = Credentials.from_authorized_user_file(
-                f"{self.creds_dir}/gcal_token.json", SCOPES
+                CREDENTIALS_DIR.joinpath("gcal_token.json"), SCOPES
             )
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    f"{self.creds_dir}/desktop_oauth_gcal.json", SCOPES
+                    f"{CREDENTIALS_DIR}/desktop_oauth_gcal.json", SCOPES
                 )
                 creds = flow.run_local_server(port=0)
 
             # Save the credentials for the next run
-            with open(f"{self.creds_dir}/gcal_token.json", "w") as token:
+            with open(f"{CREDENTIALS_DIR}/gcal_token.json", "w") as token:
                 token.write(creds.to_json())
 
         try:
@@ -202,7 +201,7 @@ class AtlassianBase:
     def __init__(self):
         self.cas_user = keyring.get_password("cas", "user")
         self.cas_pass = keyring.get_password("cas", self.cas_user)
-        self.confl_url = keyring.get_password("confl", "url")
+        self.confl_url = keyring.get_password("confluence", "url")
         self.jira_url = keyring.get_password("jira", "url")
 
 
@@ -232,17 +231,13 @@ class JiraTools(AtlassianBase):
         self.jira = Jira(
             url=self.jira_url, username=self.cas_user, password=self.cas_pass
         )
-        self.gsheets_creds_dir = (
-            f"{os.getenv('HOME')}",
-            "/Google Drive/My Drive/Scripts/desktop_oauth_gsheet.json",
-        )
 
     def cor_project_updates(self, engineer: list, jql: str) -> None:
         """Return ticket updates, creation, resolution from the COR Jira
         Software project for the past 5 days. To be run each Friday.
         """
 
-        ticket_updates = open_gsheet("Core Tickets", "updates", self.gsheets_creds_dir)
+        ticket_updates = open_gsheet("Core Tickets", "updates")
         ticket_updates.clear()
 
         results = self.jira.jql(
@@ -316,7 +311,7 @@ class JiraTools(AtlassianBase):
 
     def core_tickets(self, engineer: list, jql_request: str):
         """Get all open tickets for engineers"""
-        tickets_sheet = open_gsheet("Core Tickets", "Bulk", self.gsheets_creds_dir)
+        tickets_sheet = open_gsheet("Core Tickets", "Bulk")
         tickets_sheet.clear()
 
         full_df = pd.DataFrame()
@@ -328,6 +323,7 @@ class JiraTools(AtlassianBase):
                     "assignee",
                     "key",
                     "status",
+                    "labels",
                     "summary",
                     "updated",
                     MILESTONE,
@@ -341,6 +337,7 @@ class JiraTools(AtlassianBase):
                     "fields.status.name",
                     "fields.updated",
                     f"fields.{MILESTONE}.value",
+                    "fields.labels",
                 ]
             )
             # trim to YYYY-MM-DD format
@@ -377,7 +374,7 @@ class JiraTools(AtlassianBase):
         - list of resource tickets for circuits, per engineer (named_range)
 
         """
-        circuit_sheet = open_gsheet("Core Tickets", "Tables", self.gsheets_creds_dir)
+        circuit_sheet = open_gsheet("Core Tickets", "Tables")
 
         # named range of active circuits / engineer, and range of engineer's tickets
         active_circuits = circuit_sheet.get_named_range("active_circuits")
@@ -414,9 +411,7 @@ class JiraTools(AtlassianBase):
         - start_date of monday, end_date of friday
         - append to sheet
         """
-        resources_sheet = open_gsheet(
-            "Core Tickets", "resources", self.gsheets_creds_dir
-        )
+        resources_sheet = open_gsheet("Core Tickets", "resources")
         engineers.remove("jdickman")
         engineers.remove("sshibley")
 
@@ -523,12 +518,8 @@ class JiraTools(AtlassianBase):
             else:
                 return ""
 
-        active_sheet = open_gsheet(
-            "CPE Hardware Tracker", "Active", self.gsheets_creds_dir
-        )
-        resolved_sheet = open_gsheet(
-            "CPE Hardware Tracker", "Resolved", self.gsheets_creds_dir
-        )
+        active_sheet = open_gsheet("CPE Hardware Tracker", "Active")
+        resolved_sheet = open_gsheet("CPE Hardware Tracker", "Resolved")
         active_df = active_sheet.get_as_df(start="A2", include_tailing_empty=False)
         resolved_df = resolved_sheet.get_as_df(include_tailing_empty=False)
 
@@ -675,9 +666,7 @@ class JiraTools(AtlassianBase):
             ]
         ]
 
-        data_sheet = open_gsheet(
-            "Core Purchase Tracking", "data", self.gsheets_creds_dir
-        )
+        data_sheet = open_gsheet("Core Purchase Tracking", "data")
         data_sheet.clear(start="A8")
         data_sheet.set_dataframe(df, start=(8, 1), extend=True, nan="")
 
@@ -719,16 +708,12 @@ class JiraTools(AtlassianBase):
             inplace=True,
         )
 
-        data_sheet = open_gsheet(
-            "Core Purchase Tracking", "mgr_approval", self.gsheets_creds_dir
-        )
+        data_sheet = open_gsheet("Core Purchase Tracking", "mgr_approval")
         data_sheet.clear()
         data_sheet.set_dataframe(mgr_df, start=(1, 1), extend=True, nan="")
 
     def la2_migration_status(self):
-        tickets_sheet = open_gsheet(
-            "LA2 Migration - Deployment Tracker", "Sheet1", self.gsheets_creds_dir
-        )
+        tickets_sheet = open_gsheet("LA2 Migration - Deployment Tracker", "Sheet1")
         tickets_list = tickets_sheet.get_col(
             1, include_tailing_empty=False, returnas="cell"
         )
@@ -759,3 +744,47 @@ class JiraTools(AtlassianBase):
                 author,
             ]
             tickets_sheet.update_row(ticket.row, update_vals, col_offset=7)
+
+    def get_ticket_summary(self, ticket: str) -> str:
+        return self.jira.get_issue(ticket, fields=["summary"])["fields"]["summary"]
+
+    def create_ticket(
+        self,
+        master_ticket: str,
+        title: str,
+        project_key: str = "COR",
+        ticket_type: str = "Task",
+    ) -> str:
+        """Create ticket in Jira.
+
+        JIRA_CORE_ORGANIZATION: [JIRA_CORE_ORGANIZATION_ID],
+        """
+        new_ticket = self.jira.create_issue(
+            fields={
+                "summary": title,
+                "project": {
+                    "key": project_key,
+                },
+                "issuetype": {
+                    "name": ticket_type,
+                },
+            }
+        )["key"]
+        self._create_ticket_link(master_ticket, new_ticket)
+        return new_ticket
+
+    def _create_ticket_link(self, master_ticket: str, new_ticket: str) -> None:
+        """Create Link between master and new ticket."""
+        self.jira.create_issue_link(
+            data={
+                "type": {
+                    "name": "Members",
+                },
+                "inwardIssue": {
+                    "key": master_ticket,
+                },
+                "outwardIssue": {
+                    "key": new_ticket,
+                },
+            }
+        )

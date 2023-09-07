@@ -1,11 +1,11 @@
 import re
 from enum import Enum
-from typing import Any, Union
-import yaml 
+from typing import Any
 
 import keyring
 import typer
 import urllib3
+import yaml
 from pynautobot import api
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -50,14 +50,13 @@ class NBTools:
         self.nautobot = api(
             url=keyring.get_password("nautobot_stage", "url"),
             token=keyring.get_password(
-                "nautobot-stage", keyring.get_password("cas", "user") + "mfa"
+                "nautobot_stage", keyring.get_password("cas", "user") + "mfa"
             ),
         )
         self.nautobot.http_session.verify = False
-
         self.LAST_CABLE_ID = None
 
-    def guess_port_type(self, port_name: str, port_device_id: str) -> tuple[Any, str]:
+    def guess_port_type(self, port_name: str, port_device_slug: str) -> tuple[Any, str]:
         """Determine if given port is FrontPort, RearPort, or Interface. None is returned if not found
         from the nautobot get method.
 
@@ -66,19 +65,21 @@ class NBTools:
             port_type: type of Nautobot port for the api
         """
         if port := self.nautobot.dcim.front_ports.get(
-            device_id=port_device_id, name=port_name
+            device_id=port_device_slug.id, name=port_name
         ):
             return port, "dcim.frontport"
         elif port := self.nautobot.dcim.rear_ports.get(
-            device_id=port_device_id, name=port_name
+            device_id=port_device_slug.id, name=port_name
         ):
             return port, "dcim.rearport"
         elif port := self.nautobot.dcim.interfaces.get(
-            device_id=port_device_id, name=port_name
+            device_id=port_device_slug.id, name=port_name
         ):
             return port, "dcim.interface"
         else:
-            raise Exception("No matching Front/RearPort or Interface was found.")
+            raise Exception(
+                f"No matching Front/RearPort or Interface was found for '{port_device_slug}' and '{port_name}'."
+            )
 
     def _next_cable_id(self) -> int:
         """Get last used cabled ID (i.e. CLR increment)."""
@@ -137,23 +138,23 @@ class NBTools:
         device = self.nautobot.dcim.devices.get(name=name, site=site.slug)
 
         for i in range(1, num_ports * 2, 2):
-            port_name = f"Port {i}/{i+1} "
+            port_name = f"Port {i}/{i + 1} "
             rp = self.nautobot.dcim.rear_ports.create(
                 device=device.id,
                 type=port_type,
                 positions=1,
                 custom_fields={"jumper_type": jumper_type.upper()},
-                name=f"Port {i}/{i+1} Rear",
+                name=f"Port {i}/{i + 1} Rear",
             )
-            print(f"Created port: {port_name+'Rear'}")
+            print(f"Created port: {port_name + 'Rear'}")
             self.nautobot.dcim.front_ports.create(
                 device=device.id,
                 rear_port=rp.id,
                 type=port_type,
                 custom_fields={"jumper_type": jumper_type.upper()},
-                name=f"Port {i}/{i+1} Front",
+                name=f"Port {i}/{i + 1} Front",
             )
-            print(f"Created port: {port_name+'Front'}")
+            print(f"Created port: {port_name + 'Front'}")
 
     def connect_rear_ports(
         self, site_code: str, device_1_name: str, device_2_name: str, jumper_type: str
@@ -189,18 +190,25 @@ class NBTools:
         label: str,
         jumper_type: str,
         status: str,
+        length: int = 0,
+        length_unit: str = "m",
     ) -> None:
         site = self.nautobot.dcim.sites.get(name=site_code.upper())
         term_a_device = self.nautobot.dcim.devices.get(name=device_1, site=site.slug)
         term_b_device = self.nautobot.dcim.devices.get(name=device_2, site=site.slug)
+
+        if None in (term_a_device, term_b_device):
+            print(term_a_device, term_b_device)
+            exit(1)
+
         term_a_port, term_a_port_type = self.guess_port_type(
-            device_1_port, term_a_device.id
+            device_1_port, term_a_device
         )
         term_b_port, term_b_port_type = self.guess_port_type(
-            device_2_port, term_b_device.id
+            device_2_port, term_b_device
         )
 
-        if label == 'next_trunk':
+        if label == "next_trunk":
             label = self._create_com_label(term_a_device.name, term_b_device.name)
 
         self.nautobot.dcim.cables.create(
@@ -211,6 +219,8 @@ class NBTools:
             type=jumper_type,
             status=status,
             label=label,
+            length=length,
+            length_unit=length_unit,
         )
         print(f"Created new cable: {label}")
 
@@ -231,6 +241,9 @@ def new_site(
     """Create a new site and CPE rack in Nautobot."""
     nautobot = NBTools()
     nautobot.create_new_site(site_code, site_name, address, tenant.value)
+    print(
+        f"https://nautobot-1-staging.svl.cenic.org/dcim/sites/{site_code.lower()}/?tab=main"
+    )
 
 
 @main.command()
@@ -262,7 +275,9 @@ def connect_rear_ports(
 
 @main.command()
 def create_jumper(
-    yaml_input: bool = typer.Option(False, help='Pull variables from cable.yaml. No validation is performed.'),
+    yaml_input: bool = typer.Option(
+        False, help="Pull variables from cable.yaml. No validation is performed."
+    ),
     # site_code: str = typer.Option(..., prompt="Site Code"),
     # device_1: str = typer.Option(..., prompt="Device 1"),
     # device_1_port: str = typer.Option(..., prompt="Device 1 Port"),
@@ -277,11 +292,11 @@ def create_jumper(
     # ),
 ):
     cable = locals()
-    cable.pop('yaml_input')
+    cable.pop("yaml_input")
     nautobot = NBTools()
 
     if yaml_input:
-        with open('cable.yaml', 'r') as f:
+        with open("cable.yaml", "r") as f:
             cables = yaml.safe_load(f)
         for cable in cables:
             nautobot.create_jumper(**cable)

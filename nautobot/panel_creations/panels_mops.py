@@ -104,11 +104,11 @@ class PanelsNautobot(Data):
         )
         self._assign_bays(panel, slot, cassette)
         return cassette
-    
+
     def _assign_bays(self, panel, slot, cassette):
         self.nautobot.dcim.device_bays.create(
             device=panel.id,
-            name=f'Slot {slot}',
+            name=f"Slot {slot}",
             installed_device=cassette.id,
         )
 
@@ -130,7 +130,6 @@ class PanelsNautobot(Data):
 
     def create_panels(self):
         for panel_pair in self.panels_list:
-
             self.new_panel_list, self.trunk_list = [], []
             cassette_list, c6_list = [], []
 
@@ -180,7 +179,7 @@ class PanelsNautobot(Data):
 
                 if panel_pair[2]:
                     c6_cassette = self._create_cassettes(
-                        new_panel, 4, "fhd-6xcat6-adapter", "Cat6"
+                        new_panel, 4, "fhd-6xcopper-adapter", "Cat6"
                     )
                     c6_list.append(c6_cassette)
 
@@ -316,7 +315,7 @@ class Panels(Data):
         return new_ticket
 
     def create_mop(self, template, mop_name, rh_ticket, shipping_ticket):
-        if template == 'panel_install':
+        if template == "panel_install":
             title = f"{self.site} Panels Install"
         else:
             title = f"{self.site} Panel Jumpers Install"
@@ -351,29 +350,29 @@ def create_panels():
 
 
 @main.command()
-def install_panels(parent_ticket: str):
+def install_panels(parent_ticket: str, shipping_ticket: str):
     panels = Panels()
-    # panels.upload_pairings(parent_ticket)
+    panels.upload_pairings(parent_ticket)
 
     # shipment_form = panels.create_panels_shipment()
     # shipping_ticket = panels.create_ticket(
     #     parent_ticket, "Panels Shipping", shipment_form
     # )
-    # rh_ticket = panels.create_ticket(parent_ticket, "Panels Install", "")
-    rh_ticket = 'NOC-692426'
-    shipping_ticket = 'NOC-683847'
+    rh_ticket = panels.create_ticket(parent_ticket, "Panels Install", "")
+    # rh_ticket = 'NOC-692426'
+    # shipping_ticket = 'NOC-683847'
     panels.create_mop("panel_install", "mop_panel.yml", rh_ticket, shipping_ticket)
 
 
 @main.command()
-def install_jumpers(parent_ticket: str):
+def install_jumpers(parent_ticket: str, shipping_ticket: str):
     # add jumper length to panels in Comments
     panels = Panels()
 
-    shipment_form = panels.create_jumper_shipment()
-    shipping_ticket = panels.create_ticket(
-        parent_ticket, "Jumpers Shipping", shipment_form
-    )
+    # shipment_form = panels.create_jumper_shipment()
+    # shipping_ticket = panels.create_ticket(
+    #     parent_ticket, "Jumpers Shipping", shipment_form
+    # )
     rh_ticket = panels.create_ticket(parent_ticket, "Jumpers Install", "")
     panels.create_mop("jumper_install", "mop_jumper.yml", rh_ticket, shipping_ticket)
 

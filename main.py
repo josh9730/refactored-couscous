@@ -2,6 +2,7 @@ import datetime
 
 import typer
 import yaml
+
 from tools import GCalTools, JiraTools
 
 main = typer.Typer(
@@ -74,7 +75,7 @@ def cpe_tracker():
 
 @main.command()
 def purchasing_tracker():
-    """Purchasing Tracker for all Core purchasing. """
+    """Purchasing Tracker for all Core purchasing."""
     core_list = open_yaml()["core_all"]
     jtools.purchases_tracking(core_list)
 
@@ -100,6 +101,19 @@ def scheduled():
     elif day == "Fri":
         # resources_report()
         cor_updates()
+
+
+@main.command()
+def create_predep(master_ticket: str):
+    """Create Install, Migration, Closeout child tickets."""
+    summary = jtools.get_ticket_summary(master_ticket)
+    jtools.create_ticket(
+        master_ticket, summary.replace("Circuit Install", "Install Planning")
+    )
+    jtools.create_ticket(
+        master_ticket, summary.replace("Circuit Install", "Migration Planning")
+    )
+    jtools.create_ticket(master_ticket, summary.replace("Circuit Install", "Closeout"))
 
 
 if __name__ == "__main__":

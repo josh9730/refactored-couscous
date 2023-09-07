@@ -10,7 +10,7 @@ executing_dep: NOC
 rh: {{ site }}
 approval: COR-1696
 impact:
-- 
+-
 escalation: Deploying Engineer
 
 partial_rollback: True
@@ -19,77 +19,83 @@ rollback_steps:
 pre_maint:
 -
 
+migration_table:
+-
+cleanups:
+- |-
+
 tech_equip:
 - Labeler
 shipping:
-    {{ shipping_ticket }}:
-        - Pending
-        - Pending
+{{ shipping_ticket }}:
+- Pending
+- Pending
 
-sections: 
-    "Summary":
-        - noc: New paneling is being installed. Please review the documentation *[HERE|https://documentation.cenic.org/display/Core/Patch+Panel+Usage]* for details
-        - note: A 48 port LC SMF panel was shipped as well as a 24 port Cat6 panel. [MPO-LC cassettes|https://www.fs.com/products/57023.html] and [Cat6 cassettes|https://www.fs.com/products/66602.html] with RJ45 jacks pre-installed were shipped.
-        - rh: Multiple patch panels and cassettes were shipped. Please remove all items from the individual boxes before proceeding.
-        - note: On the back of the cassettes with LC connectors, note that there are labels for 'Type A' and 'Type AF'. Please be aware of the cassette types when installing. All cassettes installed into the hub rack ({{ fac_hub_rack }}) *must* be of Type AF.
-        - rh: Rack {{ fac_hub_rack }} (the 'hub') rack will get ({{ panels_list|length }}) 4-slot panels (each with one Type AF cassette and one 6-port Cat6 module), (1) 48-port LC panel, and (1) 24-port Cat6 panels
-        - rh: Non-hub racks will each get one of the 4-slot panels with one Type A cassette and one 6-port Cat6 module
-        - rh: Each panel in {{ fac_hub_rack }} will pair with one panel in the other racks. We will need approximate lengths between the panels for later shipment.
+sections:
+"Summary":
+- noc: New paneling is being installed. Please review the documentation *[HERE|https://documentation.cenic.org/display/Core/Patch+Panel+Usage]* for details
+- note: A 48 port LC SMF panel was shipped as well as a 24 port Cat6 panel. [MPO-LC cassettes|https://www.fs.com/products/57023.html] and [Cat6 cassettes|https://www.fs.com/products/66602.html] with RJ45 jacks pre-installed were shipped.
+- rh: Multiple patch panels and cassettes were shipped. Please remove all items from the individual boxes before proceeding.
+- note: On the back of the cassettes with LC connectors, note that there are labels for 'Type A' and 'Type AF'. Please be aware of the cassette types when installing. All cassettes installed into the hub rack ({{ fac_hub_rack }}) *must* be of Type AF.
+- rh: Rack {{ fac_hub_rack }} (the 'hub') rack will get ({{ panels_list|length }}) 4-slot panels (each with one Type AF cassette and one 6-port Cat6 module), (1) 48-port LC panel, and (1) 24-port Cat6 panels
+- rh: Non-hub racks will each get one of the 4-slot panels with one Type A cassette and one 6-port Cat6 module
+- rh: Each panel in {{ fac_hub_rack }} will pair with one panel in the other racks. We will need approximate lengths between the panels for later shipment.
 
-    "{{ fac_hub_rack }} Installs":
-        - rh: First, install the 48-port LC panel on RU{{ xcp_ru }}. Label as XCP-{{ site }}-{{ hub_rack }}-U{{ xcp_ru }}.
-        - rh: Next, install the 24-port Cat6 panel on RU{{ c6_ru }}. Label as COP-{{ site }}-{{ hub_rack }}-U{{ c6_ru }}.
-        - cmd_rh:
-            - Install one 4-slot panel and label the panels as listed below, according to RU. Relocate & update the label if any RU is occupied.
-            - |-
-                {%- for panels in panels_list %}
-                RU{{ panels[0].split("-U")[-1] }} -- {{ panels[0] }}
-                {%- endfor %}
-        - rh: In each of the above installed panels, insert (1) MPO-24/LC **Type AF** cassette in the left-most slot. 
-        - cmd_rh:
-            - Install (1) Cat6 cassette in each of the installed panels
-            - |-
-                {%- for panels in panels_list %}
-                {%- if panels[2] != 0 %}
-                {{ panels[0] }}
-                {%- endif %}
-                {%- endfor %}
-
-
-                Note that these two panels should NOT have Cat6 cassettes:
-                {%- for panels in panels_list %}
-                {%- if panels[2] == 0 %}
-                {{ panels[0] }}
-                {%- endif %}{% endfor %}
-    "Non-Hub Rack Installs":
-        - cmd_rh:
-            - In each of following racks, install one 4-slot panel into the specified rack, RU, and label as follows. Relocate & update the label if any RU is occupied.
-            - |-
-                {%- for panels in panels_list %}
-                Rack {{ panels[1].split("-")[2].split(".")[1] }}.{{ panels[1].split("-")[2].split(".")[2] }} -- RU{{ panels[1].split("-U")[-1] }} -- {{ panels[1] }}
-                {%- endfor %}
-        - rh: In each of the above installed panels, insert (1) MPO-24/LC **Type A** cassette in the left-most slot. 
-        - cmd_rh:
-            - Install (1) Cat6 cassette in each of the installed panels
-            - |-
-                {%- for panels in panels_list %}
-                {%- if panels[2] != 0 %}
-                Rack {{ panels[1].split("-")[2].split(".")[1] }}.{{ panels[1].split("-")[2].split(".")[2] }} -- {{ panels[1] }}
-                {%- endif %}{% endfor %}
+"{{ fac_hub_rack }} Installs":
+- rh: First, install the 48-port LC panel on RU{{ xcp_ru }}. Label as XCP-{{ site }}-{{ hub_rack }}-U{{ xcp_ru }}.
+- rh: Next, install the 24-port Cat6 panel on RU{{ c6_ru }}. Label as COP-{{ site }}-{{ hub_rack }}-U{{ c6_ru }}.
+- cmd_rh:
+- Install one 4-slot panel and label the panels as listed below, according to RU. Relocate & update the label if any RU is occupied.
+- |-
+{%- for panels in panels_list %}
+    RU{{ panels[0].split("-U")[-1] }} -- {{ panels[0] }}
+{%- endfor %}
+- rh: In each of the above installed panels, insert (1) MPO-24/LC **Type AF** cassette in the left-most slot.
+- cmd_rh:
+- Install (1) Cat6 cassette in each of the installed panels
+- |-
+{%- for panels in panels_list %}
+    {%- if panels[2] != 0 %}
+        {{ panels[0] }}
+    {%- endif %}
+{%- endfor %}
 
 
-                Note that these two panels should NOT have Cat6 cassettes:
-                {%- for panels in panels_list %}
-                {%- if panels[2] == 0 %}
-                Rack {{ panels[1].split("-")[2].split(".")[1] }}.{{ panels[1].split("-")[2].split(".")[2] }} -- {{ panels[1] }}
-                {%- endif %}{% endfor %}
+Note that these two panels should NOT have Cat6 cassettes:
+{%- for panels in panels_list %}
+    {%- if panels[2] == 0 %}
+        {{ panels[0] }}
+    {%- endif %}{% endfor %}
+"Non-Hub Rack Installs":
+- cmd_rh:
+- In each of following racks, install one 4-slot panel into the specified rack, RU, and label as follows. Relocate & update the label if any RU is occupied.
+- |-
+{%- for panels in panels_list %}
+    Rack {{ panels[1].split("-")[2].split(".")[1] }}.{{ panels[1].split("-")[2].split(".")[2] }} -- RU
+    {{ panels[1].split("-U")[-1] }} -- {{ panels[1] }}
+{%- endfor %}
+- rh: In each of the above installed panels, insert (1) MPO-24/LC **Type A** cassette in the left-most slot.
+- cmd_rh:
+- Install (1) Cat6 cassette in each of the installed panels
+- |-
+{%- for panels in panels_list %}
+    {%- if panels[2] != 0 %}
+        Rack {{ panels[1].split("-")[2].split(".")[1] }}.{{ panels[1].split("-")[2].split(".")[2] }} -- {{ panels[1] }}
+    {%- endif %}{% endfor %}
 
-    "Survey and Pictures":
-        - rh: Provide pictures of the installed panels in each rack to oper@cenic.org
-        - rh: Each of the panels installed are 'paired' with one other panel. We will need approximate lengths between each pair of panels for future shipment.
-        - cmd_rh:
-            - Provide required jumper lengths to connect panels as follows
-            - |-
-                {%- for panels in panels_list %}
-                {{ panels[0] }} -- {{ panels[1] }}
-                {%- endfor %}
+
+Note that these two panels should NOT have Cat6 cassettes:
+{%- for panels in panels_list %}
+    {%- if panels[2] == 0 %}
+        Rack {{ panels[1].split("-")[2].split(".")[1] }}.{{ panels[1].split("-")[2].split(".")[2] }} -- {{ panels[1] }}
+    {%- endif %}{% endfor %}
+
+"Survey and Pictures":
+- rh: Provide pictures of the installed panels in each rack to oper@cenic.org
+- rh: Each of the panels installed are 'paired' with one other panel. We will need approximate lengths between each pair of panels for future shipment.
+- cmd_rh:
+- Provide required jumper lengths to connect panels as follows
+- |-
+{%- for panels in panels_list %}
+    {{ panels[0] }} -- {{ panels[1] }}
+{%- endfor %}
