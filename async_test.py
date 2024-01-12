@@ -1,18 +1,17 @@
 import asyncio
 import logging
 
-logger = logging.getLogger("ciena_backups")
-logger.propagate = False  # disable printing to console when running directly
+import typer
+
+logger = logging.getLogger("backups")
 _format = logging.Formatter(fmt="%(levelname)s | %(asctime)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 log_file = logging.FileHandler("backups.log", mode="w")
 log_file.setFormatter(_format)
 logger.addHandler(log_file)
 logger.setLevel(logging.INFO)
 
-# creates a list of three 'routers'
-# simply a placeholder to iterate over while testing async features
-# test this in your IDE if you're unfamilar with python list comprehension, this is equivalent to a for loop
-DEVICES = [f"R{i}" for i in range(1, 5)]
+# Create a new Typer app
+app = typer.Typer(help="Run backups for Ciena devices.")
 
 
 async def ping_test(hostname: str, queue: asyncio.Queue) -> None:
@@ -27,7 +26,7 @@ async def ping_test(hostname: str, queue: asyncio.Queue) -> None:
     # essentially this is waiting on our ping test for the hostname to complete
     await asyncio.sleep(2)
 
-    # these are just to test that our async program works as expected
+    # these are just to test to show that our async program works as expected
     if hostname == "R1":
         # this tests what will happen to the queue if one of the devices 'fails'
         # we need to make sure the program can handle failures like this and not hang
@@ -54,16 +53,17 @@ async def run_commands(queue: asyncio.Queue) -> None:
     queue.task_done()  # let the queue know this task has been completed
 
 
-async def main() -> None:
-    """Main function to execute device backups."""
-    logger.info("Starting backups")
+async def main(devices: list[str]) -> None:
+    """Main function to execute device backups.
 
-    queue = asyncio.Queue()
+    devices: list of hostnames or IPs to backup
+    """
+    queue = asyncio.Queue()  # create a new queue
 
     # this is the queue 'producer', meaning it will add items to the queue
     # note that we're creating N tasks for N devices. In our case, 4 tasks
     # see note in devices for info on list comprehension
-    producers = [asyncio.create_task(ping_test(hostname, queue)) for hostname in DEVICES]
+    producers = [asyncio.create_task(ping_test(hostname, queue)) for hostname in devices]
 
     # this is the 'consumer', meaning it will consume from the queue
     consumers = [asyncio.create_task(run_commands(queue)) for _ in producers]
@@ -75,9 +75,31 @@ async def main() -> None:
     # closes queue after consumers are done, otherwise it will wait indefinitely on the queue
     await queue.join()
 
+
+@app.command()  # this makes the function a command in for the Typer app
+def ciena_backups(
+    username: str = typer.Argument(..., help="Device Username"),
+    password: str = typer.Argument(..., help="Device Password"),
+):
+    """Tool to backup Ciena devices."""
+
+    print(f"Credentials: {username} | {password}")
+
+    # creates a list of four 'routers'
+    # simply a placeholder to iterate over while testing async features
+    # test this in your IDE if you're unfamilar with python list comprehension, this is equivalent to a for loop
+    devices = [f"R{i}" for i in range(1, 5)]
+
+    logger.info("Starting backups")
+
+    asyncio.run(main(devices))
+    print("Check log file!")
+
     logger.info("Finished backups")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
-    print("Check log file!")
+    # requires Typer. install with: pip install typer
+
+    # use `python3 async_test.py --help` to look at Typer
+    app()
