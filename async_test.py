@@ -1,7 +1,11 @@
 import asyncio
 import logging
 
+import pynautobot
 import typer
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 logger = logging.getLogger("backups")
 _format = logging.Formatter(fmt="%(levelname)s | %(asctime)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
@@ -79,23 +83,50 @@ async def main(devices: list[str]) -> None:
     await queue.join()
 
 
+def get_devices_from_nb(api_key: str, url: str) -> list[str]:
+    """pip install pynautobot=1.5.1
+
+    set pynautobot to a version that will work with our Nautobot instance.
+    """
+    nb_waveserver_models = [
+        "waveserver",
+        "waveserver-5",
+        "waveserver-ai",
+    ]
+    nb = pynautobot.api(url=url, token=api_key)
+    nb.http_session.verify = False
+    devices = nb.dcim.devices.filter(model=nb_waveserver_models)
+    from pprint import pprint
+
+    pprint([device.name for device in devices])
+    # return [device.name for device in devices]
+
+    # devices = [f"R{i}" for i in range(1, 5)]
+    # return devices
+
+
 @app.command()  # this makes the function a command in for the Typer app
 def ciena_backups(
-    username: str = typer.Argument(..., help="Device Username"),
-    password: str = typer.Argument(..., help="Device Password"),
+    api_key: str = typer.Argument(..., help="Device Username"),
+    url: str = typer.Argument(..., help="Device Password"),
 ):
     """Tool to backup Ciena devices."""
 
-    print(f"Credentials: {username} | {password}")
+    # print(f"Credentials: {username} | {password}")
 
     # creates a list of four 'routers'
     # simply a placeholder to iterate over while testing async features
     # test this in your IDE if you're unfamilar with python list comprehension, this is equivalent to a for loop
-    devices = [f"R{i}" for i in range(1, 5)]
+    devices = get_devices_from_nb(api_key, url)
+
+    # devices = []
+    # for i in range(1, 5):
+    #     devices.append(f"R{i}")
 
     logger.info("Starting backups")
 
     asyncio.run(main(devices))
+
     print("Check log file!")
 
     logger.info("Finished backups")
