@@ -1,6 +1,7 @@
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Final
 
 import keyring
 import numpy as np
@@ -18,12 +19,31 @@ from googleapiclient.errors import HttpError
 Tools for Jira, Confluence, and Google Calendar.
 """
 
-MILESTONE = "customfield_10209"
-START_DATE = "customfield_10410"
-END_DATE = "customfield_10411"
-JUSTIFICATION = "customfield_11102"
-SEGMENT = "customfield_11004"
-CREDENTIALS_DIR = Path("~/Google Drive/My Drive/Scripts").expanduser()
+MILESTONE: Final = "customfield_10209"
+START_DATE: Final = "customfield_10410"
+END_DATE: Final = "customfield_10411"
+JUSTIFICATION: Final = "customfield_11102"
+SEGMENT: Final = "customfield_11004"
+CREDENTIALS_DIR: Final = Path("~/Google Drive/My Drive/Scripts").expanduser()
+
+DEP_FY_FIELD: Final = "customfield_11003"
+DEP_A_LOC: Final = "customfield_11000"
+DEP_Z_LOC: Final = "customfield_11001"
+DEP_CIRCUIT_REPLACE: Final = "customfield_11604"
+DEP_CID_TO_REPLACE: Final = "customfield_11608"
+DEP_CIRCUIT_TYPE: Final = "customfield_11602"
+DEP_PORT_CHARGE: Final = "customfield_11610"
+DEP_SEGMENT: Final = "customfield_11004"
+DEP_ADDTL_NOTES: Final = "customfield_11403"
+
+DEP_INSTALL_TYPE: Final = "customfield_11626"  # prod
+DEP_SERVICE: Final = "customfield_11613"  # prod
+DEP_CDF_FEE: Final = "customfield_11625"  # prod
+
+
+# DEP_INSTALL_TYPE: Final = "customfield_11627"  # stage
+# DEP_CDF_FEE: Final = "customfield_11626"  # stage
+# DEP_SERVICE: Final = "customfield_11621"  # stage
 
 
 def get_last_comment(comments: list) -> str:
@@ -47,17 +67,13 @@ class GCalTools:
         creds = None
 
         if CREDENTIALS_DIR.exists():
-            creds = Credentials.from_authorized_user_file(
-                CREDENTIALS_DIR.joinpath("gcal_token.json"), SCOPES
-            )
+            creds = Credentials.from_authorized_user_file(CREDENTIALS_DIR.joinpath("gcal_token.json"), SCOPES)
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    f"{CREDENTIALS_DIR}/desktop_oauth_gcal.json", SCOPES
-                )
+                flow = InstalledAppFlow.from_client_secrets_file(f"{CREDENTIALS_DIR}/desktop_oauth_gcal.json", SCOPES)
                 creds = flow.run_local_server(port=0)
 
             # Save the credentials for the next run
@@ -142,9 +158,7 @@ class GCalTools:
             lambda x: x[11:-6] if pd.notnull(x) else ""
         )  # trim to hours/minutes only
 
-        df[["start_date", "start_time"]] = df["start.dateTime"].str.split(
-            "T", expand=True
-        )
+        df[["start_date", "start_time"]] = df["start.dateTime"].str.split("T", expand=True)
 
         df["start_time"] = df["start_time"].apply(
             lambda x: x[:-6] if pd.notnull(x) else ""
@@ -165,9 +179,7 @@ class GCalTools:
         df["ticket_sum"] = ticket_lists[2]
         df["last_comment"] = ticket_lists[3]
 
-        df["ticket"] = df["ticket"].apply(
-            lambda x: f'=HYPERLINK("https://servicedesk.cenic.org/browse/{x}", "{x}")'
-        )
+        df["ticket"] = df["ticket"].apply(lambda x: f'=HYPERLINK("https://servicedesk.cenic.org/browse/{x}", "{x}")')
 
         df = df[
             [
@@ -192,9 +204,7 @@ class GCalTools:
             f"{self.creds_dir}/desktop_oauth_gsheet.json",
         )
         first_row = len(tickets_sheet.get_col(1, include_tailing_empty=False)) + 1
-        tickets_sheet.set_dataframe(
-            df, start=(first_row, 1), copy_head=False, extend=True, nan=""
-        )
+        tickets_sheet.set_dataframe(df, start=(first_row, 1), copy_head=False, extend=True, nan="")
 
 
 class AtlassianBase:
@@ -202,15 +212,15 @@ class AtlassianBase:
         self.cas_user = keyring.get_password("cas", "user")
         self.cas_pass = keyring.get_password("cas", self.cas_user)
         self.confl_url = keyring.get_password("confluence", "url")
+
         self.jira_url = keyring.get_password("jira", "url")
+        # self.jira_url = "https://servicedesk-stage.cenic.org/"
 
 
 class ConflTools(AtlassianBase):
     def __init__(self):
         super().__init__()
-        self.confl = Confluence(
-            url=self.confl_url, username=self.cas_user, password=self.cas_pass
-        )
+        self.confl = Confluence(url=self.confl_url, username=self.cas_user, password=self.cas_pass)
 
     def push_new_page(self, parent_page_id: str, page_title: str):
         """Push Wiki formatted .txt file to Confluence as a new page.
@@ -220,17 +230,13 @@ class ConflTools(AtlassianBase):
         """
         with open("doc.txt", "r") as f:
             doc = f.read()
-        self.confl.update_or_create(
-            parent_page_id, page_title, doc, representation="wiki"
-        )
+        self.confl.update_or_create(parent_page_id, page_title, doc, representation="wiki")
 
 
 class JiraTools(AtlassianBase):
     def __init__(self):
         super().__init__()
-        self.jira = Jira(
-            url=self.jira_url, username=self.cas_user, password=self.cas_pass
-        )
+        self.jira = Jira(url=self.jira_url, username=self.cas_user, password=self.cas_pass)
 
     def cor_project_updates(self, engineer: list, jql: str) -> None:
         """Return ticket updates, creation, resolution from the COR Jira
@@ -240,9 +246,7 @@ class JiraTools(AtlassianBase):
         ticket_updates = open_gsheet("Core Tickets", "updates")
         ticket_updates.clear()
 
-        results = self.jira.jql(
-            jql, limit=100, fields=["assignee", "key", "summary", "updated", "comment"]
-        )
+        results = self.jira.jql(jql, limit=100, fields=["assignee", "key", "summary", "updated", "comment"])
 
         columns = {
             "key": "ticket",
@@ -266,9 +270,7 @@ class JiraTools(AtlassianBase):
         df = df[~df["last_comment"].str.startswith("Task COR-")]
 
         # create hyperlink for key
-        df["ticket"] = df["ticket"].apply(
-            lambda x: f'=HYPERLINK("https://servicedesk.cenic.org/browse/{x}", "{x}")'
-        )
+        df["ticket"] = df["ticket"].apply(lambda x: f'=HYPERLINK("https://servicedesk.cenic.org/browse/{x}", "{x}")')
 
         # trim updated date to YYYY-MM-DD
         df["updated"] = df["updated"].apply(lambda x: x.split("T")[0])
@@ -297,9 +299,7 @@ class JiraTools(AtlassianBase):
                     reporter_list.append("")
 
                 try:
-                    comments_list.append(
-                        output["fields"]["comment"]["comments"][-1]["body"]
-                    )  # get most recent comment
+                    comments_list.append(output["fields"]["comment"]["comments"][-1]["body"])  # get most recent comment
                 except IndexError:  # if no comments
                     comments_list.append("")
             else:
@@ -354,12 +354,8 @@ class JiraTools(AtlassianBase):
                 ticket,
                 {
                     "timetracking": {"originalEstimate": str(hours) + "h"},
-                    START_DATE: (today + timedelta(days=count * 7)).strftime(
-                        "%Y-%m-%d"
-                    ),
-                    END_DATE: (today + timedelta(days=count * 7 + 4)).strftime(
-                        "%Y-%m-%d"
-                    ),
+                    START_DATE: (today + timedelta(days=count * 7)).strftime("%Y-%m-%d"),
+                    END_DATE: (today + timedelta(days=count * 7 + 4)).strftime("%Y-%m-%d"),
                 },
             )
 
@@ -389,9 +385,7 @@ class JiraTools(AtlassianBase):
 
         # Get time in hours - # of circuits * hours/circuit * 4 (weeks), and update list
         weeks = 4
-        hours_list = [
-            str(int(circuits) * hours * weeks) + "h" for circuits in circuits_list
-        ]
+        hours_list = [str(int(circuits) * hours * weeks) + "h" for circuits in circuits_list]
 
         # Update buckets - move start/end ahead one week, update hours
         for i, ticket in enumerate(tickets_list):
@@ -445,28 +439,20 @@ class JiraTools(AtlassianBase):
                     "fields.summary": "summary",
                 }
             )
-            df["key"] = df["key"].apply(
-                lambda x: f'=HYPERLINK("https://servicedesk.cenic.org/browse/{x}", "{x}")'
-            )
+            df["key"] = df["key"].apply(lambda x: f'=HYPERLINK("https://servicedesk.cenic.org/browse/{x}", "{x}")')
 
             # convert original estimate to hours
             # get original hours / day, multiply by 5 and divide by number of business
             # days to get hours allocated over the current week
-            org_est_list = [
-                int(i) / 3600 for i in df["fields.timetracking.originalEstimateSeconds"]
-            ]
+            org_est_list = [int(i) / 3600 for i in df["fields.timetracking.originalEstimateSeconds"]]
             start_date_list = list(df[f"fields.{START_DATE}"])
             end_date_list = list(df[f"fields.{END_DATE}"])
-            df["weekly_hours"] = (
-                org_est_list / np.busday_count(start_date_list, end_date_list) * 5
-            )
+            df["weekly_hours"] = org_est_list / np.busday_count(start_date_list, end_date_list) * 5
             df["weekly_hours"] = df["weekly_hours"].apply(lambda x: round(x, 2))
 
             # get previous monday as datetime string
             today = datetime.today()
-            df["week_start"] = (today - timedelta(days=today.weekday())).strftime(
-                "%Y-%m-%d"
-            )
+            df["week_start"] = (today - timedelta(days=today.weekday())).strftime("%Y-%m-%d")
 
             df = df[
                 [
@@ -480,9 +466,7 @@ class JiraTools(AtlassianBase):
             full_df = pd.concat([full_df, df])
 
         first_row = len(resources_sheet.get_col(1, include_tailing_empty=False)) + 1
-        resources_sheet.set_dataframe(
-            full_df, start=(first_row, 1), copy_head=False, extend=True, nan=""
-        )
+        resources_sheet.set_dataframe(full_df, start=(first_row, 1), copy_head=False, extend=True, nan="")
 
     def get_cpe_tracker_info(self) -> None:
         """Used for the CPE Hardware Tracker, for each active deployment ticket the milestones and
@@ -524,33 +508,23 @@ class JiraTools(AtlassianBase):
         resolved_df = resolved_sheet.get_as_df(include_tailing_empty=False)
 
         # get status and trim resolved; drop unneeded Status
-        active_df["Status"] = active_df["Deployment Ticket"].apply(
-            lambda x: self.jira.get_issue_status(x)
-        )
+        active_df["Status"] = active_df["Deployment Ticket"].apply(lambda x: self.jira.get_issue_status(x))
         new_resolved_df = active_df[active_df["Status"] == "Resolved"]
         active_df = active_df[active_df["Status"] != "Resolved"]
         active_df = active_df.drop("Status", axis=1)
         new_resolved_df = new_resolved_df.drop("Status", axis=1)
 
         # Get Milestones and hardware delivery data
-        active_df["Ticket Milestone"] = active_df["Deployment Ticket"].apply(
-            lambda x: get_milestone(x)
-        )
+        active_df["Ticket Milestone"] = active_df["Deployment Ticket"].apply(lambda x: get_milestone(x))
         for col in ("CPE", "Modem", "Dark Fiber Equip."):
-            active_df[f"{col} Delivered"] = active_df[f"{col} Purchase Ticket"].apply(
-                lambda x: get_delivered(x)
-            )
+            active_df[f"{col} Delivered"] = active_df[f"{col} Purchase Ticket"].apply(lambda x: get_delivered(x))
 
         # combine resolved DFs
         resolved_df = pd.concat([resolved_df, new_resolved_df])
         active_sheet.clear(start="A3")
         resolved_sheet.clear(start="A2")
-        active_sheet.set_dataframe(
-            active_df, start="A3", copy_head=False, extend=True, nan=""
-        )
-        resolved_sheet.set_dataframe(
-            resolved_df, start="A2", copy_head=False, extend=True, nan=""
-        )
+        active_sheet.set_dataframe(active_df, start="A3", copy_head=False, extend=True, nan="")
+        resolved_sheet.set_dataframe(resolved_df, start="A2", copy_head=False, extend=True, nan="")
 
     def purchases_tracking(self, core: list) -> None:
         """Update Purchase Tracker, run each week.
@@ -576,9 +550,7 @@ class JiraTools(AtlassianBase):
                         return re.findall(r"\d+", po.group())[0]
             return "PO not found"
 
-        def check_status(
-            comments: list[dict], status: str, assignee: str, reporter: str
-        ) -> str:
+        def check_status(comments: list[dict], status: str, assignee: str, reporter: str) -> str:
             """Tries to guess ticket status based on critiera below. Should not
             be viewed as authoritative.
             """
@@ -646,9 +618,7 @@ class JiraTools(AtlassianBase):
         df["PO"] = df["comments"].apply(get_po)
         df["PO Date"] = df["comments"].apply(lambda x: get_po(x, date=True))
         df["HW Status"] = df.apply(
-            lambda x: check_status(
-                x["comments"], x["Ticket Status"], x["assignee"], x["Reporter"]
-            ),
+            lambda x: check_status(x["comments"], x["Ticket Status"], x["assignee"], x["Reporter"]),
             axis=1,
         )
 
@@ -714,9 +684,7 @@ class JiraTools(AtlassianBase):
 
     def la2_migration_status(self):
         tickets_sheet = open_gsheet("LA2 Migration - Deployment Tracker", "Sheet1")
-        tickets_list = tickets_sheet.get_col(
-            1, include_tailing_empty=False, returnas="cell"
-        )
+        tickets_list = tickets_sheet.get_col(1, include_tailing_empty=False, returnas="cell")
         tickets_list.pop(0)  # remove header
 
         for ticket in tickets_list:
@@ -748,6 +716,9 @@ class JiraTools(AtlassianBase):
     def get_ticket_summary(self, ticket: str) -> str:
         return self.jira.get_issue(ticket, fields=["summary"])["fields"]["summary"]
 
+    def get_ticket_fields(self, ticket: str) -> dict:
+        return self.jira.get_issue(ticket)["fields"]
+
     def create_ticket(
         self,
         master_ticket: str,
@@ -772,6 +743,56 @@ class JiraTools(AtlassianBase):
         )["key"]
         self._create_ticket_link(master_ticket, new_ticket)
         return new_ticket
+
+    def create_dep_install(
+        self,
+        master_ticket: str,
+        title: str,
+        assignee: str,
+        reporter: str,
+        description: str,
+        fy: str,
+        zloc: str,
+        service: str,
+        cid_replace: str,
+        cid_to_replace: str,
+        circuit_type: str,
+        port_charge: str,
+        install_type: str,
+        cdf_fee: str,
+        segment: str,
+        aloc: str = "",
+    ):
+        fields = {
+            "summary": title,
+            "project": {
+                "key": "DEP",
+            },
+            "issuetype": {
+                "name": "Circuit Install",
+            },
+            "assignee": {"name": assignee},
+            "reporter": {"name": reporter},
+            DEP_ADDTL_NOTES: description,
+            DEP_FY_FIELD: {"value": fy},
+            DEP_A_LOC: aloc,
+            DEP_Z_LOC: zloc,
+            DEP_SERVICE: [{"value": service}],
+            DEP_CIRCUIT_REPLACE: {"value": cid_replace},
+            DEP_CID_TO_REPLACE: cid_to_replace,
+            DEP_CIRCUIT_TYPE: {"value": circuit_type},
+            DEP_PORT_CHARGE: {"value": port_charge},
+            DEP_INSTALL_TYPE: {"value": install_type},
+            DEP_CDF_FEE: {"value": cdf_fee},
+            DEP_SEGMENT: {"value": segment},
+        }
+
+        new_ticket = self.jira.create_issue(fields=fields)["key"]
+        self._create_ticket_link(master_ticket, new_ticket)
+        return new_ticket
+
+    def change_status(self, ticket: str, new_status: str) -> None:
+        self.jira.set_issue_status(ticket, new_status)
 
     def _create_ticket_link(self, master_ticket: str, new_ticket: str) -> None:
         """Create Link between master and new ticket."""

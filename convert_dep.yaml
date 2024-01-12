@@ -1,0 +1,24 @@
+---
+# fy: str - FY 22-23
+# zloc: str - SNVL2
+# service: str - DC, HPR, L2VPN, PacWave, WRN, XD
+# cid_replace: str - Yes, No
+# cid_to_replace: str - CLR-1234
+# circuit_type: str - Lit, Dark, Overlay
+# port_charge: str - Yes, No
+# install_type: str - New, Upgrade, Hardware Refresh, Renewal, Move
+# cdf_fee: str - 0, 2550, 6333.33
+# segment: str - CCC, K12, UC, CSU, Library, UCHS, Medical Other, Independent, Cultural and Arts, BIIG, Other,
+# quote: str
+
+fy: FY 23-24
+aloc: Coyote Valley Education Center
+zloc: FERG1
+service: DC
+cid_replace: "No"
+cid_to_replace:
+circuit_type: Lit
+port_charge: "Yes"
+install_type: New
+cdf_fee: "6333.33"
+segment: CCC

@@ -107,13 +107,68 @@ def scheduled():
 def create_predep(master_ticket: str):
     """Create Install, Migration, Closeout child tickets."""
     summary = jtools.get_ticket_summary(master_ticket)
-    jtools.create_ticket(
-        master_ticket, summary.replace("Circuit Install", "Install Planning")
-    )
-    jtools.create_ticket(
-        master_ticket, summary.replace("Circuit Install", "Migration Planning")
-    )
+    jtools.create_ticket(master_ticket, summary.replace("Circuit Install", "Install Planning"))
+    jtools.create_ticket(master_ticket, summary.replace("Circuit Install", "Migration Planning"))
     jtools.create_ticket(master_ticket, summary.replace("Circuit Install", "Closeout"))
+
+
+@main.command()
+def convert_dep(master_ticket: str, noc_ticket: str):
+    """ """
+
+    with open("convert_dep.yaml", "r") as f:
+        data = yaml.safe_load(f)
+
+    for i, j in data.items():
+        if not j:
+            data[i] = ""
+
+    fields = jtools.get_ticket_fields(noc_ticket)
+    dep_ticket = jtools.create_dep_install(
+        master_ticket,
+        fields["summary"],
+        fields["assignee"]["name"],
+        fields["reporter"]["name"],
+        fields["description"],
+        **data,
+    )
+    print(f"Created new DEP ticket: {dep_ticket}")
+    jtools.change_status(noc_ticket, "Resolved")
+    print(f"Changed ticket status for: {noc_ticket}")
+
+    # new_tickets = [
+    #     [
+    #         "Amador COE",
+    #         "FERG1",
+    #         "New",
+    #         "Amador COE to FERG1 - AT&T 10 Gbps  - Circuit Install",
+    #     ],
+    # ]
+
+    # for i in new_tickets:
+    #     if i[2] == "Upgrade":
+    #         replace = "Yes"
+    #     else:
+    #         replace = "No"
+    #
+    #     dep_ticket = jtools.create_dep_install(
+    #         "DEP-303",
+    #         i[3],
+    #         "snguyen",
+    #         "FY 23-24",
+    #         i[1],
+    #         "DC",
+    #         replace,
+    #         "",
+    #         "Lit",
+    #         "Yes",
+    #         i[2],
+    #         "6333.33",
+    #         "K12",
+    #         i[0],
+    #     )
+    #     print(i[3])
+    #     print(dep_ticket)
 
 
 if __name__ == "__main__":

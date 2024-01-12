@@ -52,7 +52,7 @@ class AMS:
 
     def _get_segment(self) -> str:
         """Return AMS project from serial."""
-        project = self.soup.find("td", text="project")
+        project = self.soup.find("td", string="project")
 
         if project:
             return project.find_next_sibling("td").text
@@ -60,7 +60,7 @@ class AMS:
 
     def _get_host(self) -> str:
         """Return hostname from serial."""
-        host = self.soup.find("td", text="host info")
+        host = self.soup.find("td", string="host info")
 
         if host:
             return host.find_next_sibling("td").next_element.text.strip()
@@ -68,7 +68,7 @@ class AMS:
 
     def _get_po(self) -> str:
         """Return Purchase Order from serial."""
-        self.po_elem = self.soup.find("td", text="purchase order")
+        self.po_elem = self.soup.find("td", string="purchase order")
         po = self.po_elem.find_next_sibling("td").find("strong")
 
         if po:
@@ -89,7 +89,7 @@ class AMS:
 
     def _get_receive_date(self) -> str:
         """Return asset Receive Date from serial."""
-        rx_date_elem = self.soup.find("td", text="status")
+        rx_date_elem = self.soup.find("td", string="status")
         rx_date = rx_date_elem.find_next_sibling("td").find("br")
 
         if rx_date_elem:
@@ -99,15 +99,13 @@ class AMS:
 
     def _get_status(self) -> str:
         """Return In-Service Date if present, else return status."""
-        status_elem = self.soup.find("td", text="status")
+        status_elem = self.soup.find("td", string="status")
         if status_elem:
             status = status_elem.find_next_sibling("td").find("strong").text.strip()
 
             if status == "IN-SERVICE":
                 in_service_date = (
-                    status_elem.find_next_sibling("td")
-                    .find("br")
-                    .next_element.next_element.text.split()[-1]
+                    status_elem.find_next_sibling("td").find("br").next_element.next_element.text.split()[-1]
                 )
                 return normalize_datetime(in_service_date)
             return status
@@ -137,7 +135,7 @@ class AMS:
         self.soup = BeautifulSoup(resp.text, "html.parser")
 
         # if serial number not found, skip
-        if self.soup.find(text=" No matching assets found "):
+        if self.soup.find(string=" No matching assets found "):
             return serial_info
 
         if model:
@@ -159,6 +157,20 @@ class AMS:
 
         return serial_info
 
+    @staticmethod
+    def make_header() -> list[str]:
+        return [
+            "SERIAL",
+            "MODEL",
+            "LOCATION",
+            "SEGMENT",
+            "HOSTNAME",
+            "CENIC PO",
+            "PO TICKET",
+            "RECEIVE DATE",
+            "IN-SERVICE STATUS",
+        ]
+
 
 def main(input_file: str = "serials.txt"):
     """Expects input_file to be single serial per-line text file, ex:
@@ -174,6 +186,7 @@ def main(input_file: str = "serials.txt"):
 
     with open("serial_loc.csv", "w", encoding="UTF-8") as f:
         writer = csv.writer(f)
+        writer.writerow(ams.make_header())
         for serial in serials:
             writer.writerow(ams.get_serial_info(serial))
             time.sleep(1)

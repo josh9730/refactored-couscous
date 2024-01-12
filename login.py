@@ -53,13 +53,9 @@ def get_yubikey() -> str:
     )
 
 
-def shell_login(
-    username: str, first_factor: str, second_factor: pyotp.TOTP
-) -> pexpect.spawn:
+def shell_login(username: str, first_factor: str, second_factor: pyotp.TOTP) -> pexpect.spawn:
     shell_url = keyring.get_password("shell", "url")
-    child = pexpect.spawn(
-        f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no -p 22222 {username}@{shell_url}"'
-    )
+    child = pexpect.spawn(f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no -p 22222 {username}@{shell_url}"')
 
     child.expect("First Factor: ")
     child.sendline(first_factor)
@@ -106,6 +102,19 @@ def get_cas():
 
 
 @logins.command()
+def nettools():
+    """Get nettools Fernet."""
+    nettools_fernet = cast(str, keyring.get_password("nettools", "fernet"))
+    pyperclip.copy(nettools_fernet)
+    print_account(
+        (
+            "Account: Nettools Fernet",
+            f"Fernet: {nettools_fernet} -- sent to clipboard\n",
+        )
+    )
+
+
+@logins.command()
 def telnet(hostname: str = typer.Argument(..., help="Device hostname")):
     mfa_user, first_factor, otp = mfa_default()
     child = shell_login(mfa_user, first_factor, otp)
@@ -125,9 +134,7 @@ def telnet(hostname: str = typer.Argument(..., help="Device hostname")):
 def ssh(hostname: str = typer.Argument(..., help="Device hostname")):
     username, cas_password = cas_creds()
 
-    child = pexpect.spawn(
-        f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {username}@{hostname}"'
-    )
+    child = pexpect.spawn(f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {username}@{hostname}"')
     child.expect([".*assword:.*", "Local password:"])
     child.sendline(cas_password + "," + get_yubikey())
     child.interact()
@@ -139,9 +146,7 @@ def ssh_prompt(
     username: str = typer.Argument(..., help="Device Username"),
     password: str = typer.Argument(..., help="Device Password"),
 ):
-    child = pexpect.spawn(
-        f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {username}@{hostname}"'
-    )
+    child = pexpect.spawn(f'/bin/bash -c "ssh -4 -o stricthostkeychecking=no {username}@{hostname}"')
     child.expect([".*assword:.*", "Local password:"])
     child.sendline(password)
     child.interact()
