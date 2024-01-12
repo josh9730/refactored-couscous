@@ -24,6 +24,9 @@ async def ping_test(hostname: str, queue: asyncio.Queue) -> None:
 
     # wait on something to run and allow other tasks to run while waiting
     # essentially this is waiting on our ping test for the hostname to complete
+
+    # try replacing this with a time.sleep() instead - the function now becomes 'blocking' and it can't
+    # release control to another task
     await asyncio.sleep(2)
 
     # these are just to test to show that our async program works as expected
