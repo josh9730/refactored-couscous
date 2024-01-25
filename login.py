@@ -47,7 +47,7 @@ def cas_creds() -> tuple[str, str]:
 
 def get_yubikey() -> str:
     return Prompt.ask(
-        "[green]Enter [white]Yubikey[/white] long press, [white]push[/white] (default) or [white]phone[/white]",
+        "[green]Enter [white]Yubikey[/white] long press, [white]push[/white] (default) or [white]phone[/white].",
         password=True,
         default="push",
     )
