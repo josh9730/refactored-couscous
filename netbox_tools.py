@@ -94,11 +94,11 @@ def bulk_add_devices() -> None:
             rack=nb.dcim.racks.get(name=device[11], site=site.slug).id,
             position=device[12],
             face=device[13].lower(),
-            comments=device[15],
+            comments=device[14],
             custom_fields={
-                "deployment_ticket": device[16],
-                "facility_device_id": device[17],
-                "oob_number": device[18],
+                "deployment_ticket": device[15],
+                "facility_device_id": device[16],
+                "oob_number": device[17],
             },
         )
 
@@ -110,13 +110,17 @@ def bulk_add_devices() -> None:
     try:
         with open(filename) as f:
             devices = csv.reader(f)
+            print("[green]Adding devices...")
             for device in devices:
                 if device[0] == "name":  # header row
+                    device.append("FAILURE REASON")
                     failed_devices.append(device)
                     continue
+
                 try:
                     add_device(device)
-                except pynetbox.RequestError:
+                except pynetbox.RequestError as err:
+                    device.append(err.error)
                     failed_devices.append(device)
                     print(f"[bold red]Failed to upload {device[0]}, re-attempt manually.")
 
@@ -126,6 +130,8 @@ def bulk_add_devices() -> None:
     with open(failure_file, "w") as f:
         write = csv.writer(f)
         write.writerows(failed_devices)
+
+    print("[green]Program finished!")
 
 
 if __name__ == "__main__":
