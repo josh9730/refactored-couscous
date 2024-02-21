@@ -90,7 +90,6 @@ def bulk_add_devices() -> None:
             "device_type": nb.dcim.device_types.get(model=device[4]).id,
             "status": device[8].lower(),
             "site": site.id,
-            "rack": nb.dcim.racks.get(name=device[11], site=site.slug).id,
             "position": device[12],
             "face": device[13].lower(),
             "comments": device[14],
@@ -103,6 +102,13 @@ def bulk_add_devices() -> None:
         tenant_str = device[2]
         if tenant_str:
             data.update({"tenant": nb.tenancy.tenants.get(name=tenant_str).id})
+
+        location_str = device[10]
+        if location_str:
+            location = nb.dcim.locations.get(name=location_str, site=site.slug)
+            data.update({"rack": nb.dcim.racks.get(name=device[11], location=location.slug).id})
+        else:
+            data.update({"rack": nb.dcim.racks.get(name=device[11], site=site.slug).id})
 
         _ = nb.dcim.devices.create(**data)
 
