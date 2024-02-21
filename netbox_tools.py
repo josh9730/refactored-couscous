@@ -84,23 +84,27 @@ def bulk_add_devices() -> None:
 
     def add_device(device: list[list[str]]) -> None:
         site = nb.dcim.sites.get(name=device[9])
-        _ = nb.dcim.devices.create(
-            name=device[0],
-            role=nb.dcim.device_roles.get(name=device[1]).id,
-            tenant=nb.tenancy.tenants.get(name=device[2]).id,
-            device_type=nb.dcim.device_types.get(model=device[4]).id,
-            status=device[8].lower(),
-            site=site.id,
-            rack=nb.dcim.racks.get(name=device[11], site=site.slug).id,
-            position=device[12],
-            face=device[13].lower(),
-            comments=device[14],
-            custom_fields={
+        data = {
+            "name": device[0],
+            "role": nb.dcim.device_roles.get(name=device[1]).id,
+            "device_type": nb.dcim.device_types.get(model=device[4]).id,
+            "status": device[8].lower(),
+            "site": site.id,
+            "rack": nb.dcim.racks.get(name=device[11], site=site.slug).id,
+            "position": device[12],
+            "face": device[13].lower(),
+            "comments": device[14],
+            "custom_fields": {
                 "deployment_ticket": device[15],
                 "facility_device_id": device[16],
                 "oob_number": device[17],
             },
-        )
+        }
+        tenant_str = device[2]
+        if tenant_str:
+            data.update({"tenant": nb.tenancy.tenants.get(name=tenant_str).id})
+
+        _ = nb.dcim.devices.create(**data)
 
     filename = "devices.csv"
     failure_file = "failures.csv"
