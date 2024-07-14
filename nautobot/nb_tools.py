@@ -49,9 +49,7 @@ class NBTools:
     def __init__(self):
         self.nautobot = api(
             url=keyring.get_password("nautobot_stage", "url"),
-            token=keyring.get_password(
-                "nautobot_stage", keyring.get_password("cas", "user") + "mfa"
-            ),
+            token=keyring.get_password("nautobot_stage", keyring.get_password("cas", "user") + "mfa"),
         )
         self.nautobot.http_session.verify = False
         self.LAST_CABLE_ID = None
@@ -64,17 +62,11 @@ class NBTools:
             port: Nautobot port object, one of Front, RearPort, Interface
             port_type: type of Nautobot port for the api
         """
-        if port := self.nautobot.dcim.front_ports.get(
-            device_id=port_device_slug.id, name=port_name
-        ):
+        if port := self.nautobot.dcim.front_ports.get(device_id=port_device_slug.id, name=port_name):
             return port, "dcim.frontport"
-        elif port := self.nautobot.dcim.rear_ports.get(
-            device_id=port_device_slug.id, name=port_name
-        ):
+        elif port := self.nautobot.dcim.rear_ports.get(device_id=port_device_slug.id, name=port_name):
             return port, "dcim.rearport"
-        elif port := self.nautobot.dcim.interfaces.get(
-            device_id=port_device_slug.id, name=port_name
-        ):
+        elif port := self.nautobot.dcim.interfaces.get(device_id=port_device_slug.id, name=port_name):
             return port, "dcim.interface"
         else:
             raise Exception(
@@ -102,9 +94,7 @@ class NBTools:
         cable_id = "C" + str(self.LAST_CABLE_ID).rjust(4, "0")
         return f"COM--{device_1_name}--{device_2_name}--{cable_id}"
 
-    def create_new_site(
-        self, site_code: str, site_name: str, address: str, tenant: str
-    ) -> None:
+    def create_new_site(self, site_code: str, site_name: str, address: str, tenant: str) -> None:
         tenant_id = self.nautobot.tenancy.tenants.get(slug=tenant.lower()).id
         new_site = self.nautobot.dcim.sites.create(
             name=site_code,
@@ -156,9 +146,7 @@ class NBTools:
             )
             print(f"Created port: {port_name + 'Front'}")
 
-    def connect_rear_ports(
-        self, site_code: str, device_1_name: str, device_2_name: str, jumper_type: str
-    ) -> None:
+    def connect_rear_ports(self, site_code: str, device_1_name: str, device_2_name: str, jumper_type: str) -> None:
         site = self.nautobot.dcim.sites.get(name=site_code.upper())
         device_1 = self.nautobot.dcim.devices.get(name=device_1_name, site=site.slug)
         device_2 = self.nautobot.dcim.devices.get(name=device_2_name, site=site.slug)
@@ -201,12 +189,8 @@ class NBTools:
             print(term_a_device, term_b_device)
             exit(1)
 
-        term_a_port, term_a_port_type = self.guess_port_type(
-            device_1_port, term_a_device
-        )
-        term_b_port, term_b_port_type = self.guess_port_type(
-            device_2_port, term_b_device
-        )
+        term_a_port, term_a_port_type = self.guess_port_type(device_1_port, term_a_device)
+        term_b_port, term_b_port_type = self.guess_port_type(device_2_port, term_b_device)
 
         if label == "next_trunk":
             label = self._create_com_label(term_a_device.name, term_b_device.name)
@@ -232,18 +216,14 @@ def new_site(
         case_sensitive=False,
         help="Select Tenant from choices, case-insensitve.",
     ),
-    site_code: str = typer.Option(
-        ..., prompt="Site Code", help="Unique site Code for new site."
-    ),
+    site_code: str = typer.Option(..., prompt="Site Code", help="Unique site Code for new site."),
     site_name: str = typer.Option(..., prompt="Site Name", help="Full site name."),
     address: str = typer.Option(..., prompt=True, help="Physical site address."),
 ):
     """Create a new site and CPE rack in Nautobot."""
     nautobot = NBTools()
     nautobot.create_new_site(site_code, site_name, address, tenant.value)
-    print(
-        f"https://nautobot-1-staging.svl.cenic.org/dcim/sites/{site_code.lower()}/?tab=main"
-    )
+    print(f"https://nautobot-1-staging.svl.cenic.org/dcim/sites/{site_code.lower()}/?tab=main")
 
 
 @main.command()
@@ -256,9 +236,7 @@ def update_simplex_panel(
 ):
     """Update a patch panel with simplex ports, i.e. 'Port 1/2 Front'."""
     nautobot = NBTools()
-    nautobot.update_simplex_panel(
-        site_code, name, num_ports, port_type.value, jumper_type.value
-    )
+    nautobot.update_simplex_panel(site_code, name, num_ports, port_type.value, jumper_type.value)
 
 
 @main.command()
@@ -275,9 +253,7 @@ def connect_rear_ports(
 
 @main.command()
 def create_jumper(
-    yaml_input: bool = typer.Option(
-        False, help="Pull variables from cable.yaml. No validation is performed."
-    ),
+    yaml_input: bool = typer.Option(False, help="Pull variables from cable.yaml. No validation is performed."),
     # site_code: str = typer.Option(..., prompt="Site Code"),
     # device_1: str = typer.Option(..., prompt="Device 1"),
     # device_1_port: str = typer.Option(..., prompt="Device 1 Port"),

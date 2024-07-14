@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Final
 
@@ -13,7 +13,6 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 """
 Tools for Jira, Confluence, and Google Calendar.
@@ -60,38 +59,78 @@ def open_gsheet(sheet_title: str, workbook_title: str):
     return client.open(sheet_title).worksheet_by_title(workbook_title)
 
 
-class GCalTools:
+class GoogleTools:
     def __init__(self):
-        # If modifying these scopes, delete the file token.json.
-        SCOPES = ["https://www.googleapis.com/auth/calendar.events"]
-        creds = None
+        # If modifying these scopes, delete the file token.json
+        self.scopes = [
+            "https://www.googleapis.com/auth/calendar.events",
+            "https://www.googleapis.com/auth/gmail.readonly",
+        ]
+        self.creds = None
 
-        if CREDENTIALS_DIR.exists():
-            creds = Credentials.from_authorized_user_file(CREDENTIALS_DIR.joinpath("gcal_token.json"), SCOPES)
-        # If there are no (valid) credentials available, let the user log in.
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
+        self.get_token()
+        self.gmail = build("gmail", "v1", credentials=self.creds)
+        self.gcal = build("calendar", "v3", credentials=self.creds)
+
+        # # If modifying these scopes, delete the file token.json.
+        # SCOPES = ["https://www.googleapis.com/auth/calendar.events", "https://www.googleapis.com/auth/gmail.readonly"]
+        # creds = None
+        #
+        # creds_file = CREDENTIALS_DIR.joinpath("google_token.json")
+        # if creds_file.exists():
+        #     creds = Credentials.from_authorized_user_file(creds_file, SCOPES)
+        # # If there are no (valid) credentials available, let the user log in.
+        # if not creds or not creds.valid:
+        #     if creds and creds.expired and creds.refresh_token:
+        #         creds.refresh(Request())
+        #     else:
+        #         flow = InstalledAppFlow.from_client_secrets_file(f"{CREDENTIALS_DIR}/credentials.json", SCOPES)
+        #         creds = flow.run_local_server(port=0)
+        #
+        #     # Save the credentials for the next run
+        #     with open(f"{CREDENTIALS_DIR}/google_token.json", "w") as token:
+        #         token.write(creds.to_json())
+        #
+        # try:
+        #     self.service = build("calendar", "v3", credentials=creds)
+        #
+        # except HttpError as error:
+        #     print("An error occurred: %s" % error)
+
+    def get_token(self):
+        creds_file = CREDENTIALS_DIR.joinpath("google_token.json")
+
+        if creds_file.exists():
+            self.creds = Credentials.from_authorized_user_file(creds_file, self.scopes)
+
+        if not self.creds or not self.creds.valid:
+            if self.creds and self.creds.expired and self.creds.refresh_token:
+                self.creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(f"{CREDENTIALS_DIR}/desktop_oauth_gcal.json", SCOPES)
-                creds = flow.run_local_server(port=0)
+                flow = InstalledAppFlow.from_client_secrets_file(f"{CREDENTIALS_DIR}/credentials.json", self.scopes)
+                self.creds = flow.run_local_server(port=0)
 
-            # Save the credentials for the next run
-            with open(f"{CREDENTIALS_DIR}/gcal_token.json", "w") as token:
-                token.write(creds.to_json())
+            with open(creds_file, "w") as token:
+                token.write(self.creds.to_json())
 
-        try:
-            self.service = build("calendar", "v3", credentials=creds)
+    def get_mail_by_label(self, label: str, start_date: str = "", end_date: str = "") -> dict:
+        if not end_date:
+            end_date = date.today().strftime("%Y/%m/%d")
+        query = f"before: {end_date}"
+        if start_date:
+            query += f" after: {start_date}"
 
-        except HttpError as error:
-            print("An error occurred: %s" % error)
+        return self.gmail.users().messages().list(userId="me", labelIds=[label], q=query).execute()
+
+    def get_mail_by_id(self, mail_id: str):
+        return self.gmail.users().messages().get(userId="me", id=mail_id).execute()
 
     def get_engrv(self, engrv_url: str) -> list:
         """Get engineer on EngRv, to be run each Monday"""
         now = (datetime.utcnow() - timedelta(days=2)).isoformat() + "Z"
         d1 = (datetime.utcnow() + timedelta(weeks=4)).isoformat() + "Z"
         engrv_rotation = (
-            self.service.events()
+            self.gcal.events()
             .list(
                 calendarId=engrv_url,
                 q="EngRv",
@@ -109,7 +148,7 @@ class GCalTools:
     def return_calendar(self, date1: str, date2: str, cal_url: str) -> pd.DataFrame:
         """Returns DF of events from specified calendar."""
         events = (
-            self.service.events()
+            self.gcal.events()
             .list(
                 calendarId=cal_url,
                 timeMin=date1,
@@ -201,7 +240,6 @@ class GCalTools:
         tickets_sheet = open_gsheet(
             "Calendar Checks",
             str(datetime.now().year),
-            f"{self.creds_dir}/desktop_oauth_gsheet.json",
         )
         first_row = len(tickets_sheet.get_col(1, include_tailing_empty=False)) + 1
         tickets_sheet.set_dataframe(df, start=(first_row, 1), copy_head=False, extend=True, nan="")
@@ -284,7 +322,6 @@ class JiraTools(AtlassianBase):
         assignee_list, reporter_list, ticket_sum_list, comments_list = [], [], [], []
         for ticket in tickets_list:
             if isinstance(ticket, str):
-                print(ticket)
                 # ticket will be float nan if no ticket is on event
                 output = self.jira.issue(ticket)
                 try:

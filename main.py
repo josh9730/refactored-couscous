@@ -1,9 +1,13 @@
+import base64
+import csv
 import datetime
+import re
+from typing import Final
 
 import typer
 import yaml
 
-from tools import GCalTools, JiraTools
+from tools import GoogleTools, JiraTools
 
 main = typer.Typer(
     add_completion=False,
@@ -13,11 +17,83 @@ individually or regularly via a scheduler.
 """,
 )
 
+RH_LABEL: Final[str] = "Label_3737818148016423963"
+
 
 def open_yaml():
     """YAML file for inputs."""
     with open("/Users/jdickman/Google Drive/My Drive/Scripts/usernames.yml", "r") as f:
         return yaml.safe_load(f)
+
+
+def decode_mail_payload(message: dict) -> str:
+    try:
+        return base64.b64decode(message["payload"]["body"]["data"]).decode("utf-8")
+    except UnicodeDecodeError:
+        print(message["snippet"])
+        return ""
+
+
+def parse_rh_message(message: str) -> list[str | int]:
+    def re_search(regex):
+        result = re.search(regex, message)
+        if result:
+            return result.group()
+        return None
+
+    def format_return(raw: str) -> str:
+        if raw:
+            return raw.split(":")[1].strip().upper()
+        return ""
+
+    def parse_time(input_time: str) -> int:
+        """Return time in minutes."""
+        if not input_time:
+            return ""
+
+        t_list = input_time.split()
+        if len(t_list) <= 2:
+            return int(float(t_list[0]) * 60)  # assume its an integer of hours if len == 1
+        elif len(t_list) == 3:
+            ...  # not sure if this is possible
+        elif len(t_list) == 4:
+            return int(float(t_list[0]) * 60 + float(t_list[2]))
+
+    charge = format_return(re_search(r"Charge:\s*((\w+\s\w+)|(\w+))"))
+    vendor = format_return(re_search(r"Vendor:\s*((\w+\s\w+)|(\w+))"))
+    ticket = format_return(re_search(r"Jira Ticket:\s*\S+"))
+    billable = format_return(re_search(r"Billable Time.*:\s*((\d+\s\w+\s\d+\s\w+)|(\d+\.\d+\s\w+)|(\d+\s\w+))"))
+
+    return [vendor, ticket, charge, parse_time(billable)]
+
+
+def convert_date(epoch_ms: str) -> str:
+    return datetime.datetime.utcfromtimestamp(int(epoch_ms) / 1000).strftime("%Y-%m-%d")
+
+
+@main.command()
+def rh_emails(
+    start_date: str = typer.Option("", help="Search start date, YYYY/MM/DD"),
+    end_date: str = typer.Option("", help="Search end date, YYYY/MM/DD"),
+):
+    google = GoogleTools()
+    rh_mail = google.get_mail_by_label(RH_LABEL, start_date=start_date, end_date=end_date)
+
+    output = []
+    for mail in rh_mail["messages"]:
+        message_raw = google.get_mail_by_id(mail["id"])
+        payload = decode_mail_payload(message_raw)
+        if payload:
+            msg_date = convert_date(message_raw["internalDate"])
+            msg_output = parse_rh_message(payload)
+            msg_output.append(msg_date)
+            output.append(msg_output)
+
+    with open("billables.csv", "w", encoding="UTF-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["VENDOR", "TICKET", "CHARGE", "BILLABLE MIN", "DATE"])
+        for i in output:
+            writer.writerow(i)
 
 
 @main.command()
@@ -36,7 +112,7 @@ def update_resource_buckets():
     Circuits: Updates hours based on active circuits, and updates start/end dates.
     """
     data = open_yaml()
-    engineer_list = GCalTools().get_engrv(data["engrv_url"])
+    engineer_list = GoogleTools().get_engrv(data["engrv_url"])
     jtools.update_engrv(engineer_list, data["engrv_tickets"], data["engrv_hours"])
     jtools.update_circuit(data["circuit_hours"])
 
@@ -47,7 +123,7 @@ def calendar_pull():
     and dump to gSheet
     """
     data = open_yaml()
-    gtools = GCalTools()
+    gtools = GoogleTools()
     gtools.weekly_events(data["maint_url"], data["ic_url"])
 
 
