@@ -396,5 +396,39 @@ def make_c1100_conn(
         cable.save()
 
 
+@app.command()
+def make_simplex_ports(
+    panel_name: str = typer.Argument(..., help="Panel name"),
+    port_count: int = typer.Argument(..., help="Number of ports"),
+):
+    netbox = get_pynb()
+    device = netbox.dcim.devices.get(name=panel_name)
+
+    j = 0
+    for i in range(port_count):
+        i = j + 1
+        j = i + 1
+
+        rp = netbox.dcim.rear_ports.create(
+            device=device.id,
+            name=f"Ports {i},{j} Rear",
+            type="sc",
+            positions=1,
+            custom_fields={"jumper_type": "SMF"},
+        )
+        rp.save()
+        fp = netbox.dcim.front_ports.create(
+            device=device.id,
+            name=f"Ports {i},{j} Front",
+            type="sc",
+            rear_port=rp.id,
+            rear_port_position=1,
+            custom_fields={"jumper_type": "SMF"},
+        )
+        fp.save()
+
+        print(f"Created port {i},{j}")
+
+
 if __name__ == "__main__":
     app()
