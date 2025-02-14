@@ -83,5 +83,3 @@ def convert_and_upload(
 if __name__ == "__main__":
     app()
 
-
-# 7219016_1_Cenic Juniper (1).pdf
