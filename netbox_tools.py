@@ -10,7 +10,7 @@ import typer
 import urllib3
 from pynautobot import api
 from rich import print
-from rich.prompt import Prompt
+from rich.prompt import Prompt, IntPrompt
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 app = typer.Typer(add_completion=False)
@@ -20,6 +20,15 @@ class PortType(str, Enum):
     rear = "rear"
     front = "front"
     iface = "iface"
+
+
+class Segment(str, Enum):
+    ccc = "CCC"
+    k12 = "K12"
+    uc = "UC"
+    uchs = "UCHS"
+    csu = "CSU"
+    lib = "Library"
 
 
 def get_auth() -> tuple[str, str]:
@@ -428,6 +437,40 @@ def make_simplex_ports(
         fp.save()
 
         print(f"Created port {i},{j}")
+
+
+@app.command()
+def new_site(segment: Segment = typer.Argument(...)):
+    site_code = Prompt.ask("Unique Site Code")
+    site_name = Prompt.ask("Full Site Name")
+    address = Prompt.ask("Site Address")
+    zip_code = IntPrompt.ask("ZIP Code")
+
+    nb = get_pynb()
+    tenant_id = nb.tenancy.tenants.get(name=segment).id
+
+    new_site = nb.dcim.sites.create(
+        name=site_code.upper(),
+        slug=site_code.lower(),
+        status="active",
+        region=nb.dcim.regions.get(slug="ca").id,
+        description=site_name,
+        tenant=tenant_id,
+        physical_address=address,
+        custom_fields={"zip": zip_code},
+    )
+    print(f"Created new site {site_name}")
+
+    nb.dcim.racks.create(
+        site=new_site.id,
+        name="CPE_RACK",
+        tenant=tenant_id,
+        status="active",
+        role=nb.dcim.rack_roles.get(slug="associate").id,
+        comments="# NOT A REAL RACK\nThis is an abstraction only, Associate racks are not tracked or managed by CENIC.",
+        custom_field_data={"hub_rack": False},
+    )
+    print("Created CPE Rack")
 
 
 if __name__ == "__main__":

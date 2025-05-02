@@ -134,6 +134,8 @@ class AMS:
         )
         self.soup = BeautifulSoup(resp.text, "html.parser")
 
+        print(self.soup)
+
         # if serial number not found, skip
         if self.soup.find(string=" No matching assets found "):
             return serial_info
