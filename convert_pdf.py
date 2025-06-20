@@ -33,9 +33,7 @@ def convert_file(file_path: Path) -> None:
     """Convert PDF to CSV. Converting directly to a DataFrame sometimes encounters exceptions, so CSV is safer."""
     print("[red]Converting...")
     tabula.convert_into(file_path, OUTPUT_FILE, output_format="csv", pages="all")
-    tables = tabula.read_pdf(file_path, pages='all')
-    print(tables)
-    
+    # tabula.read_pdf(file_path, pages="all", silent=True)
 
 
 def check_wsheet_empty(wsheet: pygsheets.Worksheet) -> None:
